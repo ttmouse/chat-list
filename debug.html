@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>话术助手调试</title>
+    <link rel="stylesheet" href="content.css">
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <h3>话术助手调试页面</h3>
+        <p>用于测试管理面板的显示问题</p>
+        <button class="test-button" onclick="showWidget()">显示话术助手</button>
+        <button class="test-button" onclick="showManagePanel()">直接显示管理面板</button>
+        <button class="test-button" onclick="checkElements()">检查元素</button>
+    </div>
+
+    <div id="chat-list-widget" style="display: block; position: relative; width: 350px; height: 500px; border: 1px solid #ccc;">
+        <div class="widget-header">
+            <span class="widget-title">话术助手 <span class="version">v1.1.0</span></span>
+            <div class="widget-controls">
+                <button class="btn-manage" title="管理话术">⚙️</button>
+                <button class="btn-toggle" title="收起/展开">📋</button>
+                <button class="btn-close" title="关闭">×</button>
+            </div>
+        </div>
+        <div class="widget-content">
+            <div class="group-tabs">
+                <div class="group-tab active" data-group="all">全部</div>
+                <div class="group-tab" data-group="greeting" style="border-left: 3px solid #4CAF50">问候语</div>
+                <div class="group-tab" data-group="service" style="border-left: 3px solid #2196F3">服务话术</div>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索话术..." />
+                <button class="btn-clear-search" title="清除搜索">×</button>
+            </div>
+            <div class="script-list">
+                <div class="script-item" data-id="1">
+                    <div class="script-header">
+                        <div class="script-title">欢迎语</div>
+                        <div class="script-actions">
+                            <button class="btn-edit" title="编辑">✏️</button>
+                            <button class="btn-delete" title="删除">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="script-content">您好，很高兴为您服务！有什么可以帮助您的吗？</div>
+                    <div class="script-group" style="color: #4CAF50">问候语</div>
+                </div>
+            </div>
+            <div class="widget-actions">
+                <button class="btn-add-script">+ 添加话术</button>
+            </div>
+        </div>
+        <div class="manage-panel" style="display: none;">
+            <div class="manage-header">
+                <span>话术管理</span>
+                <button class="btn-close-manage">×</button>
+            </div>
+            <div class="manage-content">
+                <div class="group-management">
+                    <h4>分组管理</h4>
+                    <div class="group-list">
+                        <div class="group-item">
+                            <span class="group-color" style="background: #4CAF50"></span>
+                            <span class="group-name">问候语</span>
+                            <button class="btn-edit-group" data-id="greeting">编辑</button>
+                            <button class="btn-delete-group" data-id="greeting">删除</button>
+                        </div>
+                        <div class="group-item">
+                            <span class="group-color" style="background: #2196F3"></span>
+                            <span class="group-name">服务话术</span>
+                            <button class="btn-edit-group" data-id="service">编辑</button>
+                            <button class="btn-delete-group" data-id="service">删除</button>
+                        </div>
+                    </div>
+                    <button class="btn-add-group">+ 添加分组</button>
+                </div>
+                <div class="script-management">
+                    <h4>话术编辑</h4>
+                    <div class="script-form">
+                        <input type="hidden" id="edit-script-id">
+                        <input type="text" id="script-title" placeholder="话术标题">
+                        <select id="script-group">
+                            <option value="">选择分组</option>
+                            <option value="greeting">问候语</option>
+                            <option value="service">服务话术</option>
+                            <option value="closing">结束语</option>
+                        </select>
+                        <textarea id="script-content" placeholder="话术内容"></textarea>
+                        <div class="form-actions">
+                            <button class="btn-save-script">保存</button>
+                            <button class="btn-cancel-edit">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showWidget() {
+            const widget = document.getElementById('chat-list-widget');
+            const content = widget.querySelector('.widget-content');
+            const manage = widget.querySelector('.manage-panel');
+            
+            widget.style.display = 'block';
+            content.style.display = 'block';
+            manage.style.display = 'none';
+            
+            console.log('显示话术助手');
+        }
+        
+        function showManagePanel() {
+            const widget = document.getElementById('chat-list-widget');
+            const content = widget.querySelector('.widget-content');
+            const manage = widget.querySelector('.manage-panel');
+            
+            widget.style.display = 'block';
+            content.style.display = 'none';
+            manage.style.display = 'block';
+            
+            console.log('显示管理面板');
+        }
+        
+        function checkElements() {
+            const widget = document.getElementById('chat-list-widget');
+            const content = widget.querySelector('.widget-content');
+            const manage = widget.querySelector('.manage-panel');
+            
+            console.log('Widget:', widget);
+            console.log('Content display:', content.style.display);
+            console.log('Manage display:', manage.style.display);
+            console.log('Widget computed style:', window.getComputedStyle(widget));
+            console.log('Manage computed style:', window.getComputedStyle(manage));
+        }
+        
+        // 绑定管理按钮事件
+        document.querySelector('.btn-manage').addEventListener('click', showManagePanel);
+        document.querySelector('.btn-close-manage').addEventListener('click', showWidget);
+    </script>
+</body>
+</html>

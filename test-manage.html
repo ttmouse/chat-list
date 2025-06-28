@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理面板测试</title>
+    <link rel="stylesheet" href="content.css">
+</head>
+<body>
+    <div id="chat-list-widget">
+        <div class="widget-wrapper">
+            <div class="widget-header">
+                <span class="widget-title">话术助手 <span class="version">v1.1.0</span></span>
+                <div class="widget-controls">
+                    <button class="btn-manage" title="管理话术">⚙️</button>
+                    <button class="btn-toggle" title="收起/展开">📋</button>
+                    <button class="btn-close" title="关闭">×</button>
+                </div>
+            </div>
+            <div class="widget-content">
+                <div class="script-list">
+                    <div class="script-item">
+                        <div class="script-content">
+                            <div class="script-title">测试话术</div>
+                            <div class="script-text">这是一个测试话术内容</div>
+                        </div>
+                        <div class="script-actions">
+                            <button class="btn-edit" data-id="1">编辑</button>
+                            <button class="btn-delete" data-id="1">删除</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="widget-actions">
+                    <button class="btn-add-script">+ 添加话术</button>
+                </div>
+            </div>
+            <div class="manage-panel" style="display: none;">
+                <div class="manage-header">
+                    <span>话术管理</span>
+                    <button class="btn-close-manage">×</button>
+                </div>
+                <div class="manage-content">
+                    <div class="group-management">
+                        <h4>分组管理</h4>
+                        <div class="group-list"></div>
+                        <button class="btn-add-group">+ 添加分组</button>
+                    </div>
+                    <div class="script-management">
+                        <h4>话术编辑</h4>
+                        <div class="script-form">
+                            <input type="hidden" id="edit-script-id">
+                            <input type="text" id="script-title" placeholder="话术标题">
+                            <select id="script-group">
+                                <option value="">选择分组</option>
+                            </select>
+                            <textarea id="script-content" placeholder="话术内容"></textarea>
+                            <div class="form-actions">
+                                <button class="btn-save-script">保存</button>
+                                <button class="btn-cancel-edit">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 测试管理面板显示
+        function showManagePanel() {
+            const widget = document.getElementById('chat-list-widget');
+            const managePanel = widget.querySelector('.manage-panel');
+            const widgetContent = widget.querySelector('.widget-content');
+            
+            console.log('管理面板元素:', managePanel);
+            console.log('内容区域元素:', widgetContent);
+            console.log('管理面板当前样式:', managePanel ? managePanel.style.display : 'null');
+            
+            if (managePanel && widgetContent) {
+                managePanel.style.display = 'block';
+                widgetContent.style.display = 'none';
+                console.log('管理面板已显示，新样式:', managePanel.style.display);
+                
+                // 检查管理面板是否真的可见
+                const rect = managePanel.getBoundingClientRect();
+                console.log('管理面板位置和大小:', rect);
+            } else {
+                console.error('找不到管理面板或内容区域元素');
+            }
+        }
+        
+        function hideManagePanel() {
+            const widget = document.getElementById('chat-list-widget');
+            const managePanel = widget.querySelector('.manage-panel');
+            const widgetContent = widget.querySelector('.widget-content');
+            
+            if (managePanel && widgetContent) {
+                managePanel.style.display = 'none';
+                widgetContent.style.display = 'block';
+                console.log('管理面板已隐藏');
+            }
+        }
+        
+        // 绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            
+            // 管理按钮
+            const manageBtn = document.querySelector('.btn-manage');
+            if (manageBtn) {
+                manageBtn.addEventListener('click', function() {
+                    console.log('点击管理按钮');
+                    showManagePanel();
+                });
+            }
+            
+            // 关闭管理面板
+            const closeBtn = document.querySelector('.btn-close-manage');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    console.log('点击关闭按钮');
+                    hideManagePanel();
+                });
+            }
+            
+            // 编辑按钮
+            const editBtn = document.querySelector('.btn-edit');
+            if (editBtn) {
+                editBtn.addEventListener('click', function() {
+                    console.log('点击编辑按钮');
+                    showManagePanel();
+                    // 填充测试数据
+                    document.getElementById('script-title').value = '测试话术';
+                    document.getElementById('script-content').value = '这是一个测试话术内容';
+                });
+            }
+            
+            // 添加话术按钮
+            const addBtn = document.querySelector('.btn-add-script');
+            if (addBtn) {
+                addBtn.addEventListener('click', function() {
+                    console.log('点击添加话术按钮');
+                    showManagePanel();
+                    // 清空表单
+                    document.getElementById('script-title').value = '';
+                    document.getElementById('script-content').value = '';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -150,12 +150,14 @@
 .group-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
   margin: 8px 8px 0 8px;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #f0f0f0;
   background: white;
   flex-shrink: 0; /* 不参与收缩，固定在顶部 */
+  align-items: flex-start; /* 确保换行时对齐 */
+  line-height: 1.2; /* 优化行高 */
 }
 
 .group-tab {
@@ -1186,6 +1188,15 @@ mark {
   padding: 8px 12px;
   border-radius: 6px;
   border-left: 3px solid #ff9800;
+}
+
+.import-info .info {
+  color: #2196f3;
+  font-weight: 500;
+  background: #e3f2fd;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #2196f3;
 }
 
 .import-actions {

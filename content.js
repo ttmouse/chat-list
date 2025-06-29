@@ -1819,7 +1819,7 @@ class ChatListWidget {
           <div class="import-dialog-body">
             <div class="import-info">
               <p>选择之前导出的JSON文件来导入话术数据</p>
-              <p class="warning">⚠️ 导入将覆盖现有数据，请谨慎操作</p>
+              <p class="info">💡 系统将自动识别重复话术（基于标题），只导入新的话术</p>
             </div>
             <input type="file" id="import-file-input" accept=".json" style="display: none;">
             <div class="import-actions">
@@ -1885,13 +1885,37 @@ class ChatListWidget {
         throw new Error('无效的数据格式');
       }
       
-      const confirmImport = confirm(
-        `即将导入 ${data.scripts.length} 个话术和 ${(data.groups || []).length} 个分组。\n\n这将覆盖现有数据，是否继续？`
-      );
+      // 分析导入数据
+      const existingTitles = new Set(this.scripts.map(script => script.title));
+      const newScripts = data.scripts.filter(script => !existingTitles.has(script.title));
+      const duplicateScripts = data.scripts.filter(script => existingTitles.has(script.title));
+      
+      // 处理分组数据
+      const existingGroupIds = new Set(this.groups.map(group => group.id));
+      const newGroups = (data.groups || []).filter(group => !existingGroupIds.has(group.id));
+      
+      // 显示导入预览
+      const importMessage = [
+        `共 ${data.scripts.length} 个话术，${(data.groups || []).length} 个分组`,
+        `新话术：${newScripts.length} 个`,
+        `重复话术：${duplicateScripts.length} 个（将跳过）`,
+        `新分组：${newGroups.length} 个`,
+        '',
+        '是否继续增量导入？'
+      ].join('\n');
+      
+      const confirmImport = confirm(importMessage);
       
       if (confirmImport) {
-        this.scripts = data.scripts;
-        this.groups = data.groups || [];
+        // 生成新的ID避免冲突
+        const maxId = Math.max(0, ...this.scripts.map(s => parseInt(s.id) || 0));
+        newScripts.forEach((script, index) => {
+          script.id = String(maxId + index + 1);
+        });
+        
+        // 合并数据
+        this.scripts = [...this.scripts, ...newScripts];
+        this.groups = [...this.groups, ...newGroups];
         
         await this.saveData();
         
@@ -1899,7 +1923,14 @@ class ChatListWidget {
         this.renderGroups();
         this.renderScripts();
         
-        this.showSuccessMessage('导入成功！');
+        const resultMessage = [
+          '导入完成！',
+          `新增话术：${newScripts.length} 个`,
+          `跳过重复：${duplicateScripts.length} 个`,
+          `新增分组：${newGroups.length} 个`
+        ].join('\n');
+        
+        this.showSuccessMessage(resultMessage);
       }
     } catch (error) {
       console.error('导入失败:', error);

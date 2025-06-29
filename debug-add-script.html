@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加话术功能调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .test-form input, .test-form select, .test-form textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-form textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>添加话术功能调试页面</h1>
+    
+    <div class="debug-container">
+        <h2>问题描述</h2>
+        <p>用户反馈：<strong>无法成功添加话术</strong></p>
+        <p>建议解决方案：可以用新增的浮层来实现</p>
+    </div>
+
+    <div class="debug-container">
+        <h2>测试表单</h2>
+        <div class="test-form">
+            <input type="hidden" id="edit-script-id">
+            <input type="text" id="script-title" placeholder="话术标题">
+            <select id="script-group">
+                <option value="">选择分组</option>
+                <option value="1">测试分组1</option>
+                <option value="2">测试分组2</option>
+            </select>
+            <textarea id="script-content" placeholder="话术内容"></textarea>
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="testSaveScript()">测试保存话术</button>
+                <button class="btn btn-warning" onclick="testClearForm()">清空表单</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-container">
+        <h2>调试操作</h2>
+        <button class="btn btn-success" onclick="testFormElements()">检查表单元素</button>
+        <button class="btn btn-success" onclick="testDataValidation()">测试数据验证</button>
+        <button class="btn btn-success" onclick="testStorageAPI()">测试存储API</button>
+        <button class="btn btn-danger" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <div class="debug-container">
+        <h2>状态显示</h2>
+        <div id="status-area"></div>
+    </div>
+
+    <div class="debug-container">
+        <h2>调试日志</h2>
+        <div id="log-area" class="log-area"></div>
+    </div>
+
+    <script>
+        let scripts = [];
+        let groups = [
+            { id: '1', name: '测试分组1', color: '#4CAF50' },
+            { id: '2', name: '测试分组2', color: '#2196F3' }
+        ];
+
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('log-area');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logArea.textContent += logEntry;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(logEntry);
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusArea = document.getElementById('status-area');
+            statusArea.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function clearLog() {
+            document.getElementById('log-area').textContent = '';
+            document.getElementById('status-area').innerHTML = '';
+        }
+
+        function testFormElements() {
+            log('开始检查表单元素...');
+            
+            const elements = {
+                'edit-script-id': document.getElementById('edit-script-id'),
+                'script-title': document.getElementById('script-title'),
+                'script-group': document.getElementById('script-group'),
+                'script-content': document.getElementById('script-content')
+            };
+
+            let allFound = true;
+            for (const [name, element] of Object.entries(elements)) {
+                if (element) {
+                    log(`✓ 找到元素: ${name}`);
+                } else {
+                    log(`✗ 未找到元素: ${name}`, 'error');
+                    allFound = false;
+                }
+            }
+
+            if (allFound) {
+                showStatus('所有表单元素都存在', 'success');
+                log('表单元素检查完成 - 全部正常');
+            } else {
+                showStatus('部分表单元素缺失', 'error');
+                log('表单元素检查完成 - 发现问题', 'error');
+            }
+        }
+
+        function testDataValidation() {
+            log('开始测试数据验证...');
+            
+            // 测试空数据
+            document.getElementById('script-title').value = '';
+            document.getElementById('script-content').value = '';
+            
+            const title = document.getElementById('script-title').value.trim();
+            const content = document.getElementById('script-content').value.trim();
+            
+            if (!title || !content) {
+                log('✓ 空数据验证正常 - 应该阻止保存');
+                showStatus('数据验证功能正常', 'success');
+            } else {
+                log('✗ 空数据验证失败', 'error');
+                showStatus('数据验证功能异常', 'error');
+            }
+            
+            // 填入测试数据
+            document.getElementById('script-title').value = '测试话术标题';
+            document.getElementById('script-content').value = '这是一个测试话术内容';
+            document.getElementById('script-group').value = '1';
+            
+            log('已填入测试数据');
+        }
+
+        function testStorageAPI() {
+            log('开始测试存储API...');
+            
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                log('✓ Chrome存储API可用');
+                
+                // 测试保存数据
+                const testData = {
+                    chatScripts: [{ id: 'test', title: '测试', content: '测试内容' }],
+                    chatGroups: groups
+                };
+                
+                chrome.storage.local.set(testData)
+                    .then(() => {
+                        log('✓ 数据保存成功');
+                        return chrome.storage.local.get(['chatScripts', 'chatGroups']);
+                    })
+                    .then((result) => {
+                        log('✓ 数据读取成功');
+                        log(`读取到的数据: ${JSON.stringify(result)}`);
+                        showStatus('存储API功能正常', 'success');
+                    })
+                    .catch((error) => {
+                        log(`✗ 存储API错误: ${error.message}`, 'error');
+                        showStatus('存储API功能异常', 'error');
+                    });
+            } else {
+                log('✗ Chrome存储API不可用 - 可能不在扩展环境中', 'error');
+                showStatus('存储API不可用', 'error');
+            }
+        }
+
+        function testSaveScript() {
+            log('开始测试保存话术功能...');
+            
+            const id = document.getElementById('edit-script-id').value;
+            const title = document.getElementById('script-title').value.trim();
+            const groupId = document.getElementById('script-group').value;
+            const content = document.getElementById('script-content').value.trim();
+
+            log(`获取到的数据:`);
+            log(`- ID: ${id || '(空 - 新增模式)'}`);
+            log(`- 标题: ${title || '(空)'}`);
+            log(`- 分组: ${groupId || '(未选择)'}`);
+            log(`- 内容: ${content || '(空)'}`);
+
+            if (!title || !content) {
+                log('✗ 验证失败: 标题或内容为空', 'error');
+                showStatus('请填写话术标题和内容', 'error');
+                return;
+            }
+
+            if (id) {
+                // 编辑现有话术
+                const script = scripts.find(s => s.id === id);
+                if (script) {
+                    script.title = title;
+                    script.content = content;
+                    script.groupId = groupId;
+                    log('✓ 更新现有话术成功');
+                } else {
+                    log('✗ 未找到要编辑的话术', 'error');
+                    return;
+                }
+            } else {
+                // 添加新话术
+                const newScript = {
+                    id: Date.now().toString(),
+                    title,
+                    content,
+                    groupId
+                };
+                scripts.push(newScript);
+                log('✓ 添加新话术成功');
+                log(`新话术ID: ${newScript.id}`);
+            }
+
+            log(`当前话术总数: ${scripts.length}`);
+            showStatus('话术保存成功！', 'success');
+            
+            // 模拟清空表单
+            testClearForm();
+        }
+
+        function testClearForm() {
+            log('清空表单...');
+            document.getElementById('edit-script-id').value = '';
+            document.getElementById('script-title').value = '';
+            document.getElementById('script-group').value = '';
+            document.getElementById('script-content').value = '';
+            log('✓ 表单已清空');
+        }
+
+        // 页面加载完成后的初始化
+        window.addEventListener('load', () => {
+            log('调试页面加载完成');
+            showStatus('请点击上方按钮开始调试', 'info');
+        });
+    </script>
+</body>
+</html>

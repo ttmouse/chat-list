@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增话术浮层方案</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        /* 模拟原有的插件界面 */
+        .widget-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 10000;
+        }
+        
+        .widget-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .widget-content {
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .btn-add-script {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        
+        .btn-add-script:hover {
+            background: #218838;
+        }
+        
+        /* 新增话术浮层样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .btn-close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .btn-close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-control.textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10002;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .error-message {
+            background: #dc3545;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        
+        .demo-content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-content">
+        <h1>新增话术浮层方案演示</h1>
+        <p>这是一个改进的添加话术功能实现，使用独立的模态浮层来提供更好的用户体验。</p>
+        
+        <h2>主要改进点：</h2>
+        <ul>
+            <li><strong>独立浮层</strong>：使用模态框替代内嵌面板，避免布局冲突</li>
+            <li><strong>更好的视觉反馈</strong>：添加动画效果和状态提示</li>
+            <li><strong>增强的错误处理</strong>：详细的错误信息和验证提示</li>
+            <li><strong>改进的用户体验</strong>：自动焦点管理和键盘支持</li>
+        </ul>
+    </div>
+
+    <!-- 模拟原有插件界面 -->
+    <div class="widget-container">
+        <div class="widget-header">
+            <span>话术助手 v1.1.1</span>
+            <div>
+                <button><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.85643 16.1891C5.59976 15.8149 4.48117 15.1203 3.59545 14.1999C3.92587 13.8083 4.125 13.3023 4.125 12.7499C4.125 11.5072 3.11764 10.4999 1.875 10.4999C1.79983 10.4999 1.72552 10.5036 1.65225 10.5108C1.55242 10.0227 1.5 9.51743 1.5 8.99986C1.5 8.21588 1.62029 7.45999 1.84342 6.74963C1.85393 6.74978 1.86446 6.74986 1.875 6.74986C3.11764 6.74986 4.125 5.74249 4.125 4.49986C4.125 4.14312 4.04197 3.80581 3.89422 3.50611C4.76156 2.69963 5.82019 2.09608 6.99454 1.771C7.36665 2.50039 8.12501 2.99987 9 2.99987C9.87499 2.99987 10.6334 2.50039 11.0055 1.771C12.1798 2.09608 13.2384 2.69963 14.1058 3.50611C13.958 3.80581 13.875 4.14312 13.875 4.49986C13.875 5.74249 14.8824 6.74986 16.125 6.74986C16.1355 6.74986 16.1461 6.74978 16.1566 6.74963C16.3797 7.45999 16.5 8.21588 16.5 8.99986C16.5 9.51743 16.4476 10.0227 16.3478 10.5108C16.2745 10.5036 16.2002 10.4999 16.125 10.4999C14.8824 10.4999 13.875 11.5072 13.875 12.7499C13.875 13.3023 14.0741 13.8083 14.4045 14.1999C13.5188 15.1203 12.4002 15.8149 11.1436 16.1891C10.8535 15.2818 10.0035 14.6249 9 14.6249C7.9965 14.6249 7.14645 15.2818 6.85643 16.1891Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M9 11.625C10.4497 11.625 11.625 10.4497 11.625 9C11.625 7.55025 10.4497 6.375 9 6.375C7.55025 6.375 6.375 7.55025 6.375 9C6.375 10.4497 7.55025 11.625 9 11.625Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
+                <button>×</button>
+            </div>
+        </div>
+        <div class="widget-content">
+            <button class="btn-add-script" onclick="showAddScriptModal()">+ 添加话术</button>
+            <div style="color: #666; text-align: center; padding: 20px;">
+                点击上方按钮测试新增话术功能
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增话术模态框 -->
+    <div class="modal-overlay" id="addScriptModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">添加新话术</h3>
+                <button class="btn-close-modal" onclick="hideAddScriptModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addScriptForm">
+                    <div class="form-group">
+                        <label class="form-label" for="modalScriptTitle">话术标题 *</label>
+                        <input type="text" id="modalScriptTitle" class="form-control" placeholder="请输入话术标题" required>
+                        <div id="titleError" class="error-message" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="modalScriptGroup">所属分组</label>
+                        <select id="modalScriptGroup" class="form-control">
+                            <option value="">选择分组（可选）</option>
+                            <option value="1">问候语</option>
+                            <option value="2">服务话术</option>
+                            <option value="3">结束语</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="modalScriptContent">话术内容 *</label>
+                        <textarea id="modalScriptContent" class="form-control textarea" placeholder="请输入话术内容" required></textarea>
+                        <div id="contentError" class="error-message" style="display: none;"></div>
+                    </div>
+                </form>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddScriptModal()">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNewScript()">保存话术</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scripts = [];
+        
+        function showAddScriptModal() {
+            console.log('显示添加话术模态框');
+            const modal = document.getElementById('addScriptModal');
+            modal.style.display = 'flex';
+            
+            // 清空表单
+            document.getElementById('modalScriptTitle').value = '';
+            document.getElementById('modalScriptGroup').value = '';
+            document.getElementById('modalScriptContent').value = '';
+            
+            // 隐藏错误信息
+            document.getElementById('titleError').style.display = 'none';
+            document.getElementById('contentError').style.display = 'none';
+            
+            // 设置焦点到标题输入框
+            setTimeout(() => {
+                document.getElementById('modalScriptTitle').focus();
+            }, 100);
+        }
+        
+        function hideAddScriptModal() {
+            console.log('隐藏添加话术模态框');
+            const modal = document.getElementById('addScriptModal');
+            modal.style.display = 'none';
+        }
+        
+        function validateForm() {
+            const title = document.getElementById('modalScriptTitle').value.trim();
+            const content = document.getElementById('modalScriptContent').value.trim();
+            
+            let isValid = true;
+            
+            // 验证标题
+            const titleError = document.getElementById('titleError');
+            if (!title) {
+                titleError.textContent = '请输入话术标题';
+                titleError.style.display = 'block';
+                isValid = false;
+            } else if (title.length > 50) {
+                titleError.textContent = '标题长度不能超过50个字符';
+                titleError.style.display = 'block';
+                isValid = false;
+            } else {
+                titleError.style.display = 'none';
+            }
+            
+            // 验证内容
+            const contentError = document.getElementById('contentError');
+            if (!content) {
+                contentError.textContent = '请输入话术内容';
+                contentError.style.display = 'block';
+                isValid = false;
+            } else if (content.length > 1000) {
+                contentError.textContent = '内容长度不能超过1000个字符';
+                contentError.style.display = 'block';
+                isValid = false;
+            } else {
+                contentError.style.display = 'none';
+            }
+            
+            return isValid;
+        }
+        
+        function saveNewScript() {
+            console.log('开始保存新话术');
+            
+            if (!validateForm()) {
+                console.log('表单验证失败');
+                return;
+            }
+            
+            const title = document.getElementById('modalScriptTitle').value.trim();
+            const groupId = document.getElementById('modalScriptGroup').value;
+            const content = document.getElementById('modalScriptContent').value.trim();
+            
+            const newScript = {
+                id: Date.now().toString(),
+                title,
+                content,
+                groupId,
+                createTime: new Date().toISOString()
+            };
+            
+            console.log('新话术数据:', newScript);
+            
+            // 模拟保存过程
+            scripts.push(newScript);
+            
+            // 显示成功消息
+            showSuccessMessage('话术添加成功！');
+            
+            // 关闭模态框
+            hideAddScriptModal();
+            
+            console.log('话术保存完成，当前总数:', scripts.length);
+        }
+        
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.parentNode.removeChild(successDiv);
+                }
+            }, 3000);
+        }
+        
+        // 键盘事件处理
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('addScriptModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') {
+                    hideAddScriptModal();
+                } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    saveNewScript();
+                }
+            }
+        });
+        
+        // 点击遮罩层关闭模态框
+        document.getElementById('addScriptModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                hideAddScriptModal();
+            }
+        });
+        
+        // 实时验证
+        document.getElementById('modalScriptTitle').addEventListener('input', () => {
+            const titleError = document.getElementById('titleError');
+            if (titleError.style.display === 'block') {
+                validateForm();
+            }
+        });
+        
+        document.getElementById('modalScriptContent').addEventListener('input', () => {
+            const contentError = document.getElementById('contentError');
+            if (contentError.style.display === 'block') {
+                validateForm();
+            }
+        });
+    </script>
+</body>
+</html>

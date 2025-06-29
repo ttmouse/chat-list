@@ -3,6 +3,7 @@ class ChatListWidget {
   constructor() {
     this.isVisible = false;
     this.widget = null;
+    this.previewLayer = null; // 独立的预览浮层
     this.scripts = [];
     this.groups = [];
     this.currentGroup = null;
@@ -14,11 +15,20 @@ class ChatListWidget {
   async init() {
     await this.loadData();
     this.createWidget();
+    this.createPreviewLayer();
     this.bindEvents();
   }
 
   async loadData() {
     try {
+      // 检查扩展上下文是否有效
+      if (!this.isExtensionContextValid()) {
+        console.warn('扩展上下文已失效，使用默认数据');
+        this.scripts = this.getDefaultScripts();
+        this.groups = this.getDefaultGroups();
+        return;
+      }
+      
       const result = await chrome.storage.local.get(['chatScripts', 'chatGroups']);
       this.scripts = result.chatScripts || this.getDefaultScripts();
       this.groups = result.chatGroups || this.getDefaultGroups();
@@ -26,6 +36,11 @@ class ChatListWidget {
       console.error('加载数据失败:', error);
       this.scripts = this.getDefaultScripts();
       this.groups = this.getDefaultGroups();
+      
+      // 如果是扩展上下文失效错误，提示用户刷新页面
+      if (error.message && error.message.includes('Extension context invalidated')) {
+        this.showContextInvalidatedNotice();
+      }
     }
   }
 
@@ -52,9 +67,9 @@ class ChatListWidget {
     this.widget.innerHTML = `
       <div class="widget-wrapper">
         <div class="widget-header">
-          <span class="widget-title">话术助手 <span class="version">v1.1.0</span></span>
+          <span class="widget-title">话术助手 <span class="version">v1.2.7</span></span>
           <div class="widget-controls">
-            <button class="btn-manage" title="管理话术">⚙️</button>
+            <button class="btn-manage" title="管理话术"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.85643 16.1891C5.59976 15.8149 4.48117 15.1203 3.59545 14.1999C3.92587 13.8083 4.125 13.3023 4.125 12.7499C4.125 11.5072 3.11764 10.4999 1.875 10.4999C1.79983 10.4999 1.72552 10.5036 1.65225 10.5108C1.55242 10.0227 1.5 9.51743 1.5 8.99986C1.5 8.21588 1.62029 7.45999 1.84342 6.74963C1.85393 6.74978 1.86446 6.74986 1.875 6.74986C3.11764 6.74986 4.125 5.74249 4.125 4.49986C4.125 4.14312 4.04197 3.80581 3.89422 3.50611C4.76156 2.69963 5.82019 2.09608 6.99454 1.771C7.36665 2.50039 8.12501 2.99987 9 2.99987C9.87499 2.99987 10.6334 2.50039 11.0055 1.771C12.1798 2.09608 13.2384 2.69963 14.1058 3.50611C13.958 3.80581 13.875 4.14312 13.875 4.49986C13.875 5.74249 14.8824 6.74986 16.125 6.74986C16.1355 6.74986 16.1461 6.74978 16.1566 6.74963C16.3797 7.45999 16.5 8.21588 16.5 8.99986C16.5 9.51743 16.4476 10.0227 16.3478 10.5108C16.2745 10.5036 16.2002 10.4999 16.125 10.4999C14.8824 10.4999 13.875 11.5072 13.875 12.7499C13.875 13.3023 14.0741 13.8083 14.4045 14.1999C13.5188 15.1203 12.4002 15.8149 11.1436 16.1891C10.8535 15.2818 10.0035 14.6249 9 14.6249C7.9965 14.6249 7.14645 15.2818 6.85643 16.1891Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M9 11.625C10.4497 11.625 11.625 10.4497 11.625 9C11.625 7.55025 10.4497 6.375 9 6.375C7.55025 6.375 6.375 7.55025 6.375 9C6.375 10.4497 7.55025 11.625 9 11.625Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
             <button class="btn-toggle" title="收起/展开">📋</button>
             <button class="btn-close" title="关闭">×</button>
           </div>
@@ -110,6 +125,20 @@ class ChatListWidget {
     setTimeout(() => {
       this.loadPosition();
     }, 100);
+  }
+
+  createPreviewLayer() {
+    // 创建独立的预览浮层
+    this.previewLayer = document.createElement('div');
+    this.previewLayer.id = 'script-preview-layer';
+    this.previewLayer.innerHTML = `
+      <div class="preview-content">
+        <div class="preview-title"></div>
+        <div class="preview-text"></div>
+      </div>
+    `;
+    
+    document.body.appendChild(this.previewLayer);
   }
 
   createTrigger() {
@@ -199,12 +228,12 @@ class ChatListWidget {
       }
       
       return `
-        <div class="script-item" data-id="${script.id}">
+        <div class="script-item" data-id="${script.id}" data-title="${script.title.replace(/"/g, '&quot;')}" data-content="${script.content.replace(/"/g, '&quot;')}">
           <div class="script-header">
             <span class="script-title">${highlightedTitle}</span>
             <div class="script-actions">
-              <button class="btn-edit" data-id="${script.id}" title="编辑">✏️</button>
-              <button class="btn-delete" data-id="${script.id}" title="删除">🗑️</button>
+              <button class="btn-edit" data-id="${script.id}" title="编辑"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.75 9.75V15C15.75 15.4142 15.4142 15.75 15 15.75H3C2.58579 15.75 2.25 15.4142 2.25 15V3C2.25 2.58579 2.58579 2.25 3 2.25H8.25" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.25 10.02V12.75H7.99395L15.75 4.99054L13.0107 2.25L5.25 10.02Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
+              <button class="btn-delete" data-id="${script.id}" title="删除"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5.625H15L13.875 16.5H4.125L3 5.625Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M7.50098 9.37598V13.1261" stroke="#333333" stroke-width="0.75" stroke-linecap="round"/><path d="M10.501 9.375V13.1241" stroke="#333333" stroke-width="0.75" stroke-linecap="round"/><path d="M4.5 5.62496L10.6216 1.125L13.5 5.625" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             </div>
           </div>
           <div class="script-content">${highlightedContent}</div>
@@ -318,10 +347,47 @@ class ChatListWidget {
       }
     });
 
+    // 话术项悬停预览
+    this.widget.querySelector('.script-list').addEventListener('mouseenter', (e) => {
+      const scriptItem = e.target.closest('.script-item');
+      if (scriptItem) {
+        this.showPreview(scriptItem);
+      }
+    }, true);
+
+    // 当鼠标离开整个主面板时立即隐藏预览
+    this.widget.addEventListener('mouseleave', () => {
+      this.forceHidePreview();
+    });
+
+    // 当鼠标离开具体的话术项时也隐藏预览（保留原有逻辑作为备用）
+    this.widget.querySelector('.script-list').addEventListener('mouseleave', (e) => {
+      const scriptItem = e.target.closest('.script-item');
+      if (scriptItem) {
+        this.hidePreview();
+      }
+    }, true);
+
+    // 预览浮层本身的鼠标事件
+    this.previewLayer.addEventListener('mouseenter', () => {
+      // 只有在浮层已经可见时才添加hover状态
+      if (this.previewLayer.classList.contains('visible')) {
+        this.previewLayer.classList.add('hover');
+      }
+    });
+
+    this.previewLayer.addEventListener('mouseleave', () => {
+      this.hidePreview();
+    });
+
     // 添加话术
     this.widget.querySelector('.btn-add-script').addEventListener('click', () => {
-      this.showManagePanel();
-      this.clearScriptForm();
+      try {
+        console.log('点击添加话术按钮');
+        this.showAddScriptModal();
+      } catch (error) {
+        console.error('添加话术按钮点击处理出错:', error);
+      }
     });
 
     // 保存话术
@@ -404,6 +470,249 @@ class ChatListWidget {
     }
   }
 
+  // 新增话术模态框相关方法
+  showAddScriptModal() {
+    console.log('显示添加话术模态框');
+    
+    // 创建模态框HTML
+    const modalHTML = `
+        <div class="modal-overlay" id="addScriptModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">添加新话术</h3>
+                    <button class="btn-close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addScriptForm">
+                        <div class="form-group">
+                            <label class="form-label" for="modalScriptTitle">话术标题 *</label>
+                            <input type="text" id="modalScriptTitle" class="form-control" placeholder="请输入话术标题" required>
+                            <div id="titleError" class="error-message" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="modalScriptGroup">所属分组</label>
+                            <select id="modalScriptGroup" class="form-control">
+                                <option value="">选择分组（可选）</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="modalScriptContent">话术内容 *</label>
+                            <textarea id="modalScriptContent" class="form-control textarea" placeholder="请输入话术内容" required></textarea>
+                            <div id="contentError" class="error-message" style="display: none;"></div>
+                        </div>
+                    </form>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary btn-cancel-modal">取消</button>
+                        <button type="button" class="btn btn-primary btn-save-modal">保存话术</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除已存在的模态框
+    const existingModal = document.getElementById('addScriptModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // 添加模态框到页面
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 填充分组选项
+    this.populateGroupOptions();
+    
+    // 绑定事件
+    this.bindModalEvents();
+    
+    // 显示模态框
+    const modal = document.getElementById('addScriptModal');
+    modal.style.display = 'flex';
+    
+    // 设置焦点
+    setTimeout(() => {
+      const titleInput = document.getElementById('modalScriptTitle');
+      if (titleInput) {
+        titleInput.focus();
+      }
+    }, 100);
+  }
+
+  hideAddScriptModal() {
+    console.log('隐藏添加话术模态框');
+    const modal = document.getElementById('addScriptModal');
+    if (modal) {
+      modal.remove();
+    }
+  }
+
+  populateGroupOptions() {
+    const groupSelect = document.getElementById('modalScriptGroup');
+    if (!groupSelect) return;
+    
+    // 清空现有选项（保留默认选项）
+    groupSelect.innerHTML = '<option value="">选择分组（可选）</option>';
+    
+    // 添加现有分组
+    this.groups.forEach(group => {
+      const option = document.createElement('option');
+      option.value = group.id;
+      option.textContent = group.name;
+      groupSelect.appendChild(option);
+    });
+  }
+
+  bindModalEvents() {
+    // 关闭按钮事件
+    const closeBtn = document.querySelector('.btn-close-modal');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.hideAddScriptModal());
+    }
+    
+    // 取消按钮事件
+    const cancelBtn = document.querySelector('.btn-cancel-modal');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.hideAddScriptModal());
+    }
+    
+    // 保存按钮事件
+    const saveBtn = document.querySelector('.btn-save-modal');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => this.saveNewScript());
+    }
+    
+    // 点击遮罩层关闭
+    const modal = document.getElementById('addScriptModal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+          this.hideAddScriptModal();
+        }
+      });
+    }
+    
+    // 键盘事件
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('addScriptModal');
+      if (modal && modal.style.display === 'flex') {
+        if (e.key === 'Escape') {
+          this.hideAddScriptModal();
+        } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          this.saveNewScript();
+        }
+      }
+    });
+    
+    // 实时验证
+    const titleInput = document.getElementById('modalScriptTitle');
+    const contentInput = document.getElementById('modalScriptContent');
+    
+    if (titleInput) {
+      titleInput.addEventListener('input', () => {
+        const titleError = document.getElementById('titleError');
+        if (titleError && titleError.style.display === 'block') {
+          this.validateModalForm();
+        }
+      });
+    }
+    
+    if (contentInput) {
+      contentInput.addEventListener('input', () => {
+        const contentError = document.getElementById('contentError');
+        if (contentError && contentError.style.display === 'block') {
+          this.validateModalForm();
+        }
+      });
+    }
+  }
+
+  validateModalForm() {
+    const title = document.getElementById('modalScriptTitle')?.value.trim() || '';
+    const content = document.getElementById('modalScriptContent')?.value.trim() || '';
+    
+    let isValid = true;
+    
+    // 验证标题
+    const titleError = document.getElementById('titleError');
+    if (titleError) {
+      if (!title) {
+        titleError.textContent = '请输入话术标题';
+        titleError.style.display = 'block';
+        isValid = false;
+      } else if (title.length > 50) {
+        titleError.textContent = '标题长度不能超过50个字符';
+        titleError.style.display = 'block';
+        isValid = false;
+      } else {
+        titleError.style.display = 'none';
+      }
+    }
+    
+    // 验证内容
+    const contentError = document.getElementById('contentError');
+    if (contentError) {
+      if (!content) {
+        contentError.textContent = '请输入话术内容';
+        contentError.style.display = 'block';
+        isValid = false;
+      } else if (content.length > 1000) {
+        contentError.textContent = '内容长度不能超过1000个字符';
+        contentError.style.display = 'block';
+        isValid = false;
+      } else {
+        contentError.style.display = 'none';
+      }
+    }
+    
+    return isValid;
+  }
+
+  saveNewScript() {
+    console.log('开始保存新话术');
+    
+    try {
+      if (!this.validateModalForm()) {
+        console.log('表单验证失败');
+        return;
+      }
+      
+      const title = document.getElementById('modalScriptTitle')?.value.trim() || '';
+      const groupId = document.getElementById('modalScriptGroup')?.value || '';
+      const content = document.getElementById('modalScriptContent')?.value.trim() || '';
+      
+      const newScript = {
+        id: Date.now().toString(),
+        title,
+        content,
+        groupId,
+        createTime: new Date().toISOString()
+      };
+      
+      console.log('新话术数据:', newScript);
+      
+      // 添加到话术列表
+      this.scripts.push(newScript);
+      
+      // 保存数据
+      this.saveData().then(() => {
+        console.log('话术保存成功');
+        this.showSuccessMessage('话术添加成功！');
+        this.renderScripts();
+        this.hideAddScriptModal();
+      }).catch(error => {
+        console.error('保存话术失败:', error);
+        alert('保存失败，请重试');
+      });
+      
+    } catch (error) {
+      console.error('保存新话术时出错:', error);
+      alert('保存失败，请重试');
+    }
+  }
+
   hideManagePanel() {
     this.widget.querySelector('.manage-panel').style.display = 'none';
     this.widget.querySelector('.widget-content').style.display = 'block';
@@ -477,20 +786,82 @@ class ChatListWidget {
       'input[type="url"]:not([readonly]):not([disabled])',
       'input[type="email"]:not([readonly]):not([disabled])',
       'input:not([type]):not([readonly]):not([disabled])',
-      '[contenteditable="true"]'
+      '[contenteditable="true"]',
+      // Facebook 特殊选择器
+      'div[role="textbox"]',
+      'div[contenteditable="true"]',
+      'div[data-text="true"]',
+      // 微信网页版
+      '.input_area',
+      '.chat_textarea',
+      // 通用社交媒体输入框
+      '[role="textbox"]',
+      '[aria-label*="消息"]',
+      '[aria-label*="message"]',
+      '[aria-label*="评论"]',
+      '[aria-label*="comment"]',
+      '[placeholder*="消息"]',
+      '[placeholder*="message"]',
+      '[placeholder*="评论"]',
+      '[placeholder*="comment"]'
     ];
     
     const inputs = [];
     selectors.forEach(selector => {
-      document.querySelectorAll(selector).forEach(input => {
-        // 排除插件自身的输入框
-        if (!input.closest('#chat-list-widget')) {
-          inputs.push(input);
-        }
-      });
+      try {
+        document.querySelectorAll(selector).forEach(input => {
+          // 排除插件自身的输入框
+          if (!input.closest('#chat-list-widget') && this.isValidInputElement(input)) {
+            inputs.push(input);
+          }
+        });
+      } catch (e) {
+        // 忽略无效选择器错误
+        console.warn('选择器错误:', selector, e);
+      }
     });
     
     return inputs;
+  }
+  
+  // 新增方法：验证输入元素的有效性
+  isValidInputElement(element) {
+    if (!element) return false;
+    
+    // 检查元素是否可见
+    const style = window.getComputedStyle(element);
+    if (style.display === 'none' || style.visibility === 'hidden') {
+      return false;
+    }
+    
+    // 检查元素尺寸
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      return false;
+    }
+    
+    // 检查是否为只读或禁用
+    if (element.readOnly || element.disabled) {
+      return false;
+    }
+    
+    // 对于contenteditable元素，确保真的可编辑
+    if (element.contentEditable === 'true' || element.getAttribute('contenteditable') === 'true') {
+      return true;
+    }
+    
+    // 对于role="textbox"的元素
+    if (element.getAttribute('role') === 'textbox') {
+      return true;
+    }
+    
+    // 对于传统input和textarea
+    const tagName = element.tagName.toLowerCase();
+    if (tagName === 'textarea' || tagName === 'input') {
+      return true;
+    }
+    
+    return false;
   }
   
   isElementVisible(element) {
@@ -514,28 +885,92 @@ class ChatListWidget {
       // 聚焦到目标元素
       element.focus();
       
-      if (element.contentEditable === 'true') {
-        // 处理可编辑元素
-        element.textContent = content;
-        // 触发输入事件
-        element.dispatchEvent(new Event('input', { bubbles: true }));
-        element.dispatchEvent(new Event('change', { bubbles: true }));
-      } else {
-        // 处理普通输入框
-        element.value = content;
-        // 触发多种事件以确保兼容性
-        element.dispatchEvent(new Event('input', { bubbles: true }));
-        element.dispatchEvent(new Event('change', { bubbles: true }));
-        element.dispatchEvent(new Event('keyup', { bubbles: true }));
-      }
-      
-      // 显示成功提示
-      this.showSuccessMessage('话术已填充');
+      // 等待一小段时间确保焦点设置完成
+      setTimeout(() => {
+        this.setElementContent(element, content);
+        this.triggerInputEvents(element);
+      }, 50);
       
     } catch (error) {
       console.error('填充内容失败:', error);
       alert('填充失败，请手动复制内容');
     }
+  }
+  
+  // 新增方法：设置元素内容
+  setElementContent(element, content) {
+    const tagName = element.tagName.toLowerCase();
+    const isContentEditable = element.contentEditable === 'true' || element.getAttribute('contenteditable') === 'true';
+    const hasRole = element.getAttribute('role') === 'textbox';
+    
+    if (isContentEditable || hasRole) {
+      // 处理可编辑元素和role="textbox"元素
+      if (tagName === 'div') {
+        // 对于div元素，尝试多种方式设置内容
+        element.innerHTML = '';
+        element.textContent = content;
+        
+        // Facebook特殊处理：创建文本节点
+        if (element.innerHTML === '') {
+          const textNode = document.createTextNode(content);
+          element.appendChild(textNode);
+        }
+      } else {
+        element.textContent = content;
+      }
+    } else if (tagName === 'input' || tagName === 'textarea') {
+      // 处理传统输入框
+      element.value = content;
+    } else {
+      // 兜底处理
+      if (element.value !== undefined) {
+        element.value = content;
+      } else {
+        element.textContent = content;
+      }
+    }
+  }
+  
+  // 新增方法：触发输入事件
+  triggerInputEvents(element) {
+    const events = [
+      'input',
+      'change', 
+      'keyup',
+      'keydown',
+      'blur',
+      'focus'
+    ];
+    
+    events.forEach(eventType => {
+      try {
+        const event = new Event(eventType, { 
+          bubbles: true, 
+          cancelable: true,
+          composed: true
+        });
+        element.dispatchEvent(event);
+      } catch (e) {
+        // 忽略事件触发错误
+        console.warn(`触发${eventType}事件失败:`, e);
+      }
+    });
+    
+    // 额外触发键盘事件（某些网站需要）
+    try {
+      const keyboardEvent = new KeyboardEvent('keypress', {
+        bubbles: true,
+        cancelable: true,
+        key: ' ',
+        code: 'Space'
+      });
+      element.dispatchEvent(keyboardEvent);
+    } catch (e) {
+      console.warn('触发键盘事件失败:', e);
+    }
+    
+    // 显示成功提示
+    this.showSuccessMessage('话术已填充');
   }
   
   showSuccessMessage(message) {
@@ -564,6 +999,68 @@ class ChatListWidget {
     }, 3000);
   }
 
+  showPreview(scriptItem) {
+    const title = scriptItem.dataset.title;
+    const content = scriptItem.dataset.content;
+    
+    if (!title || !content) return;
+    
+    // 更新预览内容
+    this.previewLayer.querySelector('.preview-title').textContent = title;
+    this.previewLayer.querySelector('.preview-text').textContent = content;
+    
+    // 先显示预览浮层以获取实际尺寸（但设置为不可见）
+    this.previewLayer.style.visibility = 'hidden';
+    this.previewLayer.style.opacity = '0';
+    this.previewLayer.classList.add('visible');
+    
+    // 计算位置
+    const itemRect = scriptItem.getBoundingClientRect();
+    const widgetRect = this.widget.getBoundingClientRect();
+    
+    // 获取预览浮层的实际尺寸
+    const previewRect = this.previewLayer.getBoundingClientRect();
+    const previewWidth = previewRect.width;
+    const previewHeight = previewRect.height;
+    
+    // 预览浮层右对齐，距离主界面5px
+    let left = widgetRect.right + 5;
+    let top = itemRect.top;
+    
+    // 检查是否会超出右边界
+    if (left + previewWidth > window.innerWidth) {
+      // 显示在左侧
+      left = widgetRect.left - previewWidth - 5;
+    }
+    
+    // 检查是否会超出下边界
+    if (top + previewHeight > window.innerHeight) {
+      top = window.innerHeight - previewHeight - 10;
+    }
+    
+    // 检查是否会超出上边界
+    if (top < 10) {
+      top = 10;
+    }
+    
+    // 设置最终位置并正常显示
+    this.previewLayer.style.left = left + 'px';
+    this.previewLayer.style.top = top + 'px';
+    this.previewLayer.style.visibility = 'visible';
+    this.previewLayer.style.opacity = '1';
+  }
+
+  hidePreview() {
+    if (!this.previewLayer.classList.contains('hover')) {
+      this.previewLayer.classList.remove('visible');
+    }
+  }
+
+  // 强制隐藏预览浮层（用于主面板mouseleave事件）
+  forceHidePreview() {
+    this.previewLayer.classList.remove('visible', 'hover');
+  }
+
   editScript(scriptId) {
     const script = this.scripts.find(s => s.id === scriptId);
     if (script) {
@@ -584,45 +1081,99 @@ class ChatListWidget {
   }
 
   saveScript() {
-    const id = document.getElementById('edit-script-id').value;
-    const title = document.getElementById('script-title').value.trim();
-    const groupId = document.getElementById('script-group').value;
-    const content = document.getElementById('script-content').value.trim();
+    try {
+      console.log('开始保存话术...');
+      
+      const id = document.getElementById('edit-script-id').value;
+      const title = document.getElementById('script-title').value.trim();
+      const groupId = document.getElementById('script-group').value;
+      const content = document.getElementById('script-content').value.trim();
 
-    if (!title || !content) {
-      alert('请填写话术标题和内容');
-      return;
-    }
+      console.log('获取到的表单数据:', { id, title, groupId, content });
 
-    if (id) {
-      // 编辑现有话术
-      const script = this.scripts.find(s => s.id === id);
-      if (script) {
-        script.title = title;
-        script.content = content;
-        script.groupId = groupId;
+      if (!title || !content) {
+        console.warn('验证失败: 标题或内容为空');
+        alert('请填写话术标题和内容');
+        return;
       }
-    } else {
-      // 添加新话术
-      const newScript = {
-        id: Date.now().toString(),
-        title,
-        content,
-        groupId
-      };
-      this.scripts.push(newScript);
-    }
 
-    this.saveData();
-    this.renderScripts();
-    this.clearScriptForm();
+      if (id) {
+        // 编辑现有话术
+        const script = this.scripts.find(s => s.id === id);
+        if (script) {
+          script.title = title;
+          script.content = content;
+          script.groupId = groupId;
+          console.log('更新现有话术:', script);
+        } else {
+          console.error('未找到要编辑的话术, ID:', id);
+          alert('未找到要编辑的话术');
+          return;
+        }
+      } else {
+        // 添加新话术
+        const newScript = {
+          id: Date.now().toString(),
+          title,
+          content,
+          groupId
+        };
+        this.scripts.push(newScript);
+        console.log('添加新话术:', newScript);
+        console.log('当前话术总数:', this.scripts.length);
+      }
+
+      // 保存数据
+      this.saveData()
+        .then(() => {
+          console.log('数据保存成功');
+          this.renderScripts();
+          this.clearScriptForm();
+          this.hideManagePanel();
+          
+          // 显示成功提示
+          this.showSuccessMessage(id ? '话术更新成功' : '话术添加成功');
+        })
+        .catch((error) => {
+          console.error('保存数据失败:', error);
+          alert('保存失败，请重试');
+        });
+        
+    } catch (error) {
+      console.error('保存话术时出错:', error);
+      alert('保存失败，请检查输入内容');
+    }
   }
 
   clearScriptForm() {
-    document.getElementById('edit-script-id').value = '';
-    document.getElementById('script-title').value = '';
-    document.getElementById('script-group').value = '';
-    document.getElementById('script-content').value = '';
+    try {
+      console.log('清空话术表单...');
+      
+      const elements = {
+        'edit-script-id': document.getElementById('edit-script-id'),
+        'script-title': document.getElementById('script-title'),
+        'script-group': document.getElementById('script-group'),
+        'script-content': document.getElementById('script-content')
+      };
+      
+      // 检查所有元素是否存在
+      for (const [name, element] of Object.entries(elements)) {
+        if (!element) {
+          console.error(`表单元素不存在: ${name}`);
+          return;
+        }
+      }
+      
+      // 清空所有表单元素
+      elements['edit-script-id'].value = '';
+      elements['script-title'].value = '';
+      elements['script-group'].value = '';
+      elements['script-content'].value = '';
+      
+      console.log('表单清空完成');
+    } catch (error) {
+      console.error('清空表单时出错:', error);
+    }
   }
 
   addGroup() {
@@ -726,6 +1277,12 @@ class ChatListWidget {
 
   async savePosition() {
     try {
+      // 检查扩展上下文是否有效
+      if (!this.isExtensionContextValid()) {
+        console.warn('扩展上下文已失效，跳过位置保存');
+        return;
+      }
+      
       const rect = this.widget.getBoundingClientRect();
       await chrome.storage.local.set({
         widgetPosition: {
@@ -735,11 +1292,71 @@ class ChatListWidget {
       });
     } catch (error) {
       console.error('保存位置失败:', error);
+      // 如果是扩展上下文失效错误，提示用户刷新页面
+      if (error.message && error.message.includes('Extension context invalidated')) {
+        this.showContextInvalidatedNotice();
+      }
     }
+  }
+
+  // 检查扩展上下文是否有效
+  isExtensionContextValid() {
+    try {
+      return !!(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // 显示上下文失效提示
+  showContextInvalidatedNotice() {
+    // 避免重复显示提示
+    if (this.contextNoticeShown) return;
+    this.contextNoticeShown = true;
+    
+    const notice = document.createElement('div');
+    notice.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ff6b6b;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      font-size: 14px;
+      max-width: 300px;
+      cursor: pointer;
+    `;
+    notice.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 4px;">扩展已更新</div>
+      <div style="font-size: 12px; opacity: 0.9;">请刷新页面以继续使用话术助手</div>
+    `;
+    
+    // 点击关闭提示
+    notice.addEventListener('click', () => {
+      notice.remove();
+    });
+    
+    // 5秒后自动关闭
+    setTimeout(() => {
+      if (notice.parentNode) {
+        notice.remove();
+      }
+    }, 5000);
+    
+    document.body.appendChild(notice);
   }
 
   async loadPosition() {
     try {
+      // 检查扩展上下文是否有效
+      if (!this.isExtensionContextValid()) {
+        console.warn('扩展上下文已失效，跳过位置加载');
+        return;
+      }
+      
       const result = await chrome.storage.local.get(['widgetPosition']);
       if (result.widgetPosition) {
         const { left, top } = result.widgetPosition;
@@ -757,17 +1374,31 @@ class ChatListWidget {
       }
     } catch (error) {
       console.error('加载位置失败:', error);
+      // 如果是扩展上下文失效错误，提示用户刷新页面
+      if (error.message && error.message.includes('Extension context invalidated')) {
+        this.showContextInvalidatedNotice();
+      }
     }
   }
 
   async saveData() {
     try {
+      // 检查扩展上下文是否有效
+      if (!this.isExtensionContextValid()) {
+        console.warn('扩展上下文已失效，跳过数据保存');
+        return;
+      }
+      
       await chrome.storage.local.set({
         chatScripts: this.scripts,
         chatGroups: this.groups
       });
     } catch (error) {
       console.error('保存数据失败:', error);
+      // 如果是扩展上下文失效错误，提示用户刷新页面
+      if (error.message && error.message.includes('Extension context invalidated')) {
+        this.showContextInvalidatedNotice();
+      }
     }
   }
 }

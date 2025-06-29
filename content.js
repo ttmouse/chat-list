@@ -4,6 +4,7 @@ class ChatListWidget {
     this.isVisible = false;
     this.widget = null;
     this.previewLayer = null; // 独立的预览浮层
+    this.hidePreviewTimeout = null; // 预览浮层延迟隐藏定时器
     this.scripts = [];
     this.groups = [];
     this.currentGroup = null;
@@ -67,11 +68,11 @@ class ChatListWidget {
     this.widget.innerHTML = `
       <div class="widget-wrapper">
         <div class="widget-header">
-          <span class="widget-title">话术助手 <span class="version">v1.2.7</span></span>
+          <span class="widget-title">话术助手 <span class="version">v1.3.2</span></span>
           <div class="widget-controls">
-            <button class="btn-manage" title="管理话术"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.85643 16.1891C5.59976 15.8149 4.48117 15.1203 3.59545 14.1999C3.92587 13.8083 4.125 13.3023 4.125 12.7499C4.125 11.5072 3.11764 10.4999 1.875 10.4999C1.79983 10.4999 1.72552 10.5036 1.65225 10.5108C1.55242 10.0227 1.5 9.51743 1.5 8.99986C1.5 8.21588 1.62029 7.45999 1.84342 6.74963C1.85393 6.74978 1.86446 6.74986 1.875 6.74986C3.11764 6.74986 4.125 5.74249 4.125 4.49986C4.125 4.14312 4.04197 3.80581 3.89422 3.50611C4.76156 2.69963 5.82019 2.09608 6.99454 1.771C7.36665 2.50039 8.12501 2.99987 9 2.99987C9.87499 2.99987 10.6334 2.50039 11.0055 1.771C12.1798 2.09608 13.2384 2.69963 14.1058 3.50611C13.958 3.80581 13.875 4.14312 13.875 4.49986C13.875 5.74249 14.8824 6.74986 16.125 6.74986C16.1355 6.74986 16.1461 6.74978 16.1566 6.74963C16.3797 7.45999 16.5 8.21588 16.5 8.99986C16.5 9.51743 16.4476 10.0227 16.3478 10.5108C16.2745 10.5036 16.2002 10.4999 16.125 10.4999C14.8824 10.4999 13.875 11.5072 13.875 12.7499C13.875 13.3023 14.0741 13.8083 14.4045 14.1999C13.5188 15.1203 12.4002 15.8149 11.1436 16.1891C10.8535 15.2818 10.0035 14.6249 9 14.6249C7.9965 14.6249 7.14645 15.2818 6.85643 16.1891Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M9 11.625C10.4497 11.625 11.625 10.4497 11.625 9C11.625 7.55025 10.4497 6.375 9 6.375C7.55025 6.375 6.375 7.55025 6.375 9C6.375 10.4497 7.55025 11.625 9 11.625Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
+            <button class="btn-manage" title="管理话术"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.85643 16.1891C5.59976 15.8149 4.48117 15.1203 3.59545 14.1999C3.92587 13.8083 4.125 13.3023 4.125 12.7499C4.125 11.5072 3.11764 10.4999 1.875 10.4999C1.79983 10.4999 1.72552 10.5036 1.65225 10.5108C1.55242 10.0227 1.5 9.51743 1.5 8.99986C1.5 8.21588 1.62029 7.45999 1.84342 6.74963C1.85393 6.74978 1.86446 6.74986 1.875 6.74986C3.11764 6.74986 4.125 5.74249 4.125 4.49986C4.125 4.14312 4.04197 3.80581 3.89422 3.50611C4.76156 2.69963 5.82019 2.09608 6.99454 1.771C7.36665 2.50039 8.12501 2.99987 9 2.99987C9.87499 2.99987 10.6334 2.50039 11.0055 1.771C12.1798 2.09608 13.2384 2.69963 14.1058 3.50611C13.958 3.80581 13.875 4.14312 13.875 4.49986C13.875 5.74249 14.8824 6.74986 16.125 6.74986C16.1355 6.74986 16.1461 6.74978 16.1566 6.74963C16.3797 7.45999 16.5 8.21588 16.5 8.99986C16.5 9.51743 16.4476 10.0227 16.3478 10.5108C16.2745 10.5036 16.2002 10.4999 16.125 10.4999C14.8824 10.4999 13.875 11.5072 13.875 12.7499C13.875 13.3023 14.0741 13.8083 14.4045 14.1999C13.5188 15.1203 12.4002 15.8149 11.1436 16.1891C10.8535 15.2818 10.0035 14.6249 9 14.6249C7.9965 14.6249 7.14645 15.2818 6.85643 16.1891Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/><path d="M9 11.625C10.4497 11.625 11.625 10.4497 11.625 9C11.625 7.55025 10.4497 6.375 9 6.375C7.55025 6.375 6.375 7.55025 6.375 9C6.375 10.4497 7.55025 11.625 9 11.625Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
             <button class="btn-toggle" title="收起/展开">📋</button>
-            <button class="btn-close" title="关闭">×</button>
+            <button class="btn-close" title="关闭"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
         </div>
         <div class="widget-content">
@@ -88,7 +89,7 @@ class ChatListWidget {
         <div class="manage-panel" style="display: none;">
           <div class="manage-header">
             <span>话术管理</span>
-            <button class="btn-close-manage">×</button>
+            <button class="btn-close-manage"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
           <div class="manage-content">
             <div class="group-management">
@@ -355,21 +356,27 @@ class ChatListWidget {
       }
     }, true);
 
-    // 当鼠标离开整个主面板时立即隐藏预览
+    // 当鼠标离开整个主面板时延迟隐藏预览（给用户时间移动到预览浮层）
     this.widget.addEventListener('mouseleave', () => {
-      this.forceHidePreview();
+      console.log('主面板 mouseleave 事件触发');
+      // 延迟300ms隐藏，如果鼠标进入预览浮层则取消隐藏
+      this.hidePreviewTimeout = setTimeout(() => {
+        console.log('延迟隐藏定时器执行');
+        this.forceHidePreview();
+      }, 300);
     });
 
-    // 当鼠标离开具体的话术项时也隐藏预览（保留原有逻辑作为备用）
-    this.widget.querySelector('.script-list').addEventListener('mouseleave', (e) => {
-      const scriptItem = e.target.closest('.script-item');
-      if (scriptItem) {
-        this.hidePreview();
-      }
-    }, true);
+    // 移除话术项的mouseleave事件，避免与主面板的延迟隐藏逻辑冲突
 
     // 预览浮层本身的鼠标事件
     this.previewLayer.addEventListener('mouseenter', () => {
+      console.log('预览浮层 mouseenter 事件触发');
+      // 取消延迟隐藏
+      if (this.hidePreviewTimeout) {
+        console.log('取消延迟隐藏定时器');
+        clearTimeout(this.hidePreviewTimeout);
+        this.hidePreviewTimeout = null;
+      }
       // 只有在浮层已经可见时才添加hover状态
       if (this.previewLayer.classList.contains('visible')) {
         this.previewLayer.classList.add('hover');
@@ -377,7 +384,8 @@ class ChatListWidget {
     });
 
     this.previewLayer.addEventListener('mouseleave', () => {
-      this.hidePreview();
+      console.log('预览浮层 mouseleave 事件触发');
+      this.forceHidePreview();
     });
 
     // 添加话术
@@ -480,7 +488,7 @@ class ChatListWidget {
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">添加新话术</h3>
-                    <button class="btn-close-modal">&times;</button>
+                    <button class="btn-close-modal"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 </div>
                 <div class="modal-body">
                     <form id="addScriptForm">
@@ -1000,10 +1008,15 @@ class ChatListWidget {
   }
 
   showPreview(scriptItem) {
+    console.log('showPreview 被调用');
     const title = scriptItem.dataset.title;
     const content = scriptItem.dataset.content;
     
-    if (!title || !content) return;
+    if (!title || !content) {
+      console.log('缺少标题或内容，退出预览');
+      return;
+    }
+    console.log('显示预览:', title);
     
     // 更新预览内容
     this.previewLayer.querySelector('.preview-title').textContent = title;
@@ -1012,7 +1025,7 @@ class ChatListWidget {
     // 先显示预览浮层以获取实际尺寸（但设置为不可见）
     this.previewLayer.style.visibility = 'hidden';
     this.previewLayer.style.opacity = '0';
-    this.previewLayer.classList.add('visible');
+    this.previewLayer.style.display = 'block';
     
     // 计算位置
     const itemRect = scriptItem.getBoundingClientRect();
@@ -1046,8 +1059,12 @@ class ChatListWidget {
     // 设置最终位置并正常显示
     this.previewLayer.style.left = left + 'px';
     this.previewLayer.style.top = top + 'px';
-    this.previewLayer.style.visibility = 'visible';
-    this.previewLayer.style.opacity = '1';
+    // 清除临时样式并添加visible类
+    this.previewLayer.style.visibility = '';
+    this.previewLayer.style.opacity = '';
+    this.previewLayer.style.display = '';
+    this.previewLayer.classList.add('visible');
+    console.log('预览浮层已显示，visible类已添加');
   }
 
   hidePreview() {
@@ -1058,7 +1075,18 @@ class ChatListWidget {
 
   // 强制隐藏预览浮层（用于主面板mouseleave事件）
   forceHidePreview() {
+    console.log('forceHidePreview 被调用');
+    // 清除延迟隐藏定时器
+    if (this.hidePreviewTimeout) {
+      clearTimeout(this.hidePreviewTimeout);
+      this.hidePreviewTimeout = null;
+    }
+    // 清除所有样式并移除CSS类
+    this.previewLayer.style.visibility = '';
+    this.previewLayer.style.opacity = '';
+    this.previewLayer.style.display = '';
     this.previewLayer.classList.remove('visible', 'hover');
+    console.log('预览浮层已隐藏，visible类已移除');
   }
 
   editScript(scriptId) {

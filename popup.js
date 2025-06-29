@@ -71,11 +71,7 @@ class PopupManager {
       this.openManagePage();
     });
 
-    // 导入导出按钮
-    document.getElementById('import-export').addEventListener('click', (e) => {
-      e.preventDefault();
-      this.showImportExportDialog();
-    });
+
 
     // 帮助链接
     document.getElementById('help-link').addEventListener('click', (e) => {
@@ -125,163 +121,9 @@ class PopupManager {
     }
   }
 
-  showImportExportDialog() {
-    const dialog = document.createElement('div');
-    dialog.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    `;
 
-    dialog.innerHTML = `
-      <div style="
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        width: 300px;
-        max-width: 90vw;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      ">
-        <h3 style="margin: 0 0 16px; text-align: center; color: #333;">导入/导出话术</h3>
-        
-        <div style="margin-bottom: 16px;">
-          <button id="export-btn" style="
-            width: 100%;
-            padding: 12px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 8px;
-            font-size: 14px;
-          ">导出话术数据</button>
-          
-          <input type="file" id="import-file" accept=".json" style="display: none;">
-          <button id="import-btn" style="
-            width: 100%;
-            padding: 12px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 8px;
-            font-size: 14px;
-          ">导入话术数据</button>
-        </div>
-        
-        <div style="text-align: center;">
-          <button id="close-dialog" style="
-            padding: 8px 16px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-          ">关闭</button>
-        </div>
-      </div>
-    `;
 
-    document.body.appendChild(dialog);
 
-    // 绑定事件
-    dialog.querySelector('#export-btn').addEventListener('click', () => {
-      this.exportData();
-    });
-
-    dialog.querySelector('#import-btn').addEventListener('click', () => {
-      dialog.querySelector('#import-file').click();
-    });
-
-    dialog.querySelector('#import-file').addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        this.importData(e.target.files[0]);
-      }
-    });
-
-    dialog.querySelector('#close-dialog').addEventListener('click', () => {
-      document.body.removeChild(dialog);
-    });
-
-    dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) {
-        document.body.removeChild(dialog);
-      }
-    });
-  }
-
-  async exportData() {
-    try {
-      const result = await chrome.storage.local.get(['chatScripts', 'chatGroups']);
-      const data = {
-        scripts: result.chatScripts || [],
-        groups: result.chatGroups || [],
-        exportTime: new Date().toISOString(),
-        version: '1.0.0'
-      };
-
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `话术助手数据_${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      alert('导出成功！');
-    } catch (error) {
-      console.error('导出失败:', error);
-      alert('导出失败，请重试');
-    }
-  }
-
-  async importData(file) {
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-
-      if (!data.scripts || !Array.isArray(data.scripts)) {
-        throw new Error('无效的数据格式');
-      }
-
-      const confirmImport = confirm(
-        `即将导入 ${data.scripts.length} 个话术和 ${(data.groups || []).length} 个分组。\n\n这将覆盖现有数据，是否继续？`
-      );
-
-      if (confirmImport) {
-        await chrome.storage.local.set({
-          chatScripts: data.scripts,
-          chatGroups: data.groups || []
-        });
-
-        alert('导入成功！');
-        this.loadStats();
-
-        // 通知内容脚本数据已更新
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab) {
-          chrome.tabs.sendMessage(tab.id, {
-            type: 'DATA_UPDATED'
-          }).catch(() => {
-            // 忽略错误
-          });
-        }
-      }
-    } catch (error) {
-      console.error('导入失败:', error);
-      alert('导入失败，请检查文件格式是否正确');
-    }
-  }
 
   showHelp() {
     const helpContent = `
@@ -304,7 +146,6 @@ class PopupManager {
 
 4. 数据管理：
    - 支持导出话术数据进行备份
-   - 支持导入话术数据进行恢复
 
 如有问题，请联系开发者。
     `;

@@ -106,11 +106,44 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.widget-controls .btn-refresh {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+}
+
+.widget-controls .btn-refresh:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.widget-controls .btn-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.widget-controls .btn-close:hover {
+  background: rgba(255, 0, 0, 0.3);
+}
+
 /* 内容区域 */
 .widget-content {
   max-height: 60vh;
-  overflow-y: auto;
-  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 50px; /* 底部留出空间给悬浮按钮 */
 }
 
 /* 分组标签 */
@@ -121,6 +154,8 @@
   margin: 8px 8px 0 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid #f0f0f0;
+  background: white;
+  flex-shrink: 0; /* 不参与收缩，固定在顶部 */
 }
 
 .group-tab {
@@ -156,6 +191,8 @@
   position: relative;
   margin: 8px;
   margin-bottom: 6px;
+  background: white;
+  flex-shrink: 0; /* 不参与收缩，固定在顶部 */
 }
 
 .search-input {
@@ -225,7 +262,10 @@ mark {
   flex-direction: column;
   gap: 0;
   margin-bottom: 8px;
-  overflow: visible; /* 允许预览浮层显示在外部 */
+  overflow-y: auto; /* 只有列表部分滚动 */
+  overflow-x: visible; /* 允许预览浮层显示在外部 */
+  flex: 1; /* 占据剩余空间 */
+  min-height: 0; /* 允许flex收缩 */
 }
 
 .script-item {
@@ -233,7 +273,7 @@ mark {
   border: none;
   border-bottom: 1px solid #f0f0f0;
   border-radius: 0;
-  padding: 12px 16px;
+  padding: 6px 12px;
   cursor: pointer;
   transition: background-color 0.2s;
   position: relative;
@@ -252,13 +292,21 @@ mark {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
 }
 
 .script-title {
   font-weight: 600;
   color: #333;
   font-size: 13px;
+}
+
+.script-note {
+  font-size: 12px;
+  color: #454545;
+  margin-top: 2px;
+  opacity: 0.9;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .script-actions {
@@ -301,9 +349,17 @@ mark {
 
 /* 操作按钮 */
 .widget-actions {
-  text-align: center;
-  margin: 8px;
-  margin-top: 6px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 12px 12px;
 }
 
 .btn-add-script {
@@ -316,12 +372,66 @@ mark {
   font-size: 12px;
   font-weight: 500;
   transition: all 0.2s;
-  width: 100%;
+  flex: 1;
 }
 
 .btn-add-script:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-import-script {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-import-script svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-import-script:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.btn-export-script {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-export-script svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-export-script:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
 /* 管理面板 */
@@ -477,6 +587,14 @@ mark {
 
 .script-form textarea {
   min-height: 80px;
+  resize: vertical;
+  overflow-y: hidden;
+  transition: height 0.2s ease;
+}
+
+.script-form #script-note {
+  min-height: 40px;
+  max-height: 80px;
   resize: vertical;
 }
 
@@ -726,6 +844,16 @@ mark {
     min-height: 120px;
     resize: vertical;
     font-family: inherit;
+    overflow-y: hidden;
+    transition: height 0.2s ease;
+}
+
+#modalScriptNote.form-control {
+    min-height: 60px;
+    max-height: 120px;
+    resize: vertical;
+    overflow-y: hidden;
+    transition: height 0.2s ease;
 }
 
 .form-actions {
@@ -789,7 +917,7 @@ mark {
   max-height: 60vh;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s, visibility 0.2s;
+  /* transition: opacity 0.2s, visibility 0.2s; */ /* 移除淡出动画，直接消失 */
   pointer-events: none;
   overflow: hidden;
 }
@@ -810,14 +938,67 @@ mark {
   overflow-y: auto;
 }
 
+#script-preview-layer .preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 8px;
+}
+
 #script-preview-layer .preview-title {
   font-weight: 600;
   color: #333;
   font-size: 14px;
-  margin-bottom: 10px;
   line-height: 1.4;
-  border-bottom: 1px solid #f0f0f0;
-  padding-bottom: 8px;
+  flex: 1;
+  margin-right: 8px;
+}
+
+#script-preview-layer .preview-actions {
+  display: flex;
+  gap: 4px;
+}
+
+#script-preview-layer .btn-edit-preview {
+  background: rgba(102, 126, 234, 0.1);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#script-preview-layer .btn-edit-preview:hover {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+#script-preview-layer .preview-group {
+  margin-bottom: 8px;
+}
+
+#script-preview-layer .group-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  color: white;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+#script-preview-layer .preview-note {
+  font-size: 13px;
+  color: #413e65;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  opacity: 0.7;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 #script-preview-layer .preview-text {
@@ -846,4 +1027,198 @@ mark {
 
 #script-preview-layer .preview-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 模态框分组按钮样式 */
+.edit-group-tabs,
+.add-group-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.edit-group-tab,
+.add-group-tab {
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+  font-weight: 500;
+  color: #495057;
+  white-space: nowrap;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.edit-group-tab:hover,
+.add-group-tab:hover {
+  background: #e9ecef;
+  color: #212529;
+}
+
+.edit-group-tab.active,
+.add-group-tab.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  font-weight: 600;
+}
+
+/* 分组操作按钮样式 */
+.group-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.group-actions .btn-add-group,
+.group-actions .btn-import-data {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.group-actions .btn-add-group {
+  background: #4CAF50;
+  color: white;
+}
+
+.group-actions .btn-add-group:hover {
+  background: #45a049;
+}
+
+.group-actions .btn-import-data {
+  background: #2196F3;
+  color: white;
+}
+
+.group-actions .btn-import-data:hover {
+  background: #1976D2;
+}
+
+/* 导入对话框样式 */
+.import-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.import-dialog-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 400px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.import-dialog-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.import-dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.btn-close-import {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-close-import:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.import-dialog-body {
+  padding: 24px;
+}
+
+.import-info {
+  margin-bottom: 24px;
+}
+
+.import-info p {
+  margin: 0 0 12px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.import-info .warning {
+  color: #ff9800;
+  font-weight: 500;
+  background: #fff3e0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #ff9800;
+}
+
+.import-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.import-actions .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.import-actions .btn-primary {
+  background: #2196F3;
+  color: white;
+}
+
+.import-actions .btn-primary:hover {
+  background: #1976D2;
+}
+
+.import-actions .btn-secondary {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.import-actions .btn-secondary:hover {
+  background: #e0e0e0;
+  color: #333;
 }

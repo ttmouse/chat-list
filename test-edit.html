@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑功能测试</title>
+    <link rel="stylesheet" href="content.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>编辑功能测试</h1>
+        
+        <div class="test-buttons">
+            <button class="test-button" onclick="initWidget()">初始化话术助手</button>
+            <button class="test-button" onclick="testEditFunction()">测试编辑功能</button>
+            <button class="test-button" onclick="showDebugInfo()">显示调试信息</button>
+        </div>
+        
+        <div id="debug-output" class="debug-info">点击按钮开始测试...</div>
+    </div>
+
+    <script src="content.js"></script>
+    <script>
+        let widget = null;
+        
+        function log(message) {
+            const output = document.getElementById('debug-output');
+            output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+        
+        function initWidget() {
+            try {
+                log('开始初始化话术助手...');
+                widget = new ChatListWidget();
+                log('话术助手初始化成功');
+                
+                // 添加一些测试数据
+                widget.scripts = [
+                    {
+                        id: 'test1',
+                        title: '测试话术1',
+                        content: '这是第一个测试话术的内容',
+                        note: '这是备注信息',
+                        groupId: 'greeting'
+                    },
+                    {
+                        id: 'test2', 
+                        title: '测试话术2',
+                        content: '这是第二个测试话术的内容',
+                        note: '另一个备注',
+                        groupId: 'service'
+                    }
+                ];
+                
+                widget.groups = [
+                    { id: 'greeting', name: '问候语' },
+                    { id: 'service', name: '服务话术' }
+                ];
+                
+                widget.renderScripts();
+                log('测试数据已加载');
+            } catch (error) {
+                log('初始化失败: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        function testEditFunction() {
+            if (!widget) {
+                log('请先初始化话术助手');
+                return;
+            }
+            
+            try {
+                log('测试编辑功能...');
+                
+                // 模拟点击编辑按钮
+                const editBtn = document.querySelector('.btn-edit');
+                if (editBtn) {
+                    log('找到编辑按钮，模拟点击...');
+                    editBtn.click();
+                    
+                    // 检查管理面板是否显示
+                    setTimeout(() => {
+                        const managePanel = document.querySelector('.manage-panel');
+                        if (managePanel) {
+                            const isVisible = managePanel.style.display !== 'none';
+                            log('管理面板显示状态: ' + (isVisible ? '可见' : '隐藏'));
+                            log('管理面板样式: ' + managePanel.style.display);
+                        } else {
+                            log('未找到管理面板元素');
+                        }
+                    }, 100);
+                } else {
+                    log('未找到编辑按钮');
+                }
+            } catch (error) {
+                log('测试编辑功能失败: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        function showDebugInfo() {
+            if (!widget) {
+                log('请先初始化话术助手');
+                return;
+            }
+            
+            try {
+                log('=== 调试信息 ===');
+                log('话术数量: ' + widget.scripts.length);
+                log('分组数量: ' + widget.groups.length);
+                
+                const managePanel = document.querySelector('.manage-panel');
+                const widgetContent = document.querySelector('.widget-content');
+                const editBtns = document.querySelectorAll('.btn-edit');
+                
+                log('管理面板元素: ' + (managePanel ? '存在' : '不存在'));
+                log('内容区域元素: ' + (widgetContent ? '存在' : '不存在'));
+                log('编辑按钮数量: ' + editBtns.length);
+                
+                if (managePanel) {
+                    log('管理面板当前样式: ' + managePanel.style.display);
+                }
+                
+                log('=== 调试信息结束 ===');
+            } catch (error) {
+                log('显示调试信息失败: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        // 监听控制台错误
+        window.addEventListener('error', function(e) {
+            log('JavaScript错误: ' + e.message);
+        });
+    </script>
+</body>
+</html>

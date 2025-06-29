@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试导入话术功能</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1976D2;
+        }
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #45a049;
+        }
+        .test-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .widget-actions {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .btn-add-script, .btn-import-script {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-add-script {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+        .btn-import-script {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+        .btn-add-script:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        .btn-import-script:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 导入话术功能测试</h1>
+        
+        <div class="test-section">
+            <h3>📋 功能说明</h3>
+            <p>现在已经在"添加话术"按钮旁边添加了"📥 导入话术"按钮，用户可以通过点击该按钮来导入之前导出的话术数据。</p>
+            
+            <div class="widget-actions">
+                <button class="btn-add-script">+ 添加话术</button>
+                <button class="btn-import-script">📥 导入话术</button>
+            </div>
+            
+            <p><strong>新增功能：</strong></p>
+            <ul>
+                <li>在话术列表界面添加了"导入话术"按钮</li>
+                <li>按钮采用蓝色渐变设计，与添加按钮形成对比</li>
+                <li>点击按钮会弹出文件选择对话框</li>
+                <li>支持导入JSON格式的话术数据文件</li>
+                <li>导入前会显示确认提示，避免误操作</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔧 修改内容</h3>
+            <p><strong>1. HTML结构修改 (content.js)：</strong></p>
+            <div class="test-data">在widget-actions容器中添加了导入按钮：
+&lt;button class="btn-import-script"&gt;📥 导入话术&lt;/button&gt;</div>
+            
+            <p><strong>2. 事件绑定 (content.js)：</strong></p>
+            <div class="test-data">// 导入话术
+this.widget.querySelector('.btn-import-script').addEventListener('click', () => {
+  try {
+    console.log('点击导入话术按钮');
+    this.showImportDialog();
+  } catch (error) {
+    console.error('导入话术按钮点击处理出错:', error);
+  }
+});</div>
+            
+            <p><strong>3. CSS样式修改 (content.css)：</strong></p>
+            <div class="test-data">.widget-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-import-script {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+}</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 测试数据生成</h3>
+            <p>点击下面的按钮生成测试用的JSON数据文件：</p>
+            <button class="btn btn-success" onclick="generateTestData()">生成测试数据文件</button>
+            <div id="testDataResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>✅ 测试步骤</h3>
+            <ol>
+                <li>重新加载浏览器扩展</li>
+                <li>打开任意网页，确保话术助手小部件显示</li>
+                <li>查看是否有两个按钮："+ 添加话术" 和 "📥 导入话术"</li>
+                <li>点击"📥 导入话术"按钮</li>
+                <li>选择上面生成的测试JSON文件</li>
+                <li>确认导入操作</li>
+                <li>检查话术是否成功导入</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 预期结果</h3>
+            <ul>
+                <li>✅ 界面显示两个按钮，布局美观</li>
+                <li>✅ 点击导入按钮弹出文件选择对话框</li>
+                <li>✅ 选择JSON文件后显示确认提示</li>
+                <li>✅ 确认后成功导入话术数据</li>
+                <li>✅ 导入的话术在界面中正确显示</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function generateTestData() {
+            const testData = {
+                scripts: [
+                    {
+                        id: 'test_1',
+                        title: '测试欢迎语',
+                        content: '您好！欢迎来到我们的服务，有什么可以帮助您的吗？',
+                        group: '问候语',
+                        tags: ['欢迎', '问候'],
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'test_2',
+                        title: '测试产品介绍',
+                        content: '我们的产品具有以下特点：高质量、高性价比、优质服务。',
+                        group: '产品介绍',
+                        tags: ['产品', '介绍'],
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'test_3',
+                        title: '测试感谢语',
+                        content: '感谢您的咨询，祝您生活愉快！',
+                        group: '结束语',
+                        tags: ['感谢', '结束'],
+                        createdAt: new Date().toISOString()
+                    }
+                ],
+                groups: ['问候语', '产品介绍', '结束语'],
+                exportTime: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(testData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test-scripts-data.json';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            
+            document.getElementById('testDataResult').innerHTML = `
+                <div class="status success">
+                    ✅ 测试数据文件已生成并下载：test-scripts-data.json<br>
+                    包含 3 个测试话术和 3 个分组
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

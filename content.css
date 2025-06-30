@@ -62,7 +62,7 @@
 .widget-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 12px 16px;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -136,9 +136,9 @@
 .group-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 8px 0 8px;
-  padding-bottom: 8px;
+  gap: 4px;
+  padding: 6px;
+  padding-bottom: 6px;
   border-bottom: 1px solid #f0f0f0;
   background: white;
   flex-shrink: 0; /* 不参与收缩，固定在顶部 */
@@ -147,17 +147,17 @@
 }
 
 .group-tab {
-  padding: 6px 12px;
+  padding: 4px 10px;
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 16px;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #495057;
   white-space: nowrap;
-  min-height: 28px;
+  min-height: 24px;
   display: flex;
   align-items: center;
 }
@@ -177,18 +177,18 @@
 /* 搜索框 */
 .search-container {
   position: relative;
-  margin: 8px;
-  margin-bottom: 6px;
+  margin: 6px;
+  margin-bottom: 4px;
   background: white;
   flex-shrink: 0; /* 不参与收缩，固定在顶部 */
 }
 
 .search-input {
   width: 100%;
-  padding: 8px 32px 8px 12px;
+  padding: 6px 28px 6px 10px;
   border: 1px solid #e9ecef;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: 5px;
+  font-size: 11px;
   background: #f8f9fa;
   transition: all 0.2s;
   box-sizing: border-box;
@@ -370,9 +370,9 @@ mark {
   right: 0;
   background: white;
   border-top: 1px solid #e0e0e0;
-  padding: 12px;
+  padding: 8px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 0 0 12px 12px;
 }
@@ -381,10 +381,10 @@ mark {
   background: linear-gradient(135deg, #4CAF50, #45a049);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   transition: all 0.2s;
   flex: 1;
@@ -399,17 +399,17 @@ mark {
   background: linear-gradient(135deg, #2196F3, #1976D2);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   transition: all 0.2s;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .btn-import-script svg {
@@ -426,17 +426,17 @@ mark {
   background: linear-gradient(135deg, #FF9800, #F57C00);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   transition: all 0.2s;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .btn-export-script svg {

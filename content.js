@@ -172,7 +172,7 @@ class ChatListWidget {
     console.log('当前网站在白名单中，初始化话术扩展');
     this.createWidget();
     this.createPreviewLayer();
-    this.createFocusDebugPanel();
+    // this.createFocusDebugPanel();
     this.bindEvents();
     this.initialized = true; // 标记为已初始化
   }
@@ -349,241 +349,241 @@ class ChatListWidget {
     document.body.appendChild(this.previewLayer);
   }
 
-  createFocusDebugPanel() {
-    // 创建焦点调试面板
-    this.focusDebugPanel = document.createElement('div');
-    this.focusDebugPanel.id = 'focus-debug-panel';
-    this.focusDebugPanel.innerHTML = `
-      <div class="debug-header" id="debug-drag-handle">
-        <span class="debug-title">🎯 焦点调试面板</span>
-        <div class="debug-header-actions">
-          <button class="btn-toggle-debug" title="切换显示/隐藏">👁️</button>
-          <span class="drag-indicator" title="拖动面板">⋮⋮</span>
-        </div>
-      </div>
-      <div class="debug-content">
-        <div class="debug-section">
-          <div class="debug-label">当前活动元素:</div>
-          <div class="debug-value" id="current-active">无</div>
-        </div>
-        <div class="debug-section">
-          <div class="debug-label">最后记录的焦点:</div>
-          <div class="debug-value" id="last-focused">无</div>
-        </div>
-        <div class="debug-section">
-          <div class="debug-label">焦点历史记录:</div>
-          <div class="debug-value" id="focus-history">无</div>
-        </div>
-        <div class="debug-section">
-          <div class="debug-label">可用输入框数量:</div>
-          <div class="debug-value" id="available-inputs">0</div>
-        </div>
-        <div class="debug-section">
-          <div class="debug-label">是否为有效输入:</div>
-          <div class="debug-value" id="is-valid-input">否</div>
-        </div>
-      </div>
-    `;
-    
-    // 添加样式
-    const style = document.createElement('style');
-    style.textContent = `
-      #focus-debug-panel {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        width: 320px;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        border-radius: 8px;
-        padding: 12px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        font-size: 12px;
-        z-index: 10001;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        border: 1px solid #333;
-        user-select: none;
-      }
-      
-      #focus-debug-panel .debug-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #444;
-        cursor: move;
-        padding: 4px 0;
-      }
-      
-      #focus-debug-panel .debug-header:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 4px;
-      }
-      
-      #focus-debug-panel .debug-title {
-        font-weight: bold;
-        color: #4CAF50;
-        font-size: 13px;
-      }
-      
-      #focus-debug-panel .debug-header-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      
-      #focus-debug-panel .btn-toggle-debug {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        font-size: 14px;
-        padding: 2px 6px;
-        border-radius: 4px;
-      }
-      
-      #focus-debug-panel .btn-toggle-debug:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-      
-      #focus-debug-panel .drag-indicator {
-        color: #666;
-        font-size: 12px;
-        cursor: move;
-        padding: 2px;
-        border-radius: 2px;
-      }
-      
-      #focus-debug-panel .drag-indicator:hover {
-        color: #999;
-        background: rgba(255, 255, 255, 0.1);
-      }
-      
-      #focus-debug-panel.dragging {
-        opacity: 0.8;
-        transform: scale(1.02);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-      }
-      
-      #focus-debug-panel .debug-content {
-        transition: all 0.3s ease;
-      }
-      
-      #focus-debug-panel.collapsed .debug-content {
-        display: none;
-      }
-      
-      #focus-debug-panel .debug-section {
-        margin-bottom: 8px;
-      }
-      
-      #focus-debug-panel .debug-label {
-        color: #888;
-        margin-bottom: 2px;
-      }
-      
-      #focus-debug-panel .debug-value {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 4px 8px;
-        border-radius: 4px;
-        word-break: break-all;
-        max-height: 60px;
-        overflow-y: auto;
-      }
-      
-      #focus-debug-panel .debug-value.valid {
-        background: rgba(76, 175, 80, 0.2);
-        color: #4CAF50;
-      }
-      
-      #focus-debug-panel .debug-value.invalid {
-        background: rgba(244, 67, 54, 0.2);
-        color: #f44336;
-      }
-    `;
-    
-    document.head.appendChild(style);
-    document.body.appendChild(this.focusDebugPanel);
-    
-    // 绑定切换显示/隐藏事件
-    this.focusDebugPanel.querySelector('.btn-toggle-debug').addEventListener('click', () => {
-      this.focusDebugPanel.classList.toggle('collapsed');
-    });
-    
-    // 添加拖动功能
-    this.makePanelDraggable();
-    
-    // 开始更新调试信息
-    this.startDebugUpdates();
-  }
+  // createFocusDebugPanel() {
+  //   // 创建焦点调试面板
+  //   this.focusDebugPanel = document.createElement('div');
+  //   this.focusDebugPanel.id = 'focus-debug-panel';
+  //   this.focusDebugPanel.innerHTML = `
+  //     <div class="debug-header" id="debug-drag-handle">
+  //       <span class="debug-title">🎯 焦点调试面板</span>
+  //       <div class="debug-header-actions">
+  //         <button class="btn-toggle-debug" title="切换显示/隐藏">👁️</button>
+  //         <span class="drag-indicator" title="拖动面板">⋮⋮</span>
+  //       </div>
+  //     </div>
+  //     <div class="debug-content">
+  //       <div class="debug-section">
+  //         <div class="debug-label">当前活动元素:</div>
+  //         <div class="debug-value" id="current-active">无</div>
+  //       </div>
+  //       <div class="debug-section">
+  //         <div class="debug-label">最后记录的焦点:</div>
+  //         <div class="debug-value" id="last-focused">无</div>
+  //       </div>
+  //       <div class="debug-section">
+  //         <div class="debug-label">焦点历史记录:</div>
+  //         <div class="debug-value" id="focus-history">无</div>
+  //       </div>
+  //       <div class="debug-section">
+  //         <div class="debug-label">可用输入框数量:</div>
+  //         <div class="debug-value" id="available-inputs">0</div>
+  //       </div>
+  //       <div class="debug-section">
+  //         <div class="debug-label">是否为有效输入:</div>
+  //         <div class="debug-value" id="is-valid-input">否</div>
+  //       </div>
+  //     </div>
+  //   `;
+  //   
+  //   // 添加样式
+  //   const style = document.createElement('style');
+  //   style.textContent = `
+  //     #focus-debug-panel {
+  //       position: fixed;
+  //       top: 20px;
+  //       left: 20px;
+  //       width: 320px;
+  //       background: rgba(0, 0, 0, 0.9);
+  //       color: white;
+  //       border-radius: 8px;
+  //       padding: 12px;
+  //       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  //       font-size: 12px;
+  //       z-index: 10001;
+  //       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  //       border: 1px solid #333;
+  //       user-select: none;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-header {
+  //       display: flex;
+  //       justify-content: space-between;
+  //       align-items: center;
+  //       margin-bottom: 10px;
+  //       padding-bottom: 8px;
+  //       border-bottom: 1px solid #444;
+  //       cursor: move;
+  //       padding: 4px 0;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-header:hover {
+  //       background: rgba(255, 255, 255, 0.05);
+  //       border-radius: 4px;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-title {
+  //       font-weight: bold;
+  //       color: #4CAF50;
+  //       font-size: 13px;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-header-actions {
+  //       display: flex;
+  //       align-items: center;
+  //       gap: 8px;
+  //     }
+  //     
+  //     #focus-debug-panel .btn-toggle-debug {
+  //       background: none;
+  //       border: none;
+  //       color: white;
+  //       cursor: pointer;
+  //       font-size: 14px;
+  //       padding: 2px 6px;
+  //       border-radius: 4px;
+  //     }
+  //     
+  //     #focus-debug-panel .btn-toggle-debug:hover {
+  //       background: rgba(255, 255, 255, 0.1);
+  //     }
+  //     
+  //     #focus-debug-panel .drag-indicator {
+  //       color: #666;
+  //       font-size: 12px;
+  //       cursor: move;
+  //       padding: 2px;
+  //       border-radius: 2px;
+  //     }
+  //     
+  //     #focus-debug-panel .drag-indicator:hover {
+  //       color: #999;
+  //       background: rgba(255, 255, 255, 0.1);
+  //     }
+  //     
+  //     #focus-debug-panel.dragging {
+  //       opacity: 0.8;
+  //       transform: scale(1.02);
+  //       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  //     }
+  //     
+  //     #focus-debug-panel .debug-content {
+  //       transition: all 0.3s ease;
+  //     }
+  //     
+  //     #focus-debug-panel.collapsed .debug-content {
+  //       display: none;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-section {
+  //       margin-bottom: 8px;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-label {
+  //       color: #888;
+  //       margin-bottom: 2px;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-value {
+  //       color: #fff;
+  //       background: rgba(255, 255, 255, 0.1);
+  //       padding: 4px 8px;
+  //       border-radius: 4px;
+  //       word-break: break-all;
+  //       max-height: 60px;
+  //       overflow-y: auto;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-value.valid {
+  //       background: rgba(76, 175, 80, 0.2);
+  //       color: #4CAF50;
+  //     }
+  //     
+  //     #focus-debug-panel .debug-value.invalid {
+  //       background: rgba(244, 67, 54, 0.2);
+  //       color: #f44336;
+  //     }
+  //   `;
+  //   
+  //   document.head.appendChild(style);
+  //   document.body.appendChild(this.focusDebugPanel);
+  //   
+  //   // 绑定切换显示/隐藏事件
+  //   this.focusDebugPanel.querySelector('.btn-toggle-debug').addEventListener('click', () => {
+  //     this.focusDebugPanel.classList.toggle('collapsed');
+  //   });
+  //   
+  //   // 添加拖动功能
+  //   this.makePanelDraggable();
+  //   
+  //   // 开始更新调试信息
+  //   this.startDebugUpdates();
+  // }
   
-  makePanelDraggable() {
-    const panel = this.focusDebugPanel;
-    const dragHandle = panel.querySelector('#debug-drag-handle');
-    let isDragging = false;
-    let startX, startY, startLeft, startTop;
-    
-    dragHandle.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      panel.classList.add('dragging');
-      
-      startX = e.clientX;
-      startY = e.clientY;
-      startLeft = parseInt(window.getComputedStyle(panel).left, 10);
-      startTop = parseInt(window.getComputedStyle(panel).top, 10);
-      
-      e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-      
-      let newLeft = startLeft + deltaX;
-      let newTop = startTop + deltaY;
-      
-      // 边界检查
-      const panelRect = panel.getBoundingClientRect();
-      const maxLeft = window.innerWidth - panelRect.width;
-      const maxTop = window.innerHeight - panelRect.height;
-      
-      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-      newTop = Math.max(0, Math.min(newTop, maxTop));
-      
-      panel.style.left = newLeft + 'px';
-      panel.style.top = newTop + 'px';
-    });
-    
-    document.addEventListener('mouseup', () => {
-      if (isDragging) {
-        isDragging = false;
-        panel.classList.remove('dragging');
-        
-        // 保存位置
-        const rect = panel.getBoundingClientRect();
-        localStorage.setItem('focusDebugPanel_position', JSON.stringify({
-          left: rect.left,
-          top: rect.top
-        }));
-      }
-    });
-    
-    // 加载保存的位置
-    const savedPosition = localStorage.getItem('focusDebugPanel_position');
-    if (savedPosition) {
-      try {
-        const position = JSON.parse(savedPosition);
-        panel.style.left = position.left + 'px';
-        panel.style.top = position.top + 'px';
-      } catch (e) {
-        console.warn('无法加载调试面板位置:', e);
-      }
-    }
-  }
+  // makePanelDraggable() {
+  //   const panel = this.focusDebugPanel;
+  //   const dragHandle = panel.querySelector('#debug-drag-handle');
+  //   let isDragging = false;
+  //   let startX, startY, startLeft, startTop;
+  //   
+  //   dragHandle.addEventListener('mousedown', (e) => {
+  //     isDragging = true;
+  //     panel.classList.add('dragging');
+  //     
+  //     startX = e.clientX;
+  //     startY = e.clientY;
+  //     startLeft = parseInt(window.getComputedStyle(panel).left, 10);
+  //     startTop = parseInt(window.getComputedStyle(panel).top, 10);
+  //     
+  //     e.preventDefault();
+  //   });
+  //   
+  //   document.addEventListener('mousemove', (e) => {
+  //     if (!isDragging) return;
+  //     
+  //     const deltaX = e.clientX - startX;
+  //     const deltaY = e.clientY - startY;
+  //     
+  //     let newLeft = startLeft + deltaX;
+  //     let newTop = startTop + deltaY;
+  //     
+  //     // 边界检查
+  //     const panelRect = panel.getBoundingClientRect();
+  //     const maxLeft = window.innerWidth - panelRect.width;
+  //     const maxTop = window.innerHeight - panelRect.height;
+  //     
+  //     newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+  //     newTop = Math.max(0, Math.min(newTop, maxTop));
+  //     
+  //     panel.style.left = newLeft + 'px';
+  //     panel.style.top = newTop + 'px';
+  //   });
+  //   
+  //   document.addEventListener('mouseup', () => {
+  //     if (isDragging) {
+  //       isDragging = false;
+  //       panel.classList.remove('dragging');
+  //       
+  //       // 保存位置
+  //       const rect = panel.getBoundingClientRect();
+  //       localStorage.setItem('focusDebugPanel_position', JSON.stringify({
+  //         left: rect.left,
+  //         top: rect.top
+  //       }));
+  //     }
+  //   });
+  //   
+  //   // 加载保存的位置
+  //   const savedPosition = localStorage.getItem('focusDebugPanel_position');
+  //   if (savedPosition) {
+  //     try {
+  //       const position = JSON.parse(savedPosition);
+  //       panel.style.left = position.left + 'px';
+  //       panel.style.top = position.top + 'px';
+  //     } catch (e) {
+  //       console.warn('无法加载调试面板位置:', e);
+  //     }
+  //   }
+  // }
 
   createTrigger() {
     // 创建右侧触发器
@@ -739,7 +739,7 @@ class ChatListWidget {
         this.addToFocusHistory(e.target);
         
         // 立即更新调试面板
-        this.updateDebugPanel();
+        // this.updateDebugPanel();
       }
     });
 
@@ -758,7 +758,7 @@ class ChatListWidget {
         this.addToFocusHistory(e.target);
         
         // 立即更新调试面板
-        this.updateDebugPanel();
+        // this.updateDebugPanel();
       }
     }, true); // 使用捕获阶段确保能捕获到所有焦点事件
 
@@ -777,7 +777,7 @@ class ChatListWidget {
         this.addToFocusHistory(e.target);
         
         // 立即更新调试面板
-        this.updateDebugPanel();
+        // this.updateDebugPanel();
       }
     });
 
@@ -807,7 +807,7 @@ class ChatListWidget {
           this.addToFocusHistory(currentFocus);
           
           // 立即更新调试面板
-          this.updateDebugPanel();
+          // this.updateDebugPanel();
         }
         
         // 如果话术助手未显示，先显示它

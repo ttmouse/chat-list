@@ -131,7 +131,7 @@
 /* 内容区域 */
 .widget-content {
   max-height: 60vh;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   padding-bottom: 50px; /* 底部留出空间给悬浮按钮 */
@@ -276,6 +276,7 @@ mark {
   overflow-x: visible; /* 允许预览浮层显示在外部 */
   flex: 1; /* 占据剩余空间 */
   min-height: 0; /* 允许flex收缩 */
+  max-height: calc(60vh - 120px); /* 减去分组标签和搜索框的高度 */
 }
 
 .script-item {

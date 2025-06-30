@@ -10,14 +10,171 @@ class ChatListWidget {
     this.currentGroup = null;
     this.searchKeyword = ''; // 搜索关键词
     this.lastFocusedElement = null; // 记住最后聚焦的元素
+    this.focusHistory = []; // 焦点历史记录，最多保存2个
+    this.selectedScriptIndex = -1; // 当前选中的话术索引
+    // this.focusDebugPanel = null; // 焦点调试面板
+    this.whitelist = []; // 网页白名单，将从存储中加载
+    this.initialized = false; // 初始化状态标记
+    
     this.init();
   }
 
+  // 添加元素到焦点历史记录
+  addToFocusHistory(element) {
+    // 移除已存在的相同元素
+    this.focusHistory = this.focusHistory.filter(el => el !== element);
+    
+    // 添加到历史记录开头
+    this.focusHistory.unshift(element);
+    
+    // 限制历史记录长度为2个
+    if (this.focusHistory.length > 2) {
+      this.focusHistory = this.focusHistory.slice(0, 2);
+    }
+  }
+
+  // 从焦点历史中获取有效的焦点元素
+  getValidFocusFromHistory() {
+    for (let element of this.focusHistory) {
+      // 检查元素是否仍然存在于DOM中且有效
+      if (document.contains(element) && this.isValidInput(element)) {
+        return element;
+      }
+    }
+    return null;
+  }
+
+  startDebugUpdates() {
+    // 每500ms更新一次调试信息
+    // setInterval(() => {
+    //   this.updateDebugPanel();
+    // }, 500);
+    
+    // // 立即更新一次
+    // this.updateDebugPanel();
+  }
+
+  // updateDebugPanel() {
+  //   if (!this.focusDebugPanel) return;
+  //   
+  //   const currentActive = document.activeElement;
+  //   const currentActiveEl = this.focusDebugPanel.querySelector('#current-active');
+  //   const lastFocusedEl = this.focusDebugPanel.querySelector('#last-focused');
+  //   const focusHistoryEl = this.focusDebugPanel.querySelector('#focus-history');
+  //   const availableInputsEl = this.focusDebugPanel.querySelector('#available-inputs');
+  //   const isValidInputEl = this.focusDebugPanel.querySelector('#is-valid-input');
+  //   
+  //   // 更新当前活动元素
+  //   if (currentActive && currentActive !== document.body) {
+  //     const elementInfo = this.getElementInfo(currentActive);
+  //     currentActiveEl.textContent = elementInfo;
+  //     currentActiveEl.className = 'debug-value';
+  //   } else {
+  //     currentActiveEl.textContent = '无';
+  //     currentActiveEl.className = 'debug-value';
+  //   }
+  //   
+  //   // 更新最后记录的焦点
+  //   if (this.lastFocusedElement && document.contains(this.lastFocusedElement)) {
+  //     const elementInfo = this.getElementInfo(this.lastFocusedElement);
+  //     lastFocusedEl.textContent = elementInfo;
+  //     lastFocusedEl.className = 'debug-value valid';
+  //   } else {
+  //     lastFocusedEl.textContent = '无';
+  //     lastFocusedEl.className = 'debug-value invalid';
+  //   }
+  //   
+  //   // 更新焦点历史记录
+  //   if (this.focusHistory.length > 0) {
+  //     const historyInfo = this.focusHistory
+  //       .filter(el => document.contains(el))
+  //       .map((el, index) => `${index + 1}. ${this.getElementInfo(el)}`)
+  //       .join('\n');
+  //     focusHistoryEl.textContent = historyInfo || '历史记录中的元素已失效';
+  //     focusHistoryEl.className = historyInfo ? 'debug-value valid' : 'debug-value invalid';
+  //   } else {
+  //     focusHistoryEl.textContent = '无';
+  //     focusHistoryEl.className = 'debug-value';
+  //   }
+  //   
+  //   // 更新可用输入框数量 - 显示更详细的调试信息
+  //   const allInputs = this.findAllInputs(); // 找到所有输入框
+  //   const validInputs = this.findValidInputs(); // 经过过滤的输入框
+  //   const inputCount = validInputs.length;
+  //   
+  //   availableInputsEl.innerHTML = `
+  //     <div>有效输入框: ${inputCount} 个${inputCount > 1 ? ' (多个)' : ''}</div>
+  //     <div style="font-size: 11px; color: #666;">总输入框: ${allInputs.length} 个</div>
+  //   `;
+  //   availableInputsEl.className = inputCount > 1 ? 'debug-value' : inputCount === 1 ? 'debug-value valid' : 'debug-value invalid';
+  //   
+  //   // 添加详细的悬停提示
+  //   const allDetails = allInputs.map((input, index) => {
+  //     const isValid = validInputs.includes(input);
+  //     const isMessage = this.isMessageInput(input);
+  //     const isValidElement = this.isValidInputElement(input);
+  //     const status = isValid ? '✓' : '✗';
+  //     const reason = !isValidElement ? '(无效元素)' : !isMessage ? '(非消息输入框)' : '';
+  //     return `${status} ${index + 1}. ${this.getElementInfo(input)} ${reason}`;
+  //   }).join('\n');
+  //   
+  //   availableInputsEl.title = `所有输入框详情:\n${allDetails}\n\n✓ = 有效输入框\n✗ = 被过滤的输入框`;
+  //   
+  //   // 更新是否为有效输入
+  //   const isValid = currentActive && this.isValidInput(currentActive);
+  //   isValidInputEl.textContent = isValid ? '是' : '否';
+  //   isValidInputEl.className = isValid ? 'debug-value valid' : 'debug-value invalid';
+  // }
+
+  getElementInfo(element) {
+    if (!element) return '无';
+    
+    const tagName = element.tagName.toLowerCase();
+    const id = element.id ? `#${element.id}` : '';
+    const className = element.className ? `.${element.className.split(' ').join('.')}` : '';
+    const type = element.type ? `[type="${element.type}"]` : '';
+    const placeholder = element.placeholder ? `[placeholder="${element.placeholder.substring(0, 20)}..."]` : '';
+    
+    return `${tagName}${id}${className}${type}${placeholder}`.substring(0, 100);
+  }
+
+  // 检查当前网页是否在白名单中
+  isWhitelistedSite() {
+    const currentUrl = window.location.href;
+    
+    // 检查完整URL匹配
+    if (this.whitelist.includes(currentUrl)) {
+      return true;
+    }
+    
+    // 检查URL前缀匹配（支持带参数的URL）
+    return this.whitelist.some(whitelistUrl => {
+      // 如果白名单URL包含查询参数，进行完整匹配
+      if (whitelistUrl.includes('?')) {
+        return currentUrl.startsWith(whitelistUrl);
+      }
+      // 否则只匹配基础URL部分
+      const currentBaseUrl = currentUrl.split('?')[0];
+      return currentBaseUrl === whitelistUrl || currentUrl.startsWith(whitelistUrl);
+    });
+  }
+
   async init() {
+    // 先加载数据（包括白名单）
     await this.loadData();
+    
+    // 检查白名单，如果不在白名单中则不初始化UI
+    if (!this.isWhitelistedSite()) {
+      console.log('当前网站不在白名单中，跳过初始化话术扩展');
+      return;
+    }
+    
+    console.log('当前网站在白名单中，初始化话术扩展');
     this.createWidget();
     this.createPreviewLayer();
+    this.createFocusDebugPanel();
     this.bindEvents();
+    this.initialized = true; // 标记为已初始化
   }
 
   async loadData() {
@@ -27,16 +184,19 @@ class ChatListWidget {
         console.warn('扩展上下文已失效，使用默认数据');
         this.scripts = this.getDefaultScripts();
         this.groups = this.getDefaultGroups();
+        this.whitelist = this.getDefaultWhitelist();
         return;
       }
       
-      const result = await chrome.storage.local.get(['chatScripts', 'chatGroups']);
+      const result = await chrome.storage.local.get(['chatScripts', 'chatGroups', 'siteWhitelist']);
       this.scripts = result.chatScripts || this.getDefaultScripts();
       this.groups = result.chatGroups || this.getDefaultGroups();
+      this.whitelist = result.siteWhitelist || this.getDefaultWhitelist();
     } catch (error) {
       console.error('加载数据失败:', error);
       this.scripts = this.getDefaultScripts();
       this.groups = this.getDefaultGroups();
+      this.whitelist = this.getDefaultWhitelist();
       
       // 如果是扩展上下文失效错误，提示用户刷新页面
       if (error.message && error.message.includes('Extension context invalidated')) {
@@ -58,6 +218,13 @@ class ChatListWidget {
       { id: '1', title: '欢迎语', note: '标准问候语', content: '您好，很高兴为您服务！有什么可以帮助您的吗？', groupId: 'greeting' },
       { id: '2', title: '产品介绍', note: '突出产品优势', content: '我们的产品具有以下特点：高质量、高性价比、优质服务。', groupId: 'service' },
       { id: '3', title: '感谢语', note: '礼貌结束对话', content: '感谢您的咨询，祝您生活愉快！', groupId: 'closing' }
+    ];
+  }
+
+  getDefaultWhitelist() {
+    return [
+      'https://www.larksuite.com/hc/zh-CN/chat',
+      'https://oa.zalo.me/chat'
     ];
   }
 
@@ -147,6 +314,9 @@ class ChatListWidget {
     this.renderGroups();
     this.renderScripts();
     
+    // 初始状态：隐藏浮层，显示触发器
+    this.hideWidget();
+    
     // 加载保存的位置
     setTimeout(() => {
       this.loadPosition();
@@ -179,6 +349,242 @@ class ChatListWidget {
     document.body.appendChild(this.previewLayer);
   }
 
+  createFocusDebugPanel() {
+    // 创建焦点调试面板
+    this.focusDebugPanel = document.createElement('div');
+    this.focusDebugPanel.id = 'focus-debug-panel';
+    this.focusDebugPanel.innerHTML = `
+      <div class="debug-header" id="debug-drag-handle">
+        <span class="debug-title">🎯 焦点调试面板</span>
+        <div class="debug-header-actions">
+          <button class="btn-toggle-debug" title="切换显示/隐藏">👁️</button>
+          <span class="drag-indicator" title="拖动面板">⋮⋮</span>
+        </div>
+      </div>
+      <div class="debug-content">
+        <div class="debug-section">
+          <div class="debug-label">当前活动元素:</div>
+          <div class="debug-value" id="current-active">无</div>
+        </div>
+        <div class="debug-section">
+          <div class="debug-label">最后记录的焦点:</div>
+          <div class="debug-value" id="last-focused">无</div>
+        </div>
+        <div class="debug-section">
+          <div class="debug-label">焦点历史记录:</div>
+          <div class="debug-value" id="focus-history">无</div>
+        </div>
+        <div class="debug-section">
+          <div class="debug-label">可用输入框数量:</div>
+          <div class="debug-value" id="available-inputs">0</div>
+        </div>
+        <div class="debug-section">
+          <div class="debug-label">是否为有效输入:</div>
+          <div class="debug-value" id="is-valid-input">否</div>
+        </div>
+      </div>
+    `;
+    
+    // 添加样式
+    const style = document.createElement('style');
+    style.textContent = `
+      #focus-debug-panel {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        width: 320px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        border-radius: 8px;
+        padding: 12px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 12px;
+        z-index: 10001;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        border: 1px solid #333;
+        user-select: none;
+      }
+      
+      #focus-debug-panel .debug-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #444;
+        cursor: move;
+        padding: 4px 0;
+      }
+      
+      #focus-debug-panel .debug-header:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+      }
+      
+      #focus-debug-panel .debug-title {
+        font-weight: bold;
+        color: #4CAF50;
+        font-size: 13px;
+      }
+      
+      #focus-debug-panel .debug-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      #focus-debug-panel .btn-toggle-debug {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      
+      #focus-debug-panel .btn-toggle-debug:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      #focus-debug-panel .drag-indicator {
+        color: #666;
+        font-size: 12px;
+        cursor: move;
+        padding: 2px;
+        border-radius: 2px;
+      }
+      
+      #focus-debug-panel .drag-indicator:hover {
+        color: #999;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      #focus-debug-panel.dragging {
+        opacity: 0.8;
+        transform: scale(1.02);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      }
+      
+      #focus-debug-panel .debug-content {
+        transition: all 0.3s ease;
+      }
+      
+      #focus-debug-panel.collapsed .debug-content {
+        display: none;
+      }
+      
+      #focus-debug-panel .debug-section {
+        margin-bottom: 8px;
+      }
+      
+      #focus-debug-panel .debug-label {
+        color: #888;
+        margin-bottom: 2px;
+      }
+      
+      #focus-debug-panel .debug-value {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        word-break: break-all;
+        max-height: 60px;
+        overflow-y: auto;
+      }
+      
+      #focus-debug-panel .debug-value.valid {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+      }
+      
+      #focus-debug-panel .debug-value.invalid {
+        background: rgba(244, 67, 54, 0.2);
+        color: #f44336;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    document.body.appendChild(this.focusDebugPanel);
+    
+    // 绑定切换显示/隐藏事件
+    this.focusDebugPanel.querySelector('.btn-toggle-debug').addEventListener('click', () => {
+      this.focusDebugPanel.classList.toggle('collapsed');
+    });
+    
+    // 添加拖动功能
+    this.makePanelDraggable();
+    
+    // 开始更新调试信息
+    this.startDebugUpdates();
+  }
+  
+  makePanelDraggable() {
+    const panel = this.focusDebugPanel;
+    const dragHandle = panel.querySelector('#debug-drag-handle');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+    
+    dragHandle.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      panel.classList.add('dragging');
+      
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = parseInt(window.getComputedStyle(panel).left, 10);
+      startTop = parseInt(window.getComputedStyle(panel).top, 10);
+      
+      e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+      
+      let newLeft = startLeft + deltaX;
+      let newTop = startTop + deltaY;
+      
+      // 边界检查
+      const panelRect = panel.getBoundingClientRect();
+      const maxLeft = window.innerWidth - panelRect.width;
+      const maxTop = window.innerHeight - panelRect.height;
+      
+      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+      newTop = Math.max(0, Math.min(newTop, maxTop));
+      
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        panel.classList.remove('dragging');
+        
+        // 保存位置
+        const rect = panel.getBoundingClientRect();
+        localStorage.setItem('focusDebugPanel_position', JSON.stringify({
+          left: rect.left,
+          top: rect.top
+        }));
+      }
+    });
+    
+    // 加载保存的位置
+    const savedPosition = localStorage.getItem('focusDebugPanel_position');
+    if (savedPosition) {
+      try {
+        const position = JSON.parse(savedPosition);
+        panel.style.left = position.left + 'px';
+        panel.style.top = position.top + 'px';
+      } catch (e) {
+        console.warn('无法加载调试面板位置:', e);
+      }
+    }
+  }
+
   createTrigger() {
     // 创建右侧触发器
     this.trigger = document.createElement('div');
@@ -187,7 +593,7 @@ class ChatListWidget {
       <div class="trigger-icon">💬</div>
     `;
     this.trigger.title = '打开话术助手';
-    this.trigger.style.display = 'none'; // 初始隐藏
+    this.trigger.style.display = 'block'; // 初始显示触发器
     
     document.body.appendChild(this.trigger);
   }
@@ -284,13 +690,94 @@ class ChatListWidget {
         </div>
       `;
     }).join('');
+    
+    // 如果有搜索关键词且有结果，自动选中第一个话术
+    if (this.searchKeyword && filteredScripts.length > 0) {
+      this.selectedScriptIndex = 0;
+      this.updateScriptSelection();
+    }
+  }
+
+  updateScriptSelection() {
+    const scriptItems = this.widget.querySelectorAll('.script-item');
+    
+    // 移除所有选中状态
+    scriptItems.forEach(item => item.classList.remove('keyboard-selected'));
+    
+    // 添加当前选中项的状态
+    if (this.selectedScriptIndex >= 0 && scriptItems[this.selectedScriptIndex]) {
+      const selectedItem = scriptItems[this.selectedScriptIndex];
+      selectedItem.classList.add('keyboard-selected');
+      
+      // 滚动到可见区域
+      selectedItem.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+      
+      // 显示预览
+      this.showPreview(selectedItem);
+    } else {
+      // 没有选中项时隐藏预览
+      this.hidePreview();
+    }
   }
 
   bindEvents() {
-    // 监听全局焦点变化，记住最后聚焦的输入元素
-    document.addEventListener('focusin', (e) => {
-      if (this.isValidInput(e.target) && !e.target.closest('#chat-list-widget')) {
+    // 监听全局点击事件，记住最后点击的输入元素
+    document.addEventListener('click', (e) => {
+      if (this.isValidInput(e.target)) {
+        // 如果是插件内部的输入框，不记录到历史中
+        if (e.target.closest('#chat-list-widget')) {
+          return;
+        }
+        
+        // 更新最后聚焦的元素
         this.lastFocusedElement = e.target;
+        
+        // 添加到焦点历史记录
+        this.addToFocusHistory(e.target);
+        
+        // 立即更新调试面板
+        this.updateDebugPanel();
+      }
+    });
+
+    // 监听全局focus事件，捕获通过键盘导航等方式获得焦点的输入框
+    document.addEventListener('focus', (e) => {
+      if (this.isValidInput(e.target)) {
+        // 如果是插件内部的输入框，不记录到历史中
+        if (e.target.closest('#chat-list-widget')) {
+          return;
+        }
+        
+        // 更新最后聚焦的元素
+        this.lastFocusedElement = e.target;
+        
+        // 添加到焦点历史记录
+        this.addToFocusHistory(e.target);
+        
+        // 立即更新调试面板
+        this.updateDebugPanel();
+      }
+    }, true); // 使用捕获阶段确保能捕获到所有焦点事件
+
+    // 监听focusin事件，确保捕获所有焦点变化（包括点击获得焦点）
+    document.addEventListener('focusin', (e) => {
+      if (this.isValidInput(e.target)) {
+        // 如果是插件内部的输入框，不记录到历史中
+        if (e.target.closest('#chat-list-widget')) {
+          return;
+        }
+        
+        // 更新最后聚焦的元素
+        this.lastFocusedElement = e.target;
+        
+        // 添加到焦点历史记录
+        this.addToFocusHistory(e.target);
+        
+        // 立即更新调试面板
+        this.updateDebugPanel();
       }
     });
 
@@ -302,6 +789,39 @@ class ChatListWidget {
         return;
       }
       e.preventDefault(); // 防止默认的焦点转移
+    });
+
+    // 全局快捷键监听 - ⌘+g 启动搜索
+    document.addEventListener('keydown', (e) => {
+      // 检查是否按下了 ⌘+g (Mac) 或 Ctrl+g (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g') {
+        // 防止浏览器默认的查找行为
+        e.preventDefault();
+        
+        // 记录快捷键触发前的焦点状态
+        const currentFocus = document.activeElement;
+        
+        // 如果当前焦点是有效输入框且不是插件内部的，记录它
+        if (currentFocus && this.isValidInput(currentFocus) && !currentFocus.closest('#chat-list-widget')) {
+          this.lastFocusedElement = currentFocus;
+          this.addToFocusHistory(currentFocus);
+          
+          // 立即更新调试面板
+          this.updateDebugPanel();
+        }
+        
+        // 如果话术助手未显示，先显示它
+        if (!this.isVisible) {
+          this.showWidget();
+        }
+        
+        // 聚焦到搜索输入框
+        const searchInput = this.widget.querySelector('.search-input');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select(); // 选中现有文本，方便用户直接输入新的搜索词
+        }
+      }
     });
 
 
@@ -338,6 +858,7 @@ class ChatListWidget {
     
     searchInput.addEventListener('input', (e) => {
       this.searchKeyword = e.target.value.trim();
+      this.selectedScriptIndex = -1; // 重置选中索引
       this.renderScripts();
       
       // 显示/隐藏清除按钮
@@ -348,9 +869,62 @@ class ChatListWidget {
       }
     });
     
+    // 搜索框键盘导航
+    searchInput.addEventListener('keydown', (e) => {
+      const scriptItems = this.widget.querySelectorAll('.script-item');
+      const maxIndex = scriptItems.length - 1;
+      
+      switch(e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (scriptItems.length > 0) {
+            this.selectedScriptIndex = Math.min(this.selectedScriptIndex + 1, maxIndex);
+            this.updateScriptSelection();
+          }
+          break;
+          
+        case 'ArrowUp':
+          e.preventDefault();
+          if (scriptItems.length > 0) {
+            this.selectedScriptIndex = Math.max(this.selectedScriptIndex - 1, 0);
+            this.updateScriptSelection();
+          }
+          break;
+          
+        case 'Enter':
+          e.preventDefault();
+          if (this.selectedScriptIndex >= 0 && scriptItems[this.selectedScriptIndex]) {
+            const scriptId = scriptItems[this.selectedScriptIndex].dataset.id;
+            const script = this.scripts.find(s => s.id === scriptId);
+            if (script) {
+              // 先让搜索框失去焦点，避免内容填充到搜索框
+              searchInput.blur();
+              // 重置选中索引
+              this.selectedScriptIndex = -1;
+              // 关闭预览浮层
+              this.forceHidePreview();
+              // 使用setTimeout确保blur操作完成后再填充内容
+              setTimeout(() => {
+                this.fillContent(script.content);
+              }, 10);
+            }
+          }
+          break;
+          
+        case 'Escape':
+          e.preventDefault();
+          this.selectedScriptIndex = -1;
+          this.updateScriptSelection();
+          this.forceHidePreview(); // 强制隐藏预览
+          searchInput.blur();
+          break;
+      }
+    });
+    
     clearSearchBtn.addEventListener('click', () => {
       searchInput.value = '';
       this.searchKeyword = '';
+      this.selectedScriptIndex = -1;
       this.renderScripts();
       clearSearchBtn.classList.remove('visible');
       searchInput.focus();
@@ -372,6 +946,8 @@ class ChatListWidget {
         const scriptId = e.target.closest('.script-item').dataset.id;
         const script = this.scripts.find(s => s.id === scriptId);
         if (script) {
+          // 关闭预览浮层
+          this.forceHidePreview();
           this.fillContent(script.content);
         }
       }
@@ -833,6 +1409,8 @@ class ChatListWidget {
         this.showSuccessMessage('话术添加成功！');
         this.renderScripts();
         this.hideAddScriptModal();
+        // 关闭预览浮层
+        this.forceHidePreview();
       }).catch(error => {
         console.error('保存话术失败:', error);
         alert('保存失败，请重试');
@@ -851,10 +1429,47 @@ class ChatListWidget {
   }
 
   fillContent(content) {
-    // 复制内容到剪贴板
+    // 复制到剪贴板
     this.copyToClipboard(content);
     
-    // 优先使用记住的焦点元素
+    // 查找当前焦点的输入框
+    const activeElement = document.activeElement;
+    
+    // 如果当前焦点是插件内部的搜索框，优先使用焦点历史记录
+    if (activeElement && activeElement.closest('#chat-list-widget')) {
+      const validFocusElement = this.getValidFocusFromHistory();
+      if (validFocusElement) {
+        this.insertContent(validFocusElement, content);
+        return;
+      }
+      
+      // 如果焦点历史中没有有效元素，使用最后聚焦的元素
+      if (this.lastFocusedElement && this.isValidInput(this.lastFocusedElement)) {
+        // 检查元素是否仍然存在于DOM中
+        if (document.contains(this.lastFocusedElement)) {
+          this.insertContent(this.lastFocusedElement, content);
+          return;
+        } else {
+          // 如果元素已被移除，清除引用
+          this.lastFocusedElement = null;
+        }
+      }
+    }
+    
+    // 如果当前有焦点的输入框且不是插件内部的输入框，优先使用
+    if (activeElement && this.isValidInput(activeElement) && !activeElement.closest('#chat-list-widget')) {
+      this.insertContent(activeElement, content);
+      return;
+    }
+    
+    // 如果没有当前焦点或焦点无效，使用焦点历史记录
+    const validFocusElement = this.getValidFocusFromHistory();
+    if (validFocusElement) {
+      this.insertContent(validFocusElement, content);
+      return;
+    }
+    
+    // 如果焦点历史中没有有效元素，使用最后聚焦的元素
     if (this.lastFocusedElement && this.isValidInput(this.lastFocusedElement)) {
       // 检查元素是否仍然存在于DOM中
       if (document.contains(this.lastFocusedElement)) {
@@ -864,15 +1479,6 @@ class ChatListWidget {
         // 如果元素已被移除，清除引用
         this.lastFocusedElement = null;
       }
-    }
-    
-    // 查找当前焦点的输入框
-    const activeElement = document.activeElement;
-    
-    // 如果当前有焦点的输入框，优先使用
-    if (activeElement && this.isValidInput(activeElement)) {
-      this.insertContent(activeElement, content);
-      return;
     }
     
     // 查找页面中可能的输入框，按优先级排序
@@ -889,9 +1495,13 @@ class ChatListWidget {
       return;
     }
     
-    // 多个输入框时，优先选择可见且在视窗内的
-    const visibleInputs = inputs.filter(input => this.isElementVisible(input));
-    const target = visibleInputs.length > 0 ? visibleInputs[0] : inputs[0];
+    // 多个输入框时，使用智能选择策略
+    const target = this.selectBestInput(inputs);
+    
+    // 如果有多个输入框，显示提示信息
+    if (inputs.length > 1) {
+      this.showMultipleInputsNotification(inputs, target);
+    }
     
     this.insertContent(target, content);
   }
@@ -899,78 +1509,15 @@ class ChatListWidget {
   isValidInput(element) {
     if (!element) return false;
     
-    // 检查是否为有效的输入元素
-    const tagName = element.tagName.toLowerCase();
-    if (tagName === 'textarea') return true;
-    if (tagName === 'input') {
-      const type = element.type.toLowerCase();
-      return ['text', 'search', 'url', 'email', 'password'].includes(type);
-    }
-    if (element.contentEditable === 'true') return true;
-    
-    return false;
-  }
-  
-  findValidInputs() {
-    // 查找所有可能的输入框
-    const selectors = [
-      'textarea:not([readonly]):not([disabled])',
-      'input[type="text"]:not([readonly]):not([disabled])',
-      'input[type="search"]:not([readonly]):not([disabled])',
-      'input[type="url"]:not([readonly]):not([disabled])',
-      'input[type="email"]:not([readonly]):not([disabled])',
-      'input:not([type]):not([readonly]):not([disabled])',
-      '[contenteditable="true"]',
-      // Facebook 特殊选择器
-      'div[role="textbox"]',
-      'div[contenteditable="true"]',
-      'div[data-text="true"]',
-      // 微信网页版
-      '.input_area',
-      '.chat_textarea',
-      // 通用社交媒体输入框
-      '[role="textbox"]',
-      '[aria-label*="消息"]',
-      '[aria-label*="message"]',
-      '[aria-label*="评论"]',
-      '[aria-label*="comment"]',
-      '[placeholder*="消息"]',
-      '[placeholder*="message"]',
-      '[placeholder*="评论"]',
-      '[placeholder*="comment"]'
-    ];
-    
-    const inputs = [];
-    selectors.forEach(selector => {
-      try {
-        document.querySelectorAll(selector).forEach(input => {
-          // 排除插件自身的输入框
-          if (!input.closest('#chat-list-widget') && this.isValidInputElement(input)) {
-            inputs.push(input);
-          }
-        });
-      } catch (e) {
-        // 忽略无效选择器错误
-        console.warn('选择器错误:', selector, e);
-      }
-    });
-    
-    return inputs;
-  }
-  
-  // 新增方法：验证输入元素的有效性
-  isValidInputElement(element) {
-    if (!element) return false;
-    
-    // 检查元素是否可见
+    // 检查元素是否可见 - 放宽条件，允许一些隐藏但实际可用的元素
     const style = window.getComputedStyle(element);
-    if (style.display === 'none' || style.visibility === 'hidden') {
+    if (style.display === 'none') {
       return false;
     }
     
-    // 检查元素尺寸
+    // 检查元素尺寸 - 放宽条件，允许较小的元素
     const rect = element.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
+    if (rect.width === 0 && rect.height === 0) {
       return false;
     }
     
@@ -995,7 +1542,270 @@ class ChatListWidget {
       return true;
     }
     
+    // 检查是否有特殊的输入框属性
+    if (element.getAttribute('data-text') === 'true') {
+      return true;
+    }
+    
+    // 检查是否有输入框相关的类名
+    const className = element.className || '';
+    if (className.includes('input') || className.includes('textarea') || className.includes('textbox')) {
+      return true;
+    }
+    
     return false;
+  }
+  
+  findAllInputs() {
+    // 查找所有可能的输入框，不进行过滤
+    const selectors = [
+      'textarea',
+      'input[type="text"]',
+      'input[type="search"]',
+      'input[type="url"]',
+      'input[type="email"]',
+      'input:not([type])',
+      '[contenteditable="true"]',
+      'div[role="textbox"]',
+      'div[contenteditable="true"]',
+      'div[data-text="true"]',
+      '.input_area',
+      '.chat_textarea',
+      // Zalo 页面特殊选择器
+      '#chat-input-container-id',
+      '#chat-input-container-id input',
+      '#chat-input-container-id textarea',
+      '#chat-input-container-id [contenteditable="true"]',
+      '#chat-input-container-id [role="textbox"]',
+      // 更多Zalo可能的选择器
+      '[class*="rich-input"]',
+      '[class*="input-rich"]',
+      '[class*="chat-input"]',
+      '[class*="message-input"]',
+      '[class*="compose"]',
+      '[data-testid*="input"]',
+      '[data-testid*="compose"]',
+      '[data-testid*="message"]',
+      '[role="textbox"]',
+      '[aria-label*="消息"]',
+      '[aria-label*="message"]',
+      '[aria-label*="评论"]',
+      '[aria-label*="comment"]',
+      '[placeholder*="消息"]',
+      '[placeholder*="message"]',
+      '[placeholder*="评论"]',
+      '[placeholder*="comment"]',
+      '[placeholder*="输入"]',
+      '[placeholder*="input"]',
+      '[placeholder*="text"]',
+      '[placeholder*="type"]'
+    ];
+    
+    const inputs = [];
+    const seen = new Set();
+    
+    selectors.forEach(selector => {
+      try {
+        document.querySelectorAll(selector).forEach(input => {
+          // 排除插件自身的输入框，避免重复
+          if (!input.closest('#chat-list-widget') && !seen.has(input)) {
+            inputs.push(input);
+            seen.add(input);
+          }
+        });
+      } catch (e) {
+        console.warn('选择器错误:', selector, e);
+      }
+    });
+    
+    return inputs;
+  }
+  
+  findValidInputs() {
+    // 查找所有可能的输入框
+    const selectors = [
+      'textarea:not([readonly]):not([disabled])',
+      'input[type="text"]:not([readonly]):not([disabled])',
+      'input[type="search"]:not([readonly]):not([disabled])',
+      'input[type="url"]:not([readonly]):not([disabled])',
+      'input[type="email"]:not([readonly]):not([disabled])',
+      'input:not([type]):not([readonly]):not([disabled])',
+      '[contenteditable="true"]',
+      // Facebook 特殊选择器
+      'div[role="textbox"]',
+      'div[contenteditable="true"]',
+      'div[data-text="true"]',
+      // 微信网页版
+      '.input_area',
+      '.chat_textarea',
+      // Zalo 页面特殊选择器
+      '#chat-input-container-id',
+      '#chat-input-container-id input',
+      '#chat-input-container-id textarea',
+      '#chat-input-container-id [contenteditable="true"]',
+      '#chat-input-container-id [role="textbox"]',
+      // 更多Zalo可能的选择器
+      '[class*="rich-input"]',
+      '[class*="input-rich"]',
+      '[class*="chat-input"]',
+      '[class*="message-input"]',
+      '[class*="compose"]',
+      '[data-testid*="input"]',
+      '[data-testid*="compose"]',
+      '[data-testid*="message"]',
+      // 通用社交媒体输入框
+      '[role="textbox"]',
+      '[aria-label*="消息"]',
+      '[aria-label*="message"]',
+      '[aria-label*="评论"]',
+      '[aria-label*="comment"]',
+      '[placeholder*="消息"]',
+      '[placeholder*="message"]',
+      '[placeholder*="评论"]',
+      '[placeholder*="comment"]',
+      '[placeholder*="输入"]',
+      '[placeholder*="input"]',
+      '[placeholder*="text"]',
+      '[placeholder*="type"]'
+    ];
+    
+    const inputs = [];
+    selectors.forEach(selector => {
+      try {
+        document.querySelectorAll(selector).forEach(input => {
+          // 排除插件自身的输入框
+          if (!input.closest('#chat-list-widget') && this.isValidInput(input) && this.isMessageInput(input)) {
+            inputs.push(input);
+          }
+        });
+      } catch (e) {
+        // 忽略无效选择器错误
+        console.warn('选择器错误:', selector, e);
+      }
+    });
+    
+    return inputs;
+  }
+  
+  // 新增方法：验证输入元素的有效性
+  isValidInputElement(element) {
+    if (!element) return false;
+    
+    // 检查元素是否可见 - 放宽条件，允许一些隐藏但实际可用的元素
+    const style = window.getComputedStyle(element);
+    if (style.display === 'none') {
+      return false;
+    }
+    
+    // 检查元素尺寸 - 放宽条件，允许较小的元素
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      return false;
+    }
+    
+    // 检查是否为只读或禁用
+    if (element.readOnly || element.disabled) {
+      return false;
+    }
+    
+    // 对于contenteditable元素，确保真的可编辑
+    if (element.contentEditable === 'true' || element.getAttribute('contenteditable') === 'true') {
+      return true;
+    }
+    
+    // 对于role="textbox"的元素
+    if (element.getAttribute('role') === 'textbox') {
+      return true;
+    }
+    
+    // 对于传统input和textarea
+    const tagName = element.tagName.toLowerCase();
+    if (tagName === 'textarea' || tagName === 'input') {
+      return true;
+    }
+    
+    // 检查是否有特殊的输入框属性
+    if (element.getAttribute('data-text') === 'true') {
+      return true;
+    }
+    
+    // 检查是否有输入框相关的类名
+    const className = element.className || '';
+    if (className.includes('input') || className.includes('textarea') || className.includes('textbox')) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // 判断输入框是否为消息输入框（排除搜索框等）
+  isMessageInput(element) {
+    if (!element) return false;
+    
+    // 检查是否为明显的搜索相关输入框 - 只排除明确的搜索框
+    const searchKeywords = ['search', '搜索', 'find', '查找'];
+    
+    // 检查placeholder - 只检查明确的搜索关键词
+    const placeholder = element.placeholder || '';
+    if (searchKeywords.some(keyword => placeholder.toLowerCase().includes(keyword.toLowerCase()))) {
+      return false;
+    }
+    
+    // 检查aria-label - 只检查明确的搜索关键词
+    const ariaLabel = element.getAttribute('aria-label') || '';
+    if (searchKeywords.some(keyword => ariaLabel.toLowerCase().includes(keyword.toLowerCase()))) {
+      return false;
+    }
+    
+    // 检查class名称 - 只检查明确的搜索关键词
+    const className = element.className || '';
+    if (searchKeywords.some(keyword => className.toLowerCase().includes(keyword.toLowerCase()))) {
+      return false;
+    }
+    
+    // 排除明显的导航栏、头部区域的输入框
+    const excludeSelectors = [
+      'nav', 'header', '.navbar', '.header', '.top-bar', '.search-bar',
+      '[role="navigation"]', '[role="banner"]'
+    ];
+    
+    for (let selector of excludeSelectors) {
+      if (element.closest(selector)) {
+        return false;
+      }
+    }
+    
+    // 检查是否为Zalo页面的聊天输入框
+    if (element.closest('#chat-input-container-id')) {
+      return true;
+    }
+    
+    // 如果输入框有明确的消息相关属性，直接通过
+    const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'input', 'text'];
+    if (messageKeywords.some(keyword => 
+      placeholder.toLowerCase().includes(keyword.toLowerCase()) ||
+      ariaLabel.toLowerCase().includes(keyword.toLowerCase()) ||
+      className.toLowerCase().includes(keyword.toLowerCase())
+    )) {
+      return true;
+    }
+    
+    // 检查是否在聊天或消息相关的容器中
+    const chatContainers = [
+      '[id*="chat"]', '[class*="chat"]',
+      '[id*="message"]', '[class*="message"]',
+      '[id*="input"]', '[class*="input"]',
+      '[id*="compose"]', '[class*="compose"]'
+    ];
+    
+    for (let selector of chatContainers) {
+      if (element.closest(selector)) {
+        return true;
+      }
+    }
+    
+    // 默认允许通过，除非明确是搜索框
+    return true;
   }
   
   isElementVisible(element) {
@@ -1012,6 +1822,569 @@ class ChatListWidget {
       rect.bottom <= window.innerHeight &&
       rect.right <= window.innerWidth
     );
+  }
+  
+  selectBestInput(inputs) {
+    if (inputs.length === 0) return null;
+    if (inputs.length === 1) return inputs[0];
+    
+    // 优先级策略（增强版）：
+    // 1. 当前焦点元素（最高优先级）
+    // 2. 最近交互过的输入框
+    // 3. 可见且在视窗内的输入框
+    // 4. 消息相关的输入框（通过属性判断）
+    // 5. 位置在页面下半部分的输入框
+    // 6. 面积较大的输入框
+    // 7. 距离视窗中心较近的输入框
+    
+    const visibleInputs = inputs.filter(input => this.isElementVisible(input));
+    const candidateInputs = visibleInputs.length > 0 ? visibleInputs : inputs;
+    
+    // 按优先级排序
+    const scoredInputs = candidateInputs.map(input => {
+      const rect = input.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      let score = 0;
+      
+      // 1. 当前焦点元素（最高优先级）
+      if (input === document.activeElement) score += 500;
+      
+      // 2. 最近交互加分（提高权重）
+      const historyIndex = this.focusHistory.indexOf(input);
+      if (historyIndex !== -1) {
+        score += (this.focusHistory.length - historyIndex) * 20;
+      }
+      
+      // 3. 是否为最后聚焦的元素（提高权重）
+      if (input === this.lastFocusedElement) score += 300;
+      
+      // 4. 可见性加分
+      if (this.isElementVisible(input)) score += 100;
+      
+      // 5. 消息相关属性加分
+      const placeholder = (input.placeholder || '').toLowerCase();
+      const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
+      const className = (input.className || '').toLowerCase();
+      const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'input', '输入'];
+      
+      if (messageKeywords.some(keyword => 
+        placeholder.includes(keyword) || 
+        ariaLabel.includes(keyword) || 
+        className.includes(keyword)
+      )) {
+        score += 80;
+      }
+      
+      // 6. 位置加分（页面下半部分，但权重降低）
+      if (rect.top > viewportHeight * 0.4) score += 30;
+      
+      // 7. 面积加分（适中的面积更好）
+      const area = rect.width * rect.height;
+      if (area > 5000 && area < 50000) {
+        score += Math.min(area / 2000, 40);
+      } else if (area >= 50000) {
+        score += 20; // 过大的面积降低分数
+      }
+      
+      // 8. 距离视窗中心的距离（越近越好）
+      const centerX = viewportWidth / 2;
+      const centerY = viewportHeight / 2;
+      const inputCenterX = rect.left + rect.width / 2;
+      const inputCenterY = rect.top + rect.height / 2;
+      const distance = Math.sqrt(
+        Math.pow(inputCenterX - centerX, 2) + 
+        Math.pow(inputCenterY - centerY, 2)
+      );
+      const maxDistance = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2));
+      const distanceScore = (1 - distance / maxDistance) * 20;
+      score += distanceScore;
+      
+      // 9. 输入框类型加分
+      const tagName = input.tagName.toLowerCase();
+      if (tagName === 'textarea') score += 25;
+      if (input.contentEditable === 'true') score += 15;
+      
+      // 10. 排除明显的搜索框（减分）
+      const searchKeywords = ['search', '搜索', 'find', '查找', 'filter', '筛选'];
+      if (searchKeywords.some(keyword => 
+        placeholder.includes(keyword) || 
+        ariaLabel.includes(keyword) || 
+        className.includes(keyword)
+      )) {
+        score -= 50;
+      }
+      
+      return { input, score, rect };
+    });
+    
+    // 按分数排序，返回最高分的输入框
+    scoredInputs.sort((a, b) => b.score - a.score);
+    
+    // 调试信息
+    if (this.debugMode) {
+      console.log('输入框评分结果:', scoredInputs.map(item => ({
+        element: this.getElementInfo(item.input),
+        score: item.score,
+        rect: item.rect
+      })));
+    }
+    
+    return scoredInputs[0].input;
+  }
+  
+  // 获取输入框评分信息（用于通知显示）
+  getInputScores(inputs) {
+    if (inputs.length === 0) return [];
+    
+    const visibleInputs = inputs.filter(input => this.isElementVisible(input));
+    const candidateInputs = visibleInputs.length > 0 ? visibleInputs : inputs;
+    
+    const scoredInputs = candidateInputs.map(input => {
+      const rect = input.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      let score = 0;
+      
+      // 使用与selectBestInput相同的评分逻辑
+      if (input === document.activeElement) score += 500;
+      
+      const historyIndex = this.focusHistory.indexOf(input);
+      if (historyIndex !== -1) {
+        score += (this.focusHistory.length - historyIndex) * 20;
+      }
+      
+      if (input === this.lastFocusedElement) score += 300;
+      if (this.isElementVisible(input)) score += 100;
+      
+      const placeholder = (input.placeholder || '').toLowerCase();
+      const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
+      const className = (input.className || '').toLowerCase();
+      const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'input', '输入'];
+      
+      if (messageKeywords.some(keyword => 
+        placeholder.includes(keyword) || 
+        ariaLabel.includes(keyword) || 
+        className.includes(keyword)
+      )) {
+        score += 80;
+      }
+      
+      if (rect.top > viewportHeight * 0.4) score += 30;
+      
+      const area = rect.width * rect.height;
+      if (area > 5000 && area < 50000) {
+        score += Math.min(area / 2000, 40);
+      } else if (area >= 50000) {
+        score += 20;
+      }
+      
+      const centerX = viewportWidth / 2;
+      const centerY = viewportHeight / 2;
+      const inputCenterX = rect.left + rect.width / 2;
+      const inputCenterY = rect.top + rect.height / 2;
+      const distance = Math.sqrt(
+        Math.pow(inputCenterX - centerX, 2) + 
+        Math.pow(inputCenterY - centerY, 2)
+      );
+      const maxDistance = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2));
+      const distanceScore = (1 - distance / maxDistance) * 20;
+      score += distanceScore;
+      
+      const tagName = input.tagName.toLowerCase();
+      if (tagName === 'textarea') score += 25;
+      if (input.contentEditable === 'true') score += 15;
+      
+      const searchKeywords = ['search', '搜索', 'find', '查找', 'filter', '筛选'];
+      if (searchKeywords.some(keyword => 
+        placeholder.includes(keyword) || 
+        ariaLabel.includes(keyword) || 
+        className.includes(keyword)
+      )) {
+        score -= 50;
+      }
+      
+      return { input, score, rect };
+    });
+    
+    return scoredInputs.sort((a, b) => b.score - a.score);
+  }
+  
+  showMultipleInputsNotification(inputs, selectedInput) {
+    // 获取所有输入框的评分信息
+    const scoredInputs = this.getInputScores(inputs);
+    const selectedScore = scoredInputs.find(item => item.input === selectedInput)?.score || 0;
+    
+    // 创建临时提示
+    const notification = document.createElement('div');
+    notification.id = 'multiple-inputs-notification';
+    
+    // 生成输入框列表
+    const inputsList = scoredInputs.map((item, index) => {
+      const isSelected = item.input === selectedInput;
+      return `
+        <div class="input-option ${isSelected ? 'selected' : ''}" data-index="${index}">
+          <div class="input-info">
+            <span class="input-label">${isSelected ? '✓ ' : ''}${this.getElementInfo(item.input)}</span>
+            <span class="input-score">评分: ${Math.round(item.score)}</span>
+          </div>
+          ${isSelected ? '<div class="selected-reason">已选择（最高评分）</div>' : ''}
+        </div>
+      `;
+    }).join('');
+    
+    notification.innerHTML = `
+      <div class="notification-content">
+        <div class="notification-header">
+          <span class="notification-icon">🎯</span>
+          <span class="notification-title">智能输入框选择</span>
+          <button class="btn-close-notification">×</button>
+        </div>
+        <div class="notification-body">
+          <p>检测到 <strong>${inputs.length}</strong> 个输入框，已智能选择最佳输入框：</p>
+          <div class="inputs-list">
+            ${inputsList}
+          </div>
+          <div class="notification-actions">
+            <button class="btn-highlight-selected">高亮选中</button>
+            <button class="btn-show-all-inputs">显示全部</button>
+            <button class="btn-switch-input">切换选择</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // 存储输入框信息供后续使用
+    notification._inputsData = { inputs, scoredInputs, selectedInput };
+    
+    // 添加样式
+    const style = document.createElement('style');
+    style.textContent = `
+      #multiple-inputs-notification {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        z-index: 10002;
+        max-width: 500px;
+        border: 1px solid #ddd;
+        animation: slideIn 0.3s ease;
+      }
+      
+      @keyframes slideIn {
+        from { opacity: 0; transform: translate(-50%, -60%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+      }
+      
+      @keyframes highlightPulse {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(1.02); }
+      }
+      
+      #multiple-inputs-notification .notification-content {
+        padding: 0;
+      }
+      
+      #multiple-inputs-notification .notification-header {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #eee;
+        background: #f8f9fa;
+        border-radius: 12px 12px 0 0;
+      }
+      
+      #multiple-inputs-notification .notification-icon {
+        font-size: 20px;
+        margin-right: 8px;
+      }
+      
+      #multiple-inputs-notification .notification-title {
+        font-weight: bold;
+        color: #333;
+        flex: 1;
+      }
+      
+      #multiple-inputs-notification .btn-close-notification {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #666;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      #multiple-inputs-notification .btn-close-notification:hover {
+        color: #333;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+      }
+      
+      #multiple-inputs-notification .notification-body {
+        padding: 20px;
+      }
+      
+      #multiple-inputs-notification .notification-body p {
+        margin: 0 0 12px 0;
+        color: #555;
+        line-height: 1.5;
+      }
+      
+      #multiple-inputs-notification .inputs-list {
+        margin: 12px 0;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      
+      #multiple-inputs-notification .input-option {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      
+      #multiple-inputs-notification .input-option:last-child {
+        border-bottom: none;
+      }
+      
+      #multiple-inputs-notification .input-option:hover {
+        background-color: #f8f9fa;
+      }
+      
+      #multiple-inputs-notification .input-option.selected {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+      }
+      
+      #multiple-inputs-notification .input-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      #multiple-inputs-notification .input-label {
+        font-family: monospace;
+        font-size: 12px;
+        color: #333;
+        flex: 1;
+        margin-right: 8px;
+      }
+      
+      #multiple-inputs-notification .input-score {
+        font-size: 11px;
+        color: #666;
+        background: #f0f0f0;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      
+      #multiple-inputs-notification .selected-reason {
+        font-size: 11px;
+        color: #2196f3;
+        margin-top: 4px;
+        font-weight: 500;
+      }
+      
+      #multiple-inputs-notification .notification-body code {
+        background: #f1f3f4;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      
+      #multiple-inputs-notification .notification-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      
+      #multiple-inputs-notification .notification-actions button {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+      
+      #multiple-inputs-notification .notification-actions button:hover {
+        background: #f8f9fa;
+        border-color: #999;
+      }
+      
+      #multiple-inputs-notification .btn-highlight-selected {
+        background: #4CAF50;
+        color: white;
+        border-color: #4CAF50;
+      }
+      
+      #multiple-inputs-notification .btn-highlight-selected:hover {
+        background: #45a049;
+      }
+      
+      #multiple-inputs-notification .btn-switch-input {
+        background: #2196f3;
+        color: white;
+        border-color: #2196f3;
+      }
+      
+      #multiple-inputs-notification .btn-switch-input:hover {
+        background: #1976d2;
+      }
+      
+      #multiple-inputs-notification .btn-show-all-inputs {
+        background: #ff9800;
+        color: white;
+        border-color: #ff9800;
+      }
+      
+      #multiple-inputs-notification .btn-show-all-inputs:hover {
+        background: #f57c00;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    document.body.appendChild(notification);
+    
+    // 绑定事件
+    notification.querySelector('.btn-close-notification').addEventListener('click', () => {
+      notification.remove();
+      style.remove();
+    });
+    
+    notification.querySelector('.btn-highlight-selected').addEventListener('click', () => {
+      this.highlightElement(selectedInput);
+      notification.remove();
+      style.remove();
+    });
+    
+    notification.querySelector('.btn-show-all-inputs').addEventListener('click', () => {
+      this.highlightAllInputs(inputs);
+      notification.remove();
+      style.remove();
+    });
+    
+    // 切换选择按钮事件
+    notification.querySelector('.btn-switch-input').addEventListener('click', () => {
+      const currentIndex = inputs.indexOf(selectedInput);
+      const nextIndex = (currentIndex + 1) % inputs.length;
+      const newSelectedInput = inputs[nextIndex];
+      
+      // 更新选中状态
+      notification._inputsData.selectedInput = newSelectedInput;
+      
+      // 更新UI显示
+      const options = notification.querySelectorAll('.input-option');
+      options.forEach((option, index) => {
+        option.classList.toggle('selected', index === nextIndex);
+      });
+      
+      // 高亮新选中的输入框
+      this.highlightElement(newSelectedInput);
+      
+      // 更新全局选中的输入框
+      this.selectedInput = newSelectedInput;
+    });
+    
+    // 输入框选项点击事件
+    const inputOptions = notification.querySelectorAll('.input-option');
+    inputOptions.forEach((option, index) => {
+      option.addEventListener('click', () => {
+        const newSelectedInput = inputs[index];
+        
+        // 更新选中状态
+        notification._inputsData.selectedInput = newSelectedInput;
+        
+        // 更新UI显示
+        inputOptions.forEach((opt, idx) => {
+          opt.classList.toggle('selected', idx === index);
+        });
+        
+        // 高亮选中的输入框
+        this.highlightElement(newSelectedInput);
+        
+        // 更新全局选中的输入框
+        this.selectedInput = newSelectedInput;
+      });
+    });
+    
+    // 5秒后自动关闭（延长时间以便用户交互）
+    setTimeout(() => {
+      if (document.contains(notification)) {
+        notification.remove();
+        style.remove();
+      }
+    }, 5000);
+  }
+  
+  highlightElement(element) {
+    const highlight = document.createElement('div');
+    highlight.style.cssText = `
+      position: absolute;
+      background: rgba(76, 175, 80, 0.3);
+      border: 2px solid #4CAF50;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: highlightPulse 1s ease-in-out 3;
+    `;
+    
+    const rect = element.getBoundingClientRect();
+    highlight.style.left = (rect.left + window.scrollX - 2) + 'px';
+    highlight.style.top = (rect.top + window.scrollY - 2) + 'px';
+    highlight.style.width = (rect.width + 4) + 'px';
+    highlight.style.height = (rect.height + 4) + 'px';
+    
+    document.body.appendChild(highlight);
+    
+    setTimeout(() => {
+      if (document.contains(highlight)) {
+        highlight.remove();
+      }
+    }, 3000);
+  }
+  
+  highlightAllInputs(inputs) {
+    inputs.forEach((input, index) => {
+      setTimeout(() => {
+        this.highlightElement(input);
+      }, index * 200);
+    });
+  }
+  
+  getElementInfo(element) {
+    if (!element) return 'Unknown';
+    
+    let info = element.tagName.toLowerCase();
+    
+    if (element.id) {
+      info += `#${element.id}`;
+    }
+    
+    if (element.className) {
+      const classes = element.className.split(' ').filter(c => c.trim()).slice(0, 2);
+      if (classes.length > 0) {
+        info += `.${classes.join('.')}`;
+      }
+    }
+    
+    if (element.placeholder) {
+      info += ` [${element.placeholder.substring(0, 20)}...]`;
+    }
+    
+    return info;
   }
   
   insertContent(element, content) {
@@ -1402,14 +2775,16 @@ class ChatListWidget {
       });
     }
     
-    // ESC键关闭
-    const escHandler = (e) => {
+    // ESC键关闭，Ctrl+Enter保存
+    const keyHandler = (e) => {
       if (e.key === 'Escape') {
         this.hideEditScriptModal();
-        document.removeEventListener('keydown', escHandler);
+        document.removeEventListener('keydown', keyHandler);
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        this.saveEditedScript();
       }
     };
-    document.addEventListener('keydown', escHandler);
+    document.addEventListener('keydown', keyHandler);
   }
 
   hideEditScriptModal() {
@@ -1418,6 +2793,8 @@ class ChatListWidget {
     if (modal) {
       modal.remove();
     }
+    // 关闭预览浮层
+    this.forceHidePreview();
   }
 
   saveEditedScript() {
@@ -1465,6 +2842,9 @@ class ChatListWidget {
       
       // 隐藏模态框
       this.hideEditScriptModal();
+      
+      // 关闭预览浮层
+      this.forceHidePreview();
       
       console.log('话术更新成功');
     } else {
@@ -2032,7 +3412,7 @@ class ChatListWidget {
   }
 }
 
-// 添加消息监听器处理数据更新
+// 添加消息监听器处理数据更新和浮层控制
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'DATA_UPDATED') {
     // 重新加载数据
@@ -2040,6 +3420,54 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       window.chatListWidget.loadData().then(() => {
         console.log('数据已更新');
       });
+    }
+  } else if (message.type === 'TOGGLE_WIDGET') {
+    // 切换浮层显示/隐藏
+    if (window.chatListWidget) {
+      if (window.chatListWidget.isVisible) {
+        window.chatListWidget.hideWidget();
+      } else {
+        window.chatListWidget.showWidget();
+      }
+      sendResponse({ success: true, visible: window.chatListWidget.isVisible });
+    }
+  } else if (message.type === 'SHOW_WIDGET') {
+    // 显示浮层
+    if (window.chatListWidget) {
+      window.chatListWidget.showWidget();
+      sendResponse({ success: true, visible: true });
+    }
+  } else if (message.type === 'HIDE_WIDGET') {
+    // 隐藏浮层
+    if (window.chatListWidget) {
+      window.chatListWidget.hideWidget();
+      sendResponse({ success: true, visible: false });
+    }
+  } else if (message.type === 'OPEN_MANAGE_PANEL') {
+    // 打开管理面板
+    if (window.chatListWidget) {
+      window.chatListWidget.showWidget();
+      window.chatListWidget.showManagePanel();
+      sendResponse({ success: true });
+    }
+  } else if (message.type === 'WHITELIST_UPDATED') {
+    // 白名单更新
+    if (window.chatListWidget) {
+      window.chatListWidget.whitelist = message.whitelist || [];
+      
+      // 检查当前页面是否在白名单中
+      if (!window.chatListWidget.isWhitelistedSite()) {
+        // 如果不在白名单中，隐藏并销毁组件
+        window.chatListWidget.hideWidget();
+        console.log('当前网站不在白名单中，话术助手已隐藏');
+      } else {
+        // 如果在白名单中但组件未初始化，重新初始化
+        if (!window.chatListWidget.initialized) {
+          window.chatListWidget.init();
+        }
+      }
+      
+      sendResponse({ success: true });
     }
   }
 });

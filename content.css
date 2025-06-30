@@ -298,6 +298,15 @@ mark {
   background: #f8f9fa;
 }
 
+.script-item.keyboard-selected {
+  background: #e3f2fd;
+  border-left: 3px solid #2196f3;
+}
+
+.script-item.keyboard-selected:hover {
+  background: #e3f2fd;
+}
+
 .script-header {
   display: flex;
   justify-content: space-between;

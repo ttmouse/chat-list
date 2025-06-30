@@ -3,339 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>话术助手 - 测试页面</title>
+    <title>输入框识别测试</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: Arial, sans-serif;
             padding: 20px;
             line-height: 1.6;
-            background: #f5f5f5;
         }
-        
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
         }
-        
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
+        .input-group {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            border-left: 4px solid #764ba2;
         }
-        
-        .section h2 {
-            color: #444;
+        .input-group h3 {
             margin-top: 0;
-            margin-bottom: 15px;
+            color: #333;
         }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
-        }
-        
-        input[type="text"],
-        input[type="email"],
-        textarea,
-        select {
+        input, textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.2s;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             box-sizing: border-box;
         }
-        
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: #764ba2;
-            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-        }
-        
-        textarea {
+        .message-input {
             min-height: 100px;
-            resize: vertical;
         }
-        
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .search-input {
+            background-color: #f9f9f9;
+        }
+        .test-button {
+            background: #4CAF50;
             color: white;
+            padding: 10px 20px;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            margin-right: 10px;
-            margin-bottom: 10px;
+            margin: 10px 5px;
         }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
-        }
-        
-        .instructions {
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .instructions h3 {
-            color: #1976d2;
-            margin-top: 0;
-        }
-        
-        .instructions ol {
-            margin: 0;
-            padding-left: 20px;
-        }
-        
-        .instructions li {
-            margin-bottom: 8px;
-        }
-        
-        .status {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .status.info {
-            background: #cce7ff;
-            color: #004085;
-            border: 1px solid #99d6ff;
-        }
-        
-        .editable {
-            border: 2px dashed #ddd;
-            padding: 15px;
-            border-radius: 6px;
-            min-height: 50px;
-            cursor: text;
-            transition: border-color 0.2s;
-        }
-        
-        .editable:focus {
-            outline: none;
-            border-color: #764ba2;
-            background: #f8f9ff;
-        }
-        
-        .editable:empty::before {
-            content: '点击这里输入内容，或使用话术助手填充...';
-            color: #999;
-            font-style: italic;
+        .test-button:hover {
+            background: #45a049;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎯 话术助手测试页面</h1>
+        <h1>输入框识别测试页面</h1>
+        <p>这个页面包含多种类型的输入框，用于测试智能识别功能。</p>
         
-        <div class="instructions">
-            <h3>📋 使用说明</h3>
-            <ol>
-                <li>确保已安装并启用「话术助手」浏览器插件</li>
-                <li>页面右侧应该显示悬浮的话术列表</li>
-                <li>点击下方任意输入框，然后点击话术列表中的内容</li>
-                <li>话术内容会自动填充到当前焦点的输入框中</li>
-                <li>可以测试不同类型的输入框和可编辑区域</li>
-            </ol>
+        <div class="input-group">
+            <h3>搜索框（应该被排除）</h3>
+            <input type="text" placeholder="搜索内容..." class="search-input">
+            <input type="search" placeholder="全站搜索">
         </div>
         
-        <div class="status info">
-            💡 提示：如果看不到话术助手，请检查插件是否正确安装并刷新页面。
+        <div class="input-group">
+            <h3>消息输入框（应该被优先选择）</h3>
+            <textarea placeholder="输入您的消息..." class="message-input"></textarea>
+            <div contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 80px;" data-placeholder="可编辑的消息框"></div>
         </div>
         
-        <div class="section">
-            <h2>📝 基础表单测试</h2>
-            
-            <div class="form-group">
-                <label for="name">姓名</label>
-                <input type="text" id="name" placeholder="请输入您的姓名">
-            </div>
-            
-            <div class="form-group">
-                <label for="email">邮箱</label>
-                <input type="email" id="email" placeholder="请输入您的邮箱地址">
-            </div>
-            
-            <div class="form-group">
-                <label for="company">公司</label>
-                <input type="text" id="company" placeholder="请输入公司名称">
-            </div>
-            
-            <div class="form-group">
-                <label for="position">职位</label>
-                <select id="position">
-                    <option value="">请选择职位</option>
-                    <option value="manager">经理</option>
-                    <option value="developer">开发工程师</option>
-                    <option value="designer">设计师</option>
-                    <option value="sales">销售</option>
-                    <option value="other">其他</option>
-                </select>
-            </div>
+        <div class="input-group">
+            <h3>普通输入框</h3>
+            <input type="text" placeholder="用户名">
+            <input type="email" placeholder="邮箱地址">
+            <textarea placeholder="备注信息"></textarea>
         </div>
         
-        <div class="section">
-            <h2>💬 文本区域测试</h2>
-            
-            <div class="form-group">
-                <label for="message">留言内容</label>
-                <textarea id="message" placeholder="请输入您的留言内容..."></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="feedback">反馈建议</label>
-                <textarea id="feedback" placeholder="请输入您的反馈建议..."></textarea>
-            </div>
+        <div class="input-group">
+            <h3>聊天相关输入框</h3>
+            <input type="text" placeholder="发送消息" class="chat-input">
+            <div contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 60px;" role="textbox" aria-label="聊天输入框"></div>
         </div>
         
-        <div class="section">
-            <h2>✏️ 可编辑区域测试</h2>
-            
-            <div class="form-group">
-                <label>富文本编辑器模拟</label>
-                <div class="editable" contenteditable="true"></div>
-            </div>
-            
-            <div class="form-group">
-                <label>产品描述</label>
-                <div class="editable" contenteditable="true"></div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <h2>🔧 功能测试</h2>
-            
-            <button class="btn" onclick="clearAllInputs()">清空所有输入</button>
-            <button class="btn" onclick="focusFirstInput()">聚焦第一个输入框</button>
-            <button class="btn" onclick="showInputCount()">显示输入框数量</button>
-            <button class="btn" onclick="testAutoFill()">测试自动填充</button>
-        </div>
-        
-        <div class="section">
-            <h2>📊 测试结果</h2>
-            <div id="test-results">
-                <p>在这里会显示测试结果和状态信息...</p>
-            </div>
+        <div class="input-group">
+            <h3>测试按钮</h3>
+            <button class="test-button" onclick="testInputDetection()">测试输入框检测</button>
+            <button class="test-button" onclick="testFillContent()">测试内容填充</button>
         </div>
     </div>
     
     <script>
-        // 测试功能函数
-        function clearAllInputs() {
-            const inputs = document.querySelectorAll('input[type="text"], input[type="email"], textarea, [contenteditable="true"]');
-            inputs.forEach(input => {
-                if (input.contentEditable === 'true') {
-                    input.textContent = '';
+        function testInputDetection() {
+            console.log('开始测试输入框检测...');
+            const allInputs = document.querySelectorAll('input, textarea, [contenteditable="true"], [role="textbox"]');
+            console.log('检测到的所有输入框:', allInputs.length);
+            
+            allInputs.forEach((input, index) => {
+                console.log(`输入框 ${index + 1}:`, {
+                    tagName: input.tagName,
+                    type: input.type,
+                    placeholder: input.placeholder,
+                    className: input.className,
+                    contentEditable: input.contentEditable
+                });
+            });
+        }
+        
+        function testFillContent() {
+            const testContent = '这是一条测试消息，用于验证内容填充功能。';
+            const messageInputs = document.querySelectorAll('textarea.message-input, [contenteditable="true"], .chat-input');
+            
+            if (messageInputs.length > 0) {
+                const targetInput = messageInputs[0];
+                
+                if (targetInput.contentEditable === 'true') {
+                    targetInput.textContent = testContent;
                 } else {
-                    input.value = '';
+                    targetInput.value = testContent;
                 }
-            });
-            showResult('✅ 已清空所有输入框', 'success');
-        }
-        
-        function focusFirstInput() {
-            const firstInput = document.querySelector('input[type="text"]');
-            if (firstInput) {
-                firstInput.focus();
-                showResult('✅ 已聚焦到第一个输入框，现在可以测试话术填充', 'success');
-            }
-        }
-        
-        function showInputCount() {
-            const inputs = document.querySelectorAll('input[type="text"], input[type="email"], textarea, [contenteditable="true"]');
-            showResult(`📊 页面共有 ${inputs.length} 个可输入的元素`, 'info');
-        }
-        
-        function testAutoFill() {
-            const testText = '这是一个测试话术内容，用于验证自动填充功能是否正常工作。';
-            const activeElement = document.activeElement;
-            
-            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-                activeElement.value = testText;
-                showResult('✅ 测试话术已填充到当前输入框', 'success');
+                
+                targetInput.focus();
+                console.log('内容已填充到:', targetInput);
             } else {
-                const firstInput = document.querySelector('input[type="text"]');
-                if (firstInput) {
-                    firstInput.focus();
-                    firstInput.value = testText;
-                    showResult('✅ 测试话术已填充到第一个输入框', 'success');
-                }
+                console.log('未找到合适的输入框');
             }
         }
         
-        function showResult(message, type = 'info') {
-            const resultsDiv = document.getElementById('test-results');
-            const timestamp = new Date().toLocaleTimeString();
-            resultsDiv.innerHTML = `
-                <div class="status ${type}">
-                    <strong>[${timestamp}]</strong> ${message}
-                </div>
-            ` + resultsDiv.innerHTML;
-        }
-        
-        // 页面加载完成后的初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            showResult('🎉 测试页面加载完成，请开始测试话术助手功能！', 'info');
-            
-            // 监听输入事件
-            document.addEventListener('input', function(e) {
-                if (e.target.matches('input, textarea, [contenteditable="true"]')) {
-                    const content = e.target.value || e.target.textContent;
-                    if (content.length > 10) {
-                        showResult(`📝 检测到输入内容：${content.substring(0, 30)}${content.length > 30 ? '...' : ''}`, 'success');
-                    }
-                }
-            });
-            
-            // 监听焦点事件
-            document.addEventListener('focus', function(e) {
-                if (e.target.matches('input, textarea, [contenteditable="true"]')) {
-                    const elementType = e.target.tagName.toLowerCase();
-                    const elementId = e.target.id || '未命名';
-                    showResult(`🎯 焦点已切换到：${elementType} (${elementId})`, 'info');
-                }
-            }, true);
+        window.addEventListener('load', () => {
+            console.log('页面加载完成，可以开始测试');
+            testInputDetection();
         });
     </script>
 </body>

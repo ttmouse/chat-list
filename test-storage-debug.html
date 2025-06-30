@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>白名单存储调试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #005a87;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group input {
+            width: 300px;
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>白名单存储调试页面</h1>
+    
+    <div class="section">
+        <h2>当前存储状态</h2>
+        <button class="button" onclick="checkStorage()">检查存储</button>
+        <button class="button" onclick="clearStorage()">清空存储</button>
+        <div id="storage-status" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>白名单测试</h2>
+        <div class="input-group">
+            <input type="text" id="test-url" placeholder="输入测试URL" value="https://example.com/test">
+            <button class="button" onclick="addToWhitelist()">添加到白名单</button>
+        </div>
+        <button class="button" onclick="loadWhitelist()">加载白名单</button>
+        <button class="button" onclick="saveTestWhitelist()">保存测试白名单</button>
+        <div id="whitelist-status" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>扩展权限检查</h2>
+        <button class="button" onclick="checkPermissions()">检查权限</button>
+        <div id="permissions-status" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>操作日志</h2>
+        <button class="button" onclick="clearLog()">清空日志</button>
+        <div id="debug-log" class="log"></div>
+    </div>
+
+    <script>
+        let debugLog = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            debugLog.push(logEntry);
+            updateLogDisplay();
+            console.log(logEntry);
+        }
+        
+        function updateLogDisplay() {
+            document.getElementById('debug-log').textContent = debugLog.join('\n');
+        }
+        
+        function clearLog() {
+            debugLog = [];
+            updateLogDisplay();
+        }
+        
+        async function checkStorage() {
+            try {
+                log('开始检查存储状态...');
+                
+                if (typeof chrome === 'undefined' || !chrome.storage) {
+                    throw new Error('Chrome扩展API不可用');
+                }
+                
+                const result = await chrome.storage.local.get(null);
+                const statusDiv = document.getElementById('storage-status');
+                statusDiv.textContent = JSON.stringify(result, null, 2);
+                
+                log(`存储检查完成，共找到 ${Object.keys(result).length} 个键`);
+                
+                // 特别检查白名单
+                if (result.siteWhitelist) {
+                    log(`白名单数据: ${JSON.stringify(result.siteWhitelist)}`);
+                } else {
+                    log('未找到白名单数据', 'warn');
+                }
+                
+            } catch (error) {
+                log(`检查存储失败: ${error.message}`, 'error');
+                document.getElementById('storage-status').textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        async function clearStorage() {
+            try {
+                log('清空存储...');
+                await chrome.storage.local.clear();
+                log('存储已清空', 'success');
+                await checkStorage();
+            } catch (error) {
+                log(`清空存储失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadWhitelist() {
+            try {
+                log('加载白名单...');
+                const result = await chrome.storage.local.get(['siteWhitelist']);
+                const whitelist = result.siteWhitelist || [];
+                
+                const statusDiv = document.getElementById('whitelist-status');
+                statusDiv.textContent = `当前白名单:\n${JSON.stringify(whitelist, null, 2)}`;
+                
+                log(`白名单加载完成，共 ${whitelist.length} 个网站`);
+            } catch (error) {
+                log(`加载白名单失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function addToWhitelist() {
+            try {
+                const url = document.getElementById('test-url').value.trim();
+                if (!url) {
+                    throw new Error('请输入URL');
+                }
+                
+                log(`添加URL到白名单: ${url}`);
+                
+                // 加载现有白名单
+                const result = await chrome.storage.local.get(['siteWhitelist']);
+                const whitelist = result.siteWhitelist || [];
+                
+                // 检查是否已存在
+                if (whitelist.includes(url)) {
+                    log('URL已在白名单中', 'warn');
+                    return;
+                }
+                
+                // 添加新URL
+                whitelist.push(url);
+                
+                // 保存
+                await chrome.storage.local.set({ siteWhitelist: whitelist });
+                log(`URL已添加到白名单，当前共 ${whitelist.length} 个网站`, 'success');
+                
+                // 刷新显示
+                await loadWhitelist();
+                
+            } catch (error) {
+                log(`添加到白名单失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function saveTestWhitelist() {
+            try {
+                log('保存测试白名单...');
+                const testWhitelist = [
+                    'https://www.larksuite.com/hc/zh-CN/chat',
+                    'https://oa.zalo.me/chat',
+                    'https://example.com/test',
+                    'https://test.example.com/chat'
+                ];
+                
+                await chrome.storage.local.set({ siteWhitelist: testWhitelist });
+                log(`测试白名单已保存，共 ${testWhitelist.length} 个网站`, 'success');
+                
+                await loadWhitelist();
+            } catch (error) {
+                log(`保存测试白名单失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkPermissions() {
+            try {
+                log('检查扩展权限...');
+                
+                const statusDiv = document.getElementById('permissions-status');
+                let status = '';
+                
+                // 检查基本API
+                status += `Chrome API: ${typeof chrome !== 'undefined' ? '✓' : '✗'}\n`;
+                status += `Storage API: ${typeof chrome !== 'undefined' && chrome.storage ? '✓' : '✗'}\n`;
+                status += `Tabs API: ${typeof chrome !== 'undefined' && chrome.tabs ? '✓' : '✗'}\n`;
+                
+                // 检查存储权限
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    try {
+                        await chrome.storage.local.get(['test']);
+                        status += `Storage权限: ✓\n`;
+                    } catch (e) {
+                        status += `Storage权限: ✗ (${e.message})\n`;
+                    }
+                }
+                
+                statusDiv.textContent = status;
+                log('权限检查完成');
+                
+            } catch (error) {
+                log(`权限检查失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载时自动检查
+        document.addEventListener('DOMContentLoaded', () => {
+            log('页面加载完成，开始初始化检查...');
+            checkPermissions();
+            checkStorage();
+            loadWhitelist();
+        });
+        
+        // 监听存储变化
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+            chrome.storage.onChanged.addListener((changes, namespace) => {
+                log(`存储变化 (${namespace}): ${JSON.stringify(changes)}`);
+                if (changes.siteWhitelist) {
+                    log('白名单已更新');
+                    loadWhitelist();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

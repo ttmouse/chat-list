@@ -37,30 +37,25 @@
   top: 20%;
   right: 0;
   transform: translateY(-50%);
-  width: 50px;
-  height: 50px;
+  width: 8px;
+  height: 40px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 25px 0 0 25px;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 4px 0 0 4px;
+  box-shadow: -1px 0 5px rgba(0, 0, 0, 0.2);
   z-index: 9999;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.3s ease;
   user-select: none;
 }
 
 #chat-widget-trigger:hover {
-  width: 60px;
-  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.3);
-  transform: translateY(-50%) translateX(-5px);
+  width: 12px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-50%) translateX(-2px);
 }
 
 #chat-widget-trigger .trigger-icon {
-  font-size: 20px;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  display: none;
 }
 
 /* 头部 */

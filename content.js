@@ -127,15 +127,7 @@ class ChatListWidget {
   // }
 
   getElementInfo(element) {
-    if (!element) return '无';
-    
-    const tagName = element.tagName.toLowerCase();
-    const id = element.id ? `#${element.id}` : '';
-    const className = element.className ? `.${element.className.split(' ').join('.')}` : '';
-    const type = element.type ? `[type="${element.type}"]` : '';
-    const placeholder = element.placeholder ? `[placeholder="${element.placeholder.substring(0, 20)}..."]` : '';
-    
-    return `${tagName}${id}${className}${type}${placeholder}`.substring(0, 100);
+    return ChatListUtils.getElementInfo(element);
   }
 
   // 检查当前网页是否在白名单中
@@ -542,7 +534,7 @@ class ChatListWidget {
     document.addEventListener('click', (e) => {
       if (this.isValidInput(e.target)) {
         // 如果是插件内部的输入框，不记录到历史中
-        if (e.target.closest('#chat-list-widget')) {
+        if (ChatListUtils.closest(e.target, '#chat-list-widget')) {
           return;
         }
         
@@ -561,7 +553,7 @@ class ChatListWidget {
     document.addEventListener('focus', (e) => {
       if (this.isValidInput(e.target)) {
         // 如果是插件内部的输入框，不记录到历史中
-        if (e.target.closest('#chat-list-widget')) {
+        if (ChatListUtils.closest(e.target, '#chat-list-widget')) {
           return;
         }
         
@@ -580,7 +572,7 @@ class ChatListWidget {
     document.addEventListener('focusin', (e) => {
       if (this.isValidInput(e.target)) {
         // 如果是插件内部的输入框，不记录到历史中
-        if (e.target.closest('#chat-list-widget')) {
+        if (ChatListUtils.closest(e.target, '#chat-list-widget')) {
           return;
         }
         
@@ -598,8 +590,8 @@ class ChatListWidget {
     // 防止浮层点击时失去焦点，但允许输入框获得焦点
     this.widget.addEventListener('mousedown', (e) => {
       // 如果点击的是输入框或搜索相关元素，允许默认行为
-      if (e.target.matches('.search-input, .btn-clear-search') || 
-          e.target.closest('.search-container')) {
+      if (ChatListUtils.matches(e.target, '.search-input, .btn-clear-search') || 
+          ChatListUtils.closest(e.target, '.search-container')) {
         return;
       }
       e.preventDefault(); // 防止默认的焦点转移
@@ -621,7 +613,7 @@ class ChatListWidget {
         const currentFocus = document.activeElement;
         
         // 如果当前焦点是有效输入框且不是插件内部的，记录它
-        if (currentFocus && this.isValidInput(currentFocus) && !currentFocus.closest('#chat-list-widget')) {
+        if (currentFocus && this.isValidInput(currentFocus) && !ChatListUtils.closest(currentFocus, '#chat-list-widget')) {
           this.lastFocusedElement = currentFocus;
           this.addToFocusHistory(currentFocus);
           
@@ -765,8 +757,8 @@ class ChatListWidget {
 
     // 话术点击填充
     this.widget.querySelector('.script-list').addEventListener('click', (e) => {
-      if (e.target.closest('.script-item') && !e.target.closest('.script-actions')) {
-        const scriptId = e.target.closest('.script-item').dataset.id;
+      if (ChatListUtils.closest(e.target, '.script-item') && !ChatListUtils.closest(e.target, '.script-actions')) {
+        const scriptId = ChatListUtils.closest(e.target, '.script-item').dataset.id;
         const script = this.scripts.find(s => s.id === scriptId);
         if (script) {
           // 关闭预览浮层
@@ -781,8 +773,8 @@ class ChatListWidget {
       console.log('Script list clicked:', e.target, e.target.classList);
       
       // 查找最近的按钮元素（处理SVG内部元素点击）
-      const editBtn = e.target.closest('.btn-edit');
-      const deleteBtn = e.target.closest('.btn-delete');
+      const editBtn = ChatListUtils.closest(e.target, '.btn-edit');
+        const deleteBtn = ChatListUtils.closest(e.target, '.btn-delete');
       
       if (editBtn) {
         console.log('Edit button clicked');
@@ -798,7 +790,7 @@ class ChatListWidget {
 
     // 话术项悬停预览
     this.widget.querySelector('.script-list').addEventListener('mouseenter', (e) => {
-      const scriptItem = e.target.closest('.script-item');
+      const scriptItem = ChatListUtils.closest(e.target, '.script-item');
       if (scriptItem) {
         this.showPreview(scriptItem);
       }
@@ -1280,7 +1272,7 @@ class ChatListWidget {
     const activeElement = document.activeElement;
     
     // 如果当前焦点是插件内部的搜索框，优先使用焦点历史记录
-    if (activeElement && activeElement.closest('#chat-list-widget')) {
+    if (activeElement && ChatListUtils.closest(activeElement, '#chat-list-widget')) {
       const validFocusElement = this.getValidFocusFromHistory();
       if (validFocusElement) {
         this.insertContent(validFocusElement, content);
@@ -1301,7 +1293,7 @@ class ChatListWidget {
     }
     
     // 如果当前有焦点的输入框且不是插件内部的输入框，优先使用
-    if (activeElement && this.isValidInput(activeElement) && !activeElement.closest('#chat-list-widget')) {
+    if (activeElement && this.isValidInput(activeElement) && !ChatListUtils.closest(activeElement, '#chat-list-widget')) {
       this.insertContent(activeElement, content);
       return;
     }
@@ -1452,7 +1444,7 @@ class ChatListWidget {
       try {
         document.querySelectorAll(selector).forEach(input => {
           // 排除插件自身的输入框，避免重复
-          if (!input.closest('#chat-list-widget') && !seen.has(input)) {
+          if (!ChatListUtils.closest(input, '#chat-list-widget') && !seen.has(input)) {
             inputs.push(input);
             seen.add(input);
           }
@@ -1518,7 +1510,7 @@ class ChatListWidget {
       try {
         document.querySelectorAll(selector).forEach(input => {
           // 排除插件自身的输入框
-          if (!input.closest('#chat-list-widget') && this.isValidInput(input) && this.isMessageInput(input)) {
+          if (!ChatListUtils.closest(input, '#chat-list-widget') && this.isValidInput(input) && this.isMessageInput(input)) {
             inputs.push(input);
           }
         });
@@ -1614,13 +1606,13 @@ class ChatListWidget {
     ];
     
     for (let selector of excludeSelectors) {
-      if (element.closest(selector)) {
+      if (ChatListUtils.closest(element, selector)) {
         return false;
       }
     }
     
     // 检查是否为Zalo页面的聊天输入框
-    if (element.closest('#chat-input-container-id')) {
+    if (ChatListUtils.closest(element, '#chat-input-container-id')) {
       return true;
     }
     
@@ -1643,7 +1635,7 @@ class ChatListWidget {
     ];
     
     for (let selector of chatContainers) {
-      if (element.closest(selector)) {
+      if (ChatListUtils.closest(element, selector)) {
         return true;
       }
     }
@@ -2256,18 +2248,36 @@ class ChatListWidget {
     
     if (isContentEditable || hasRole) {
       // 处理可编辑元素和role="textbox"元素
-      if (tagName === 'div') {
-        // 对于div元素，尝试多种方式设置内容
+      // 检查是否是 Zalo 类型的复杂输入框结构
+      if (element.classList.contains('rich-input') || element.id === 'richInput') {
+        // 清空现有内容
         element.innerHTML = '';
-        element.textContent = content;
         
-        // Facebook特殊处理：创建文本节点
-        if (element.innerHTML === '') {
-          const textNode = document.createTextNode(content);
-          element.appendChild(textNode);
-        }
+        // 按行分割内容并创建对应的 div 结构
+        const lines = content.split('\n');
+        lines.forEach((line, index) => {
+          const lineDiv = document.createElement('div');
+          lineDiv.id = `input_line_${index}`;
+          
+          if (line.trim() === '') {
+            // 空行使用 <br> 标签
+            lineDiv.appendChild(document.createElement('br'));
+          } else {
+            // 非空行创建 span 元素
+            const span = document.createElement('span');
+            span.className = '';
+            span.setAttribute('data-mention', line);
+            span.id = 'input_part_0';
+            span.style.whiteSpace = 'pre-wrap';
+            span.textContent = line;
+            lineDiv.appendChild(span);
+          }
+          
+          element.appendChild(lineDiv);
+        });
       } else {
-        element.textContent = content;
+        // 其他 contentEditable 元素使用简单的 innerText
+        element.innerText = content;
       }
     } else if (tagName === 'input' || tagName === 'textarea') {
       // 处理传统输入框
@@ -2277,7 +2287,7 @@ class ChatListWidget {
       if (element.value !== undefined) {
         element.value = content;
       } else {
-        element.textContent = content;
+        element.innerText = content;
       }
     }
   }
@@ -2325,29 +2335,7 @@ class ChatListWidget {
   }
   
   showSuccessMessage(message) {
-    // 创建成功提示
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 4px;
-      z-index: 10001;
-      font-size: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    // 3秒后自动移除
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 3000);
+    return ChatListUtils.showSuccessMessage(message);
   }
 
   showPreview(scriptItem) {
@@ -2881,7 +2869,7 @@ class ChatListWidget {
 
     header.addEventListener('mousedown', (e) => {
       // 只有点击头部区域才能拖拽，排除按钮
-      if (e.target.closest('.widget-controls')) return;
+      if (ChatListUtils.closest(e.target, '.widget-controls')) return;
       
       isDragging = true;
       this.widget.classList.add('dragging');
@@ -2955,52 +2943,12 @@ class ChatListWidget {
 
   // 检查扩展上下文是否有效
   isExtensionContextValid() {
-    try {
-      return !!(chrome && chrome.runtime && chrome.runtime.id);
-    } catch (error) {
-      return false;
-    }
+    return ChatListUtils.isExtensionContextValid();
   }
 
   // 显示上下文失效提示
   showContextInvalidatedNotice() {
-    // 避免重复显示提示
-    if (this.contextNoticeShown) return;
-    this.contextNoticeShown = true;
-    
-    const notice = document.createElement('div');
-    notice.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #ff6b6b;
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 10000;
-      font-size: 14px;
-      max-width: 300px;
-      cursor: pointer;
-    `;
-    notice.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 4px;">扩展已更新</div>
-      <div style="font-size: 12px; opacity: 0.9;">请刷新页面以继续使用话术助手</div>
-    `;
-    
-    // 点击关闭提示
-    notice.addEventListener('click', () => {
-      notice.remove();
-    });
-    
-    // 5秒后自动关闭
-    setTimeout(() => {
-      if (notice.parentNode) {
-        notice.remove();
-      }
-    }, 5000);
-    
-    document.body.appendChild(notice);
+    return ChatListUtils.showContextInvalidatedNotice();
   }
 
   async loadPosition() {
@@ -3174,121 +3122,12 @@ class ChatListWidget {
 
   // 复制内容到剪贴板
   async copyToClipboard(text) {
-    try {
-      // 优先使用现代的 Clipboard API
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-        console.log('内容已复制到剪贴板');
-      } else {
-        // 降级方案：使用传统的 execCommand
-        this.fallbackCopyToClipboard(text);
-      }
-    } catch (error) {
-      console.error('复制到剪贴板失败:', error);
-      // 如果现代API失败，尝试降级方案
-      this.fallbackCopyToClipboard(text);
-    }
-  }
-
-  // 降级复制方案
-  fallbackCopyToClipboard(text) {
-    try {
-      // 创建临时文本区域
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      textArea.style.top = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      // 执行复制命令
-      const successful = document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      if (successful) {
-        console.log('内容已复制到剪贴板（降级方案）');
-      } else {
-        console.error('复制失败');
-      }
-    } catch (error) {
-      console.error('降级复制方案失败:', error);
-    }
+    return ChatListUtils.copyToClipboard(text);
   }
 
   // 显示自定义确认对话框
   showConfirmDialog(title, message, onConfirm, onCancel = null) {
-    // 移除已存在的确认对话框
-    const existingDialog = document.getElementById('custom-confirm-dialog');
-    if (existingDialog) {
-      existingDialog.remove();
-    }
-
-    // 创建对话框HTML
-    const dialogHTML = `
-      <div class="confirm-dialog-overlay" id="custom-confirm-dialog">
-        <div class="confirm-dialog-content">
-          <div class="confirm-dialog-header">
-            <h3>${title}</h3>
-          </div>
-          <div class="confirm-dialog-body">
-            <p>${message.replace(/\n/g, '<br>')}</p>
-          </div>
-          <div class="confirm-dialog-footer">
-            <button class="btn btn-secondary" id="confirm-cancel-btn">取消</button>
-            <button class="btn btn-danger" id="confirm-ok-btn">确定</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // 添加到页面
-    document.body.insertAdjacentHTML('beforeend', dialogHTML);
-    const dialog = document.getElementById('custom-confirm-dialog');
-
-    // 绑定事件
-    const cancelBtn = dialog.querySelector('#confirm-cancel-btn');
-    const okBtn = dialog.querySelector('#confirm-ok-btn');
-
-    const closeDialog = () => {
-      dialog.remove();
-    };
-
-    // 取消按钮
-    cancelBtn.addEventListener('click', () => {
-      closeDialog();
-      if (onCancel) onCancel();
-    });
-
-    // 确定按钮
-    okBtn.addEventListener('click', () => {
-      closeDialog();
-      if (onConfirm) onConfirm();
-    });
-
-    // 点击遮罩层关闭
-    dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) {
-        closeDialog();
-        if (onCancel) onCancel();
-      }
-    });
-
-    // ESC键关闭
-    const handleKeydown = (e) => {
-      if (e.key === 'Escape') {
-        closeDialog();
-        if (onCancel) onCancel();
-        document.removeEventListener('keydown', handleKeydown);
-      }
-    };
-    document.addEventListener('keydown', handleKeydown);
-
-    // 聚焦到确定按钮
-    setTimeout(() => {
-      okBtn.focus();
-    }, 100);
+    return ChatListUtils.showConfirmDialog(title, message, onConfirm, onCancel);
   }
 }
 

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模块拆分验证测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #005a87;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 4px;
+            border-left: 4px solid #4caf50;
+        }
+        .error {
+            background: #ffeaea;
+            border-left-color: #f44336;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 2px solid #007cba;
+            padding-bottom: 5px;
+        }
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 模块拆分验证测试</h1>
+    
+    <div class="info">
+        <h3>📋 测试说明</h3>
+        <p>此页面用于验证 utils.js 模块拆分的功能是否正常工作。测试包括：</p>
+        <ul>
+            <li>工具函数模块加载验证</li>
+            <li>剪贴板功能测试</li>
+            <li>对话框功能测试</li>
+            <li>兼容性方法测试</li>
+            <li>工具函数测试</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>1. 模块加载验证</h2>
+        <button class="test-button" onclick="testModuleLoading()">检查模块加载</button>
+        <div id="module-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 剪贴板功能测试</h2>
+        <button class="test-button" onclick="testClipboard()">测试复制功能</button>
+        <div id="clipboard-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 对话框功能测试</h2>
+        <button class="test-button" onclick="testConfirmDialog()">测试确认对话框</button>
+        <button class="test-button" onclick="testSuccessMessage()">测试成功消息</button>
+        <div id="dialog-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 兼容性方法测试</h2>
+        <button class="test-button" onclick="testCompatibility()">测试 closest/matches</button>
+        <div id="compatibility-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. 工具函数测试</h2>
+        <button class="test-button" onclick="testUtilityFunctions()">测试工具函数</button>
+        <div id="utility-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- 引入 utils.js -->
+    <script src="utils.js"></script>
+    
+    <script>
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.textContent = message;
+            element.className = isError ? 'result error' : 'result';
+        }
+
+        function testModuleLoading() {
+            try {
+                if (typeof ChatListUtils !== 'undefined') {
+                    const methods = [
+                        'copyToClipboard', 'showConfirmDialog', 'showSuccessMessage',
+                        'isExtensionContextValid', 'showContextInvalidatedNotice',
+                        'getElementInfo', 'closest', 'matches', 'debounce', 'throttle'
+                    ];
+                    
+                    const missingMethods = methods.filter(method => typeof ChatListUtils[method] !== 'function');
+                    
+                    if (missingMethods.length === 0) {
+                        showResult('module-result', '✅ ChatListUtils 模块加载成功，所有方法都可用');
+                    } else {
+                        showResult('module-result', `❌ 缺少方法: ${missingMethods.join(', ')}`, true);
+                    }
+                } else {
+                    showResult('module-result', '❌ ChatListUtils 未定义，模块加载失败', true);
+                }
+            } catch (error) {
+                showResult('module-result', `❌ 测试出错: ${error.message}`, true);
+            }
+        }
+
+        function testClipboard() {
+            try {
+                const testText = '这是一个测试文本 - ' + new Date().toLocaleTimeString();
+                ChatListUtils.copyToClipboard(testText);
+                showResult('clipboard-result', `✅ 复制功能调用成功，测试文本: "${testText}"`);
+            } catch (error) {
+                showResult('clipboard-result', `❌ 复制功能测试失败: ${error.message}`, true);
+            }
+        }
+
+        function testConfirmDialog() {
+            try {
+                ChatListUtils.showConfirmDialog(
+                    '测试对话框',
+                    '这是一个测试确认对话框\n点击确定或取消来测试功能',
+                    () => showResult('dialog-result', '✅ 确认对话框测试成功 - 用户点击了确定'),
+                    () => showResult('dialog-result', '✅ 确认对话框测试成功 - 用户点击了取消')
+                );
+            } catch (error) {
+                showResult('dialog-result', `❌ 确认对话框测试失败: ${error.message}`, true);
+            }
+        }
+
+        function testSuccessMessage() {
+            try {
+                ChatListUtils.showSuccessMessage('这是一个测试成功消息！');
+                showResult('dialog-result', '✅ 成功消息显示功能正常');
+            } catch (error) {
+                showResult('dialog-result', `❌ 成功消息测试失败: ${error.message}`, true);
+            }
+        }
+
+        function testCompatibility() {
+            try {
+                // 创建测试元素
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-element';
+                testDiv.innerHTML = '<span class="inner">测试</span>';
+                document.body.appendChild(testDiv);
+                
+                const span = testDiv.querySelector('.inner');
+                
+                // 测试 matches
+                const matchesResult = ChatListUtils.matches(span, '.inner');
+                
+                // 测试 closest
+                const closestResult = ChatListUtils.closest(span, '.test-element');
+                
+                // 清理测试元素
+                document.body.removeChild(testDiv);
+                
+                if (matchesResult && closestResult) {
+                    showResult('compatibility-result', '✅ closest 和 matches 兼容性方法工作正常');
+                } else {
+                    showResult('compatibility-result', `❌ 兼容性测试失败 - matches: ${matchesResult}, closest: ${!!closestResult}`, true);
+                }
+            } catch (error) {
+                showResult('compatibility-result', `❌ 兼容性测试出错: ${error.message}`, true);
+            }
+        }
+
+        function testUtilityFunctions() {
+            try {
+                const results = [];
+                
+                // 测试 generateId
+                const id = ChatListUtils.generateId();
+                results.push(`ID生成: ${id ? '✅' : '❌'}`);
+                
+                // 测试 formatDate
+                const formattedDate = ChatListUtils.formatDate(new Date());
+                results.push(`日期格式化: ${formattedDate ? '✅' : '❌'}`);
+                
+                // 测试 deepClone
+                const original = { a: 1, b: { c: 2 } };
+                const cloned = ChatListUtils.deepClone(original);
+                const cloneSuccess = cloned && cloned.a === 1 && cloned.b.c === 2 && cloned !== original;
+                results.push(`深拷贝: ${cloneSuccess ? '✅' : '❌'}`);
+                
+                // 测试 debounce
+                const debouncedFn = ChatListUtils.debounce(() => {}, 100);
+                results.push(`防抖函数: ${typeof debouncedFn === 'function' ? '✅' : '❌'}`);
+                
+                // 测试 throttle
+                const throttledFn = ChatListUtils.throttle(() => {}, 100);
+                results.push(`节流函数: ${typeof throttledFn === 'function' ? '✅' : '❌'}`);
+                
+                showResult('utility-result', results.join(', '));
+            } catch (error) {
+                showResult('utility-result', `❌ 工具函数测试出错: ${error.message}`, true);
+            }
+        }
+
+        // 页面加载完成后自动运行模块加载测试
+        window.addEventListener('load', () => {
+            setTimeout(testModuleLoading, 100);
+        });
+    </script>
+</body>
+</html>

@@ -87,13 +87,13 @@ function isMessageInput(element) {
   ];
   
   for (let selector of excludeSelectors) {
-    if (element.closest(selector)) {
+    if (ChatListUtils.closest(element, selector)) {
       return false;
     }
   }
   
   // 检查是否为Zalo页面的聊天输入框
-  if (element.closest('#chat-input-container-id')) {
+  if (ChatListUtils.closest(element, '#chat-input-container-id')) {
     return true;
   }
   
@@ -146,7 +146,7 @@ function findValidInputs() {
     try {
       document.querySelectorAll(selector).forEach(input => {
         // 排除插件自身的输入框
-        if (!input.closest('#chat-list-widget') && isValidInputElement(input) && isMessageInput(input)) {
+        if (!ChatListUtils.closest(input, '#chat-list-widget') && isValidInputElement(input) && isMessageInput(input)) {
           inputs.push(input);
         }
       });

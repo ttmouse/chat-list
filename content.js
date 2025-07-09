@@ -8,39 +8,51 @@ class ChatListWidget {
     this.groups = [];
     this.currentGroup = null;
     this.searchKeyword = ''; // 搜索关键词
-    this.lastFocusedElement = null; // 记住最后聚焦的元素
-    this.focusHistory = []; // 焦点历史记录，最多保存2个
     this.selectedScriptIndex = -1; // 当前选中的话术索引
     // this.focusDebugPanel = null; // 焦点调试面板
     this.whitelist = []; // 网页白名单，将从存储中加载
     this.initialized = false; // 初始化状态标记
+    this.focusManagement = null; // 焦点管理模块实例
+    this.inputDetection = null; // 输入检测模块实例
+    this.dataImportExport = null; // 数据导入导出模块实例
     
     this.init();
   }
 
+  // 初始化焦点管理模块
+  initFocusManagement() {
+    if (window.FocusManagement) {
+      this.focusManagement = new window.FocusManagement();
+    } else {
+      console.error('FocusManagement 模块未加载');
+    }
+  }
+
+  // 初始化输入检测模块
+  initInputDetection() {
+    if (window.InputDetection) {
+      this.inputDetection = new window.InputDetection();
+    } else {
+      console.error('InputDetection 模块未加载');
+    }
+  }
+
   // 添加元素到焦点历史记录
   addToFocusHistory(element) {
-    // 移除已存在的相同元素
-    this.focusHistory = this.focusHistory.filter(el => el !== element);
-    
-    // 添加到历史记录开头
-    this.focusHistory.unshift(element);
-    
-    // 限制历史记录长度为2个
-    if (this.focusHistory.length > 2) {
-      this.focusHistory = this.focusHistory.slice(0, 2);
+    if (!this.focusManagement) {
+      console.error('FocusManagement模块未初始化');
+      return;
     }
+    this.focusManagement.addToFocusHistory(element);
   }
 
   // 从焦点历史中获取有效的焦点元素
   getValidFocusFromHistory() {
-    for (let element of this.focusHistory) {
-      // 检查元素是否仍然存在于DOM中且有效
-      if (document.contains(element) && this.isValidInput(element)) {
-        return element;
-      }
+    if (!this.focusManagement) {
+      console.error('FocusManagement模块未初始化');
+      return null;
     }
-    return null;
+    return this.focusManagement.getValidFocusFromHistory((element) => this.isValidInput(element));
   }
 
   startDebugUpdates() {
@@ -93,6 +105,8 @@ class ChatListWidget {
     console.log('当前网站在白名单中，初始化话术扩展');
     // 获取版本号
     this.version = await this.getVersion();
+    this.initFocusManagement(); // 初始化焦点管理模块
+    this.initInputDetection(); // 初始化输入检测模块
     this.createWidget();
     this.initDataImportExport(); // 初始化数据导入导出模块
     this.initPreviewModule();
@@ -457,10 +471,10 @@ class ChatListWidget {
           return;
         }
         
-        // 更新最后聚焦的元素
-        this.lastFocusedElement = e.target;
-        
-        // 添加到焦点历史记录
+        // 更新最后聚焦的元素和添加到焦点历史记录
+        if (this.focusManagement) {
+          this.focusManagement.setLastFocusedElement(e.target);
+        }
         this.addToFocusHistory(e.target);
         
         // 立即更新调试面板
@@ -476,10 +490,10 @@ class ChatListWidget {
           return;
         }
         
-        // 更新最后聚焦的元素
-        this.lastFocusedElement = e.target;
-        
-        // 添加到焦点历史记录
+        // 更新最后聚焦的元素和添加到焦点历史记录
+        if (this.focusManagement) {
+          this.focusManagement.setLastFocusedElement(e.target);
+        }
         this.addToFocusHistory(e.target);
         
         // 立即更新调试面板
@@ -495,10 +509,10 @@ class ChatListWidget {
           return;
         }
         
-        // 更新最后聚焦的元素
-        this.lastFocusedElement = e.target;
-        
-        // 添加到焦点历史记录
+        // 更新最后聚焦的元素和添加到焦点历史记录
+        if (this.focusManagement) {
+          this.focusManagement.setLastFocusedElement(e.target);
+        }
         this.addToFocusHistory(e.target);
         
         // 立即更新调试面板
@@ -533,7 +547,9 @@ class ChatListWidget {
         
         // 如果当前焦点是有效输入框且不是插件内部的，记录它
         if (currentFocus && this.isValidInput(currentFocus) && !ChatListUtils.closest(currentFocus, '#chat-list-widget')) {
-          this.lastFocusedElement = currentFocus;
+          if (this.focusManagement) {
+            this.focusManagement.setLastFocusedElement(currentFocus);
+          }
           this.addToFocusHistory(currentFocus);
           
           // 立即更新调试面板
@@ -1169,259 +1185,41 @@ class ChatListWidget {
     // 复制到剪贴板
     this.copyToClipboard(content);
     
-    // 查找当前焦点的输入框
-    const activeElement = document.activeElement;
-    
-    // 如果当前焦点是插件内部的搜索框，优先使用焦点历史记录
-    if (activeElement && ChatListUtils.closest(activeElement, '#chat-list-widget')) {
-      const validFocusElement = this.getValidFocusFromHistory();
-      if (validFocusElement) {
-        this.insertContent(validFocusElement, content);
-        return;
-      }
-      
-      // 如果焦点历史中没有有效元素，使用最后聚焦的元素
-      if (this.lastFocusedElement && this.isValidInput(this.lastFocusedElement)) {
-        // 检查元素是否仍然存在于DOM中
-        if (document.contains(this.lastFocusedElement)) {
-          this.insertContent(this.lastFocusedElement, content);
-          return;
-        } else {
-          // 如果元素已被移除，清除引用
-          this.lastFocusedElement = null;
-        }
-      }
-    }
-    
-    // 如果当前有焦点的输入框且不是插件内部的输入框，优先使用
-    if (activeElement && this.isValidInput(activeElement) && !ChatListUtils.closest(activeElement, '#chat-list-widget')) {
-      this.insertContent(activeElement, content);
+    if (!this.inputDetection) {
+      console.error('InputDetection模块未初始化');
+      alert('输入框检测模块未加载，请刷新页面重试');
       return;
     }
     
-    // 如果没有当前焦点或焦点无效，使用焦点历史记录
-    const validFocusElement = this.getValidFocusFromHistory();
-    if (validFocusElement) {
-      this.insertContent(validFocusElement, content);
-      return;
-    }
-    
-    // 如果焦点历史中没有有效元素，使用最后聚焦的元素
-    if (this.lastFocusedElement && this.isValidInput(this.lastFocusedElement)) {
-      // 检查元素是否仍然存在于DOM中
-      if (document.contains(this.lastFocusedElement)) {
-        this.insertContent(this.lastFocusedElement, content);
-        return;
-      } else {
-        // 如果元素已被移除，清除引用
-        this.lastFocusedElement = null;
-      }
-    }
-    
-    // 查找页面中可能的输入框，按优先级排序
-    const inputs = this.findValidInputs();
-    
-    if (inputs.length === 0) {
+    // 使用InputDetection模块处理内容填充
+    const success = this.inputDetection.insertContent(content);
+    if (!success) {
       alert('未找到可填充的输入框，请先点击输入框');
-      return;
     }
-    
-    // 如果只有一个输入框，直接使用
-    if (inputs.length === 1) {
-      this.insertContent(inputs[0], content);
-      return;
-    }
-    
-    // 多个输入框时，使用智能选择策略
-    const target = this.selectBestInput(inputs);
-    
-    // 如果有多个输入框，显示提示信息
-    // if (inputs.length > 1) {
-    //   this.showMultipleInputsNotification(inputs, target);
-    // }
-    
-    this.insertContent(target, content);
   }
   
   isValidInput(element) {
-    if (!element) return false;
-    
-    // 检查元素是否可见 - 放宽条件，允许一些隐藏但实际可用的元素
-    const style = window.getComputedStyle(element);
-    if (style.display === 'none') {
+    if (!this.inputDetection) {
+      console.error('InputDetection模块未初始化');
       return false;
     }
-    
-    // 检查元素尺寸 - 放宽条件，允许较小的元素
-    const rect = element.getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) {
-      return false;
-    }
-    
-    // 检查是否为只读或禁用
-    if (element.readOnly || element.disabled) {
-      return false;
-    }
-    
-    // 对于contenteditable元素，确保真的可编辑
-    if (element.contentEditable === 'true' || element.getAttribute('contenteditable') === 'true') {
-      return true;
-    }
-    
-    // 对于role="textbox"的元素
-    if (element.getAttribute('role') === 'textbox') {
-      return true;
-    }
-    
-    // 对于传统input和textarea
-    const tagName = element.tagName.toLowerCase();
-    if (tagName === 'textarea' || tagName === 'input') {
-      return true;
-    }
-    
-    // 检查是否有特殊的输入框属性
-    if (element.getAttribute('data-text') === 'true') {
-      return true;
-    }
-    
-    // 检查是否有输入框相关的类名
-    const className = String(element.className || '');
-    if (className.includes('input') || className.includes('textarea') || className.includes('textbox')) {
-      return true;
-    }
-    
-    return false;
+    return this.inputDetection.isValidInput(element);
   }
   
   findAllInputs() {
-    // 查找所有可能的输入框，不进行过滤
-    const selectors = [
-      'textarea',
-      'input[type="text"]',
-      'input[type="search"]',
-      'input[type="url"]',
-      'input[type="email"]',
-      'input:not([type])',
-      '[contenteditable="true"]',
-      'div[role="textbox"]',
-      'div[contenteditable="true"]',
-      'div[data-text="true"]',
-      '.input_area',
-      '.chat_textarea',
-      // Zalo 页面特殊选择器
-      '#chat-input-container-id',
-      '#chat-input-container-id input',
-      '#chat-input-container-id textarea',
-      '#chat-input-container-id [contenteditable="true"]',
-      '#chat-input-container-id [role="textbox"]',
-      // 更多Zalo可能的选择器
-      '[class*="rich-input"]',
-      '[class*="input-rich"]',
-      '[class*="chat-input"]',
-      '[class*="message-input"]',
-      '[class*="compose"]',
-      '[data-testid*="input"]',
-      '[data-testid*="compose"]',
-      '[data-testid*="message"]',
-      '[role="textbox"]',
-      '[aria-label*="消息"]',
-      '[aria-label*="message"]',
-      '[aria-label*="评论"]',
-      '[aria-label*="comment"]',
-      '[placeholder*="消息"]',
-      '[placeholder*="message"]',
-      '[placeholder*="评论"]',
-      '[placeholder*="comment"]',
-      '[placeholder*="输入"]',
-      '[placeholder*="input"]',
-      '[placeholder*="text"]',
-      '[placeholder*="type"]'
-    ];
-    
-    const inputs = [];
-    const seen = new Set();
-    
-    selectors.forEach(selector => {
-      try {
-        document.querySelectorAll(selector).forEach(input => {
-          // 排除插件自身的输入框，避免重复
-          if (!ChatListUtils.closest(input, '#chat-list-widget') && !seen.has(input)) {
-            inputs.push(input);
-            seen.add(input);
-          }
-        });
-      } catch (e) {
-        console.warn('选择器错误:', selector, e);
-      }
-    });
-    
-    return inputs;
+    if (!this.inputDetection) {
+      console.error('InputDetection模块未初始化');
+      return [];
+    }
+    return this.inputDetection.findAllInputs();
   }
   
   findValidInputs() {
-    // 查找所有可能的输入框
-    const selectors = [
-      'textarea:not([readonly]):not([disabled])',
-      'input[type="text"]:not([readonly]):not([disabled])',
-      'input[type="search"]:not([readonly]):not([disabled])',
-      'input[type="url"]:not([readonly]):not([disabled])',
-      'input[type="email"]:not([readonly]):not([disabled])',
-      'input:not([type]):not([readonly]):not([disabled])',
-      '[contenteditable="true"]',
-      // Facebook 特殊选择器
-      'div[role="textbox"]',
-      'div[contenteditable="true"]',
-      'div[data-text="true"]',
-      // 微信网页版
-      '.input_area',
-      '.chat_textarea',
-      // Zalo 页面特殊选择器
-      '#chat-input-container-id',
-      '#chat-input-container-id input',
-      '#chat-input-container-id textarea',
-      '#chat-input-container-id [contenteditable="true"]',
-      '#chat-input-container-id [role="textbox"]',
-      // 更多Zalo可能的选择器
-      '[class*="rich-input"]',
-      '[class*="input-rich"]',
-      '[class*="chat-input"]',
-      '[class*="message-input"]',
-      '[class*="compose"]',
-      '[data-testid*="input"]',
-      '[data-testid*="compose"]',
-      '[data-testid*="message"]',
-      // 通用社交媒体输入框
-      '[role="textbox"]',
-      '[aria-label*="消息"]',
-      '[aria-label*="message"]',
-      '[aria-label*="评论"]',
-      '[aria-label*="comment"]',
-      '[placeholder*="消息"]',
-      '[placeholder*="message"]',
-      '[placeholder*="评论"]',
-      '[placeholder*="comment"]',
-      '[placeholder*="输入"]',
-      '[placeholder*="input"]',
-      '[placeholder*="text"]',
-      '[placeholder*="type"]'
-    ];
-    
-    const inputs = [];
-    selectors.forEach(selector => {
-      try {
-        document.querySelectorAll(selector).forEach(input => {
-          // 排除插件自身的输入框
-          if (!ChatListUtils.closest(input, '#chat-list-widget') && this.isValidInput(input) && this.isMessageInput(input)) {
-            inputs.push(input);
-          }
-        });
-      } catch (e) {
-        // 忽略无效选择器错误
-        console.warn('选择器错误:', selector, e);
-      }
-    });
-    
-    return inputs;
+    if (!this.inputDetection) {
+      console.error('InputDetection模块未初始化');
+      return [];
+    }
+    return this.inputDetection.findValidInputs();
   }
   
   // 新增方法：验证输入元素的有效性
@@ -1588,13 +1386,18 @@ class ChatListWidget {
       if (input === document.activeElement) score += 500;
       
       // 2. 最近交互加分（提高权重）
-      const historyIndex = this.focusHistory.indexOf(input);
-      if (historyIndex !== -1) {
-        score += (this.focusHistory.length - historyIndex) * 20;
+      if (this.focusManagement) {
+        const historyIndex = this.focusManagement.getFocusHistoryIndex(input);
+        if (historyIndex !== -1) {
+          const historyLength = this.focusManagement.getFocusHistory().length;
+          score += (historyLength - historyIndex) * 20;
+        }
       }
       
       // 3. 是否为最后聚焦的元素（提高权重）
-      if (input === this.lastFocusedElement) score += 300;
+      if (this.focusManagement && input === this.focusManagement.getLastFocusedElement()) {
+        score += 300;
+      }
       
       // 4. 可见性加分
       if (this.isElementVisible(input)) score += 100;
@@ -1686,12 +1489,17 @@ class ChatListWidget {
       // 使用与selectBestInput相同的评分逻辑
       if (input === document.activeElement) score += 500;
       
-      const historyIndex = this.focusHistory.indexOf(input);
-      if (historyIndex !== -1) {
-        score += (this.focusHistory.length - historyIndex) * 20;
+      if (this.focusManagement) {
+        const historyIndex = this.focusManagement.getFocusHistoryIndex(input);
+        if (historyIndex !== -1) {
+          const historyLength = this.focusManagement.getFocusHistory().length;
+          score += (historyLength - historyIndex) * 20;
+        }
+        
+        if (input === this.focusManagement.getLastFocusedElement()) {
+          score += 300;
+        }
       }
-      
-      if (input === this.lastFocusedElement) score += 300;
       if (this.isElementVisible(input)) score += 100;
       
       const placeholder = (input.placeholder || '').toLowerCase();

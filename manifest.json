@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "话术助手",
-  "version": "1.4.1",
+  "version": "1.4.0",
   "description": "在网页右侧显示悬浮话术列表，支持话术管理和自动填充",
   "permissions": [
     "storage",
@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["utils.js", "modules/textarea-utils.js", "modules/input-detection.js", "modules/focus-management.js", "modules/data-import-export.js", "preview-module.js", "content.js"],
+      "js": ["utils.js", "modules/textarea-utils.js", "modules/data-import-export.js", "preview-module.js", "content.js"],
       "css": ["content.css"]
     }
   ],

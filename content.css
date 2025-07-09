@@ -101,16 +101,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-
-
 .widget-controls .btn-close {
-  background: rgba(255, 255, 255, 0);
-  border: none;
-  border-radius: 6px;
-  padding: 6px 8px;
-  color: white;
-  cursor: pointer;
-  transition: background 0.2s;
   font-size: 16px;
   font-weight: bold;
 }
@@ -192,6 +183,7 @@
   background: #f8f9fa;
   transition: all 0.2s;
   box-sizing: border-box;
+
 }
 
 .search-input:focus {
@@ -391,6 +383,10 @@ mark {
 }
 
 .btn-add-script:hover {
+  -webkit-transform: translateY(-1px);
+  -moz-transform: translateY(-1px);
+  -ms-transform: translateY(-1px);
+  -o-transform: translateY(-1px);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
@@ -460,6 +456,8 @@ mark {
   z-index: 100;
   border-radius: 12px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .manage-header {
@@ -489,8 +487,9 @@ mark {
 
 .manage-content {
   padding: 12px;
-  max-height: calc(60vh - 60px);
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .manage-content h4 {
@@ -613,10 +612,7 @@ mark {
   resize: vertical;
 }
 
-.form-actions {
-  display: flex;
-  gap: 8px;
-}
+
 
 .btn-save-script,
 .btn-cancel-edit {
@@ -650,24 +646,28 @@ mark {
 
 /* 滚动条样式 */
 .widget-content::-webkit-scrollbar,
-.manage-content::-webkit-scrollbar {
+.manage-content::-webkit-scrollbar,
+#script-preview-layer .preview-content::-webkit-scrollbar {
   width: 6px;
 }
 
 .widget-content::-webkit-scrollbar-track,
-.manage-content::-webkit-scrollbar-track {
+.manage-content::-webkit-scrollbar-track,
+#script-preview-layer .preview-content::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 3px;
 }
 
 .widget-content::-webkit-scrollbar-thumb,
-.manage-content::-webkit-scrollbar-thumb {
+.manage-content::-webkit-scrollbar-thumb,
+#script-preview-layer .preview-content::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
 }
 
 .widget-content::-webkit-scrollbar-thumb:hover,
-.manage-content::-webkit-scrollbar-thumb:hover {
+.manage-content::-webkit-scrollbar-thumb:hover,
+#script-preview-layer .preview-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
 
@@ -688,27 +688,7 @@ mark {
   }
 }
 
-/* 动画效果 */
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-#chat-list-widget {
-  animation: slideIn 0.3s ease-out;
-}
-
 /* 拖拽功能 */
-.widget-header {
-  user-select: none;
-}
-
 #chat-list-widget.dragging {
   transition: none;
   z-index: 10001;
@@ -880,6 +860,14 @@ mark {
     border-top: 1px solid #e1e5e9;
 }
 
+.script-form .form-actions {
+    gap: 8px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    justify-content: stretch;
+}
+
 .btn {
     padding: 12px 24px;
     border: none;
@@ -932,7 +920,7 @@ mark {
   max-height: 60vh;
   opacity: 0;
   visibility: hidden;
-  /* transition: opacity 0.2s, visibility 0.2s; */ /* 移除淡出动画，直接消失 */
+
   pointer-events: none;
   overflow: hidden;
 }
@@ -1025,55 +1013,54 @@ mark {
   max-height: none;
 }
 
-/* 预览浮层滚动条样式 */
-#script-preview-layer .preview-content::-webkit-scrollbar {
-  width: 6px;
-}
 
-#script-preview-layer .preview-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-#script-preview-layer .preview-content::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-#script-preview-layer .preview-content::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
 
 /* 模态框分组按钮样式 */
 .edit-group-tabs,
 .add-group-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
 .edit-group-tab,
 .add-group-tab {
-  padding: 6px 12px;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  padding: 8px 12px;
+  background: white;
+  border: 2px solid #e9ecef;
   border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   font-size: 12px;
   font-weight: 500;
   color: #495057;
-  white-space: nowrap;
-  min-height: 28px;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-height: 32px;
+  max-width: 120px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .edit-group-tab:hover,
 .add-group-tab:hover {
-  background: #e9ecef;
-  color: #212529;
+  background: #f8f9fa;
+  border-color: #007bff;
+  color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .edit-group-tab.active,
@@ -1082,6 +1069,20 @@ mark {
   color: white;
   border-color: #007bff;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+}
+
+/* 分组按钮左侧颜色条样式优化 */
+.edit-group-tab[style*="border-left"],
+.add-group-tab[style*="border-left"] {
+  border-left-width: 3px !important;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.edit-group-tab.active[style*="border-left"],
+.add-group-tab.active[style*="border-left"] {
+  border-left-color: white !important;
 }
 
 /* 分组操作按钮样式 */
@@ -1249,4 +1250,106 @@ mark {
 .import-actions .btn-secondary:hover {
   background: #e0e0e0;
   color: #333;
+}
+
+/* 自定义确认对话框样式 */
+.confirm-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 20001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.confirm-dialog-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 400px;
+  max-width: 90vw;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+
+
+.confirm-dialog-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.confirm-dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.confirm-dialog-body {
+  padding: 24px;
+}
+
+.confirm-dialog-body p {
+  margin: 0;
+  color: #666;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.confirm-dialog-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirm-dialog-footer .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.confirm-dialog-footer .btn-secondary {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.confirm-dialog-footer .btn-secondary:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.confirm-dialog-footer .btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.confirm-dialog-footer .btn-danger:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.confirm-dialog-footer .btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }

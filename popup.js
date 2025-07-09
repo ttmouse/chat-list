@@ -14,6 +14,7 @@ class PopupManager {
     await this.loadSettings();
     await this.loadStats();
     await this.loadWhitelist();
+    await this.loadVersion();
     this.bindEvents();
     this.updateUI();
     this.renderWhitelist();
@@ -68,6 +69,33 @@ class PopupManager {
     }
   }
 
+  async loadVersion() {
+    try {
+      // 从 manifest.json 获取版本号
+      const manifest = chrome.runtime.getManifest();
+      const version = manifest.version;
+      
+      // 更新页面中的版本号显示
+      const versionElement = document.querySelector('.footer p');
+      if (versionElement) {
+        versionElement.innerHTML = `话术助手 v${version} | <a href="#" id="help-link">帮助</a> | <a href="#" id="feedback-link">反馈</a>`;
+        
+        // 重新绑定帮助和反馈链接事件
+        document.getElementById('help-link').addEventListener('click', (e) => {
+          e.preventDefault();
+          this.showHelp();
+        });
+        
+        document.getElementById('feedback-link').addEventListener('click', (e) => {
+          e.preventDefault();
+          this.showFeedback();
+        });
+      }
+    } catch (error) {
+      console.error('加载版本号失败:', error);
+    }
+  }
+
   updateUI() {
     document.getElementById('auto-show').checked = this.settings.autoShow;
     document.getElementById('allow-drag').checked = this.settings.allowDrag;
@@ -106,18 +134,6 @@ class PopupManager {
     document.getElementById('manage-scripts').addEventListener('click', (e) => {
       e.preventDefault();
       this.openManagePage();
-    });
-
-    // 帮助链接
-    document.getElementById('help-link').addEventListener('click', (e) => {
-      e.preventDefault();
-      this.showHelp();
-    });
-
-    // 反馈链接
-    document.getElementById('feedback-link').addEventListener('click', (e) => {
-      e.preventDefault();
-      this.showFeedback();
     });
 
     // 白名单管理

@@ -170,11 +170,30 @@ class ChatListWidget {
     }
     
     console.log('当前网站在白名单中，初始化话术扩展');
+    // 获取版本号
+    this.version = await this.getVersion();
     this.createWidget();
     this.createPreviewLayer();
     // this.createFocusDebugPanel();
     this.bindEvents();
     this.initialized = true; // 标记为已初始化
+  }
+
+  // 获取插件版本号
+  async getVersion() {
+    try {
+      // 检查扩展上下文是否有效
+      if (!this.isExtensionContextValid()) {
+        console.warn('扩展上下文已失效，使用默认版本号');
+        return '1.0.0';
+      }
+      
+      const manifest = chrome.runtime.getManifest();
+      return manifest.version;
+    } catch (error) {
+      console.error('获取版本号失败:', error);
+      return '1.0.0'; // 默认版本号
+    }
   }
 
   async loadData() {
@@ -224,7 +243,8 @@ class ChatListWidget {
   getDefaultWhitelist() {
     return [
       'https://www.larksuite.com/hc/zh-CN/chat',
-      'https://oa.zalo.me/chat'
+      'https://oa.zalo.me/chat',
+      'https://chat.zalo.me/'
     ];
   }
 
@@ -255,7 +275,7 @@ class ChatListWidget {
     this.widget.innerHTML = `
       <div class="widget-wrapper">
         <div class="widget-header">
-          <span class="widget-title">话术助手 <span class="version">v1.3.4</span></span>
+          <span class="widget-title">话术助手 <span class="version">v${this.version || '1.0.0'}</span></span>
           <div class="widget-controls">
             <button class="btn-manage" title="管理话术"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.85643 16.1891C5.59976 15.8149 4.48117 15.1203 3.59545 14.1999C3.92587 13.8083 4.125 13.3023 4.125 12.7499C4.125 11.5072 3.11764 10.4999 1.875 10.4999C1.79983 10.4999 1.72552 10.5036 1.65225 10.5108C1.55242 10.0227 1.5 9.51743 1.5 8.99986C1.5 8.21588 1.62029 7.45999 1.84342 6.74963C1.85393 6.74978 1.86446 6.74986 1.875 6.74986C3.11764 6.74986 4.125 5.74249 4.125 4.49986C4.125 4.14312 4.04197 3.80581 3.89422 3.50611C4.76156 2.69963 5.82019 2.09608 6.99454 1.771C7.36665 2.50039 8.12501 2.99987 9 2.99987C9.87499 2.99987 10.6334 2.50039 11.0055 1.771C12.1798 2.09608 13.2384 2.69963 14.1058 3.50611C13.958 3.80581 13.875 4.14312 13.875 4.49986C13.875 5.74249 14.8824 6.74986 16.125 6.74986C16.1355 6.74986 16.1461 6.74978 16.1566 6.74963C16.3797 7.45999 16.5 8.21588 16.5 8.99986C16.5 9.51743 16.4476 10.0227 16.3478 10.5108C16.2745 10.5036 16.2002 10.4999 16.125 10.4999C14.8824 10.4999 13.875 11.5072 13.875 12.7499C13.875 13.3023 14.0741 13.8083 14.4045 14.1999C13.5188 15.1203 12.4002 15.8149 11.1436 16.1891C10.8535 15.2818 10.0035 14.6249 9 14.6249C7.9965 14.6249 7.14645 15.2818 6.85643 16.1891Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/><path d="M9 11.625C10.4497 11.625 11.625 10.4497 11.625 9C11.625 7.55025 10.4497 6.375 9 6.375C7.55025 6.375 6.375 7.55025 6.375 9C6.375 10.4497 7.55025 11.625 9 11.625Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
             <button class="btn-close" title="关闭"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L15 15" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15L15 3" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -364,40 +384,69 @@ class ChatListWidget {
   }
 
   renderGroups() {
-    const groupTabs = this.widget.querySelector('.group-tabs');
-    const groupSelect = this.widget.querySelector('#script-group');
-    const groupList = this.widget.querySelector('.group-list');
-    
-    // 渲染分组标签
-    groupTabs.innerHTML = `
-      <div class="group-tab ${!this.currentGroup ? 'active' : ''}" data-group="all">
-        全部
-      </div>
-      ${this.groups.map(group => `
-        <div class="group-tab ${this.currentGroup === group.id ? 'active' : ''}" 
-             data-group="${group.id}" style="border-left: 3px solid ${group.color}">
-          ${group.name}
+    try {
+      const groupTabs = this.widget.querySelector('.group-tabs');
+      const groupSelect = this.widget.querySelector('#script-group');
+      const groupList = this.widget.querySelector('.group-list');
+      
+      // 检查必要元素是否存在
+      if (!groupTabs) {
+        console.error('找不到分组标签容器 .group-tabs');
+        return;
+      }
+      if (!groupSelect) {
+        console.error('找不到分组选择器 #script-group');
+        return;
+      }
+      if (!groupList) {
+        console.error('找不到分组列表容器 .group-list');
+        return;
+      }
+      
+      // 确保groups数组存在
+      if (!this.groups || !Array.isArray(this.groups)) {
+        console.warn('分组数据不存在或格式错误，使用空数组');
+        this.groups = [];
+      }
+      
+      console.log('开始渲染分组，分组数量:', this.groups.length);
+      
+      // 渲染分组标签
+      groupTabs.innerHTML = `
+        <div class="group-tab ${!this.currentGroup ? 'active' : ''}" data-group="all">
+          全部
         </div>
-      `).join('')}
-    `;
+        ${this.groups.map(group => `
+          <div class="group-tab ${this.currentGroup === group.id ? 'active' : ''}" 
+               data-group="${group.id}" style="border-left: 3px solid ${group.color}">
+            ${group.name}
+          </div>
+        `).join('')}
+      `;
 
-    // 渲染分组选择器
-    groupSelect.innerHTML = `
-      <option value="">选择分组</option>
-      ${this.groups.map(group => `
-        <option value="${group.id}">${group.name}</option>
-      `).join('')}
-    `;
+      // 渲染分组选择器
+      groupSelect.innerHTML = `
+        <option value="">选择分组</option>
+        ${this.groups.map(group => `
+          <option value="${group.id}">${group.name}</option>
+        `).join('')}
+      `;
 
-    // 渲染分组管理列表
-    groupList.innerHTML = this.groups.map(group => `
-      <div class="group-item">
-        <span class="group-color" style="background: ${group.color}"></span>
-        <span class="group-name">${group.name}</span>
-        <button class="btn-edit-group" data-id="${group.id}">编辑</button>
-        <button class="btn-delete-group" data-id="${group.id}">删除</button>
-      </div>
-    `).join('');
+      // 渲染分组管理列表
+      groupList.innerHTML = this.groups.map(group => `
+        <div class="group-item">
+          <span class="group-color" style="background: ${group.color}"></span>
+          <span class="group-name">${group.name}</span>
+          <button class="btn-edit-group" data-id="${group.id}">编辑</button>
+          <button class="btn-delete-group" data-id="${group.id}">删除</button>
+        </div>
+      `).join('');
+      
+      console.log('分组渲染完成');
+    } catch (error) {
+      console.error('渲染分组时出错:', error);
+      console.error('错误堆栈:', error.stack);
+    }
   }
 
   renderScripts() {
@@ -558,10 +607,15 @@ class ChatListWidget {
 
     // 全局快捷键监听 - ⌘+g 启动搜索
     document.addEventListener('keydown', (e) => {
-      // 检查是否按下了 ⌘+g (Mac) 或 Ctrl+g (Windows/Linux)
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g') {
+      // 增强的快捷键检测，提高跨浏览器兼容性
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const isModifierPressed = isMac ? e.metaKey : e.ctrlKey;
+      const isGPressed = e.key && e.key.toLowerCase() === 'g' || e.keyCode === 71;
+      
+      if (isModifierPressed && isGPressed) {
         // 防止浏览器默认的查找行为
         e.preventDefault();
+        e.stopImmediatePropagation(); // 防止其他脚本干扰
         
         // 记录快捷键触发前的焦点状态
         const currentFocus = document.activeElement;
@@ -575,19 +629,23 @@ class ChatListWidget {
           // this.updateDebugPanel();
         }
         
-        // 如果话术助手未显示，先显示它
-        if (!this.isVisible) {
+        // 切换面板显示状态：如果已显示则关闭，如果未显示则打开
+        if (this.isVisible) {
+          // 面板已显示，关闭它
+          this.hideWidget();
+        } else {
+          // 面板未显示，显示它并聚焦搜索框
           this.showWidget();
-        }
-        
-        // 聚焦到搜索输入框
-        const searchInput = this.widget.querySelector('.search-input');
-        if (searchInput) {
-          searchInput.focus();
-          searchInput.select(); // 选中现有文本，方便用户直接输入新的搜索词
+          
+          // 聚焦到搜索输入框
+          const searchInput = this.widget.querySelector('.search-input');
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select(); // 选中现有文本，方便用户直接输入新的搜索词
+          }
         }
       }
-    });
+    }, true); // 使用事件捕获阶段，确保优先处理
 
 
 
@@ -868,6 +926,12 @@ class ChatListWidget {
     try {
       console.log('开始显示管理面板');
       
+      // 确保插件是可见的
+      if (!this.isVisible) {
+        console.log('插件不可见，先显示插件');
+        this.showWidget();
+      }
+      
       const managePanel = this.widget.querySelector('.manage-panel');
       const widgetContent = this.widget.querySelector('.widget-content');
       
@@ -893,11 +957,26 @@ class ChatListWidget {
       // 强制设置样式
       managePanel.style.display = 'block';
       managePanel.style.visibility = 'visible';
+      managePanel.style.opacity = '1';
       widgetContent.style.display = 'none';
+      
+      // 确保插件容器也是可见的
+      this.widget.style.display = 'block';
+      this.widget.style.visibility = 'visible';
       
       console.log('管理面板显示成功');
       console.log('设置后管理面板样式:', managePanel.style.display);
       console.log('设置后内容区域样式:', widgetContent.style.display);
+      console.log('设置后插件容器样式:', this.widget.style.display);
+      
+      // 验证元素是否真的可见
+      const rect = managePanel.getBoundingClientRect();
+      console.log('管理面板位置和尺寸:', rect);
+      
+      if (rect.width === 0 || rect.height === 0) {
+        console.warn('管理面板尺寸为0，可能存在CSS问题');
+      }
+      
     } catch (error) {
       console.error('显示管理面板时出错:', error);
       console.error('错误堆栈:', error.stack);
@@ -1313,7 +1392,7 @@ class ChatListWidget {
     }
     
     // 检查是否有输入框相关的类名
-    const className = element.className || '';
+    const className = String(element.className || '');
     if (className.includes('input') || className.includes('textarea') || className.includes('textbox')) {
       return true;
     }
@@ -1495,7 +1574,7 @@ class ChatListWidget {
     }
     
     // 检查是否有输入框相关的类名
-    const className = element.className || '';
+    const className = String(element.className || '');
     if (className.includes('input') || className.includes('textarea') || className.includes('textbox')) {
       return true;
     }
@@ -1630,7 +1709,7 @@ class ChatListWidget {
       // 5. 消息相关属性加分
       const placeholder = (input.placeholder || '').toLowerCase();
       const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
-      const className = (input.className || '').toLowerCase();
+      const className = String(input.className || '').toLowerCase();
       const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'input', '输入'];
       
       if (messageKeywords.some(keyword => 
@@ -1724,7 +1803,7 @@ class ChatListWidget {
       
       const placeholder = (input.placeholder || '').toLowerCase();
       const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
-      const className = (input.className || '').toLowerCase();
+      const className = String(input.className || '').toLowerCase();
       const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'input', '输入'];
       
       if (messageKeywords.some(keyword => 
@@ -2635,11 +2714,15 @@ class ChatListWidget {
   }
 
   deleteScript(scriptId) {
-    if (confirm('确定要删除这个话术吗？')) {
-      this.scripts = this.scripts.filter(s => s.id !== scriptId);
-      this.saveData();
-      this.renderScripts();
-    }
+    this.showConfirmDialog(
+      '确认删除',
+      '确定要删除这个话术吗？',
+      () => {
+        this.scripts = this.scripts.filter(s => s.id !== scriptId);
+        this.saveData();
+        this.renderScripts();
+      }
+    );
   }
 
   saveScript() {
@@ -2772,19 +2855,23 @@ class ChatListWidget {
   }
 
   deleteGroup(groupId) {
-    if (confirm('确定要删除这个分组吗？分组下的话术将移到未分组。')) {
-      // 将该分组下的话术移到未分组
-      this.scripts.forEach(script => {
-        if (script.groupId === groupId) {
-          script.groupId = '';
-        }
-      });
-      
-      this.groups = this.groups.filter(g => g.id !== groupId);
-      this.saveData();
-      this.renderGroups();
-      this.renderScripts();
-    }
+    this.showConfirmDialog(
+      '确认删除分组',
+      '确定要删除这个分组吗？分组下的话术将移到未分组。',
+      () => {
+        // 将该分组下的话术移到未分组
+        this.scripts.forEach(script => {
+          if (script.groupId === groupId) {
+            script.groupId = '';
+          }
+        });
+        
+        this.groups = this.groups.filter(g => g.id !== groupId);
+        this.saveData();
+        this.renderGroups();
+        this.renderScripts();
+      }
+    );
   }
 
   initDragFunctionality() {
@@ -2949,72 +3036,24 @@ class ChatListWidget {
   }
 
   showImportDialog() {
-    // 创建导入对话框HTML
-    const dialogHTML = `
-      <div class="import-dialog-overlay" id="importDialog">
-        <div class="import-dialog-content">
-          <div class="import-dialog-header">
-            <h3>导入话术数据</h3>
-            <button class="btn-close-import"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L15 15" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15L15 3" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          </div>
-          <div class="import-dialog-body">
-            <div class="import-info">
-              <p>选择之前导出的JSON文件来导入话术数据</p>
-              <p class="info">💡 系统将自动识别重复话术（基于标题），只导入新的话术</p>
-            </div>
-            <input type="file" id="import-file-input" accept=".json" style="display: none;">
-            <div class="import-actions">
-              <button class="btn btn-primary" id="select-file-btn">选择文件</button>
-              <button class="btn btn-secondary" id="cancel-import-btn">取消</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // 移除已存在的对话框
-    const existingDialog = document.getElementById('importDialog');
-    if (existingDialog) {
-      existingDialog.remove();
-    }
-    
-    // 添加对话框到页面
-    document.body.insertAdjacentHTML('beforeend', dialogHTML);
-    
-    // 绑定事件
-    const dialog = document.getElementById('importDialog');
-    const fileInput = document.getElementById('import-file-input');
-    const selectFileBtn = document.getElementById('select-file-btn');
-    const cancelBtn = document.getElementById('cancel-import-btn');
-    const closeBtn = dialog.querySelector('.btn-close-import');
-    
-    // 选择文件
-    selectFileBtn.addEventListener('click', () => {
-      fileInput.click();
-    });
+    // 直接创建文件输入元素并触发选择
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.style.display = 'none';
     
     // 文件选择处理
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
         this.importData(e.target.files[0]);
-        dialog.remove();
       }
+      // 清理临时元素
+      document.body.removeChild(fileInput);
     });
     
-    // 关闭对话框
-    const closeDialog = () => {
-      dialog.remove();
-    };
-    
-    cancelBtn.addEventListener('click', closeDialog);
-    closeBtn.addEventListener('click', closeDialog);
-    
-    // 点击遮罩关闭
-    dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) {
-        closeDialog();
-      }
-    });
+    // 添加到页面并触发点击
+    document.body.appendChild(fileInput);
+    fileInput.click();
   }
   
   async importData(file) {
@@ -3045,34 +3084,36 @@ class ChatListWidget {
         '是否继续增量导入？'
       ].join('\n');
       
-      const confirmImport = confirm(importMessage);
-      
-      if (confirmImport) {
-        // 生成新的ID避免冲突
-        const maxId = Math.max(0, ...this.scripts.map(s => parseInt(s.id) || 0));
-        newScripts.forEach((script, index) => {
-          script.id = String(maxId + index + 1);
-        });
-        
-        // 合并数据
-        this.scripts = [...this.scripts, ...newScripts];
-        this.groups = [...this.groups, ...newGroups];
-        
-        await this.saveData();
-        
-        // 重新渲染界面
-        this.renderGroups();
-        this.renderScripts();
-        
-        const resultMessage = [
-          '导入完成！',
-          `新增话术：${newScripts.length} 个`,
-          `跳过重复：${duplicateScripts.length} 个`,
-          `新增分组：${newGroups.length} 个`
-        ].join('\n');
-        
-        this.showSuccessMessage(resultMessage);
-      }
+      this.showConfirmDialog(
+        '导入确认',
+        importMessage,
+        async () => {
+          // 生成新的ID避免冲突
+          const maxId = Math.max(0, ...this.scripts.map(s => parseInt(s.id) || 0));
+          newScripts.forEach((script, index) => {
+            script.id = String(maxId + index + 1);
+          });
+          
+          // 合并数据
+          this.scripts = [...this.scripts, ...newScripts];
+          this.groups = [...this.groups, ...newGroups];
+          
+          await this.saveData();
+          
+          // 重新渲染界面
+          this.renderGroups();
+          this.renderScripts();
+          
+          const resultMessage = [
+            '导入完成！',
+            `新增话术：${newScripts.length} 个`,
+            `跳过重复：${duplicateScripts.length} 个`,
+            `新增分组：${newGroups.length} 个`
+          ].join('\n');
+          
+          this.showSuccessMessage(resultMessage);
+        }
+      );
     } catch (error) {
       console.error('导入失败:', error);
       alert('导入失败，请检查文件格式是否正确');
@@ -3175,6 +3216,80 @@ class ChatListWidget {
       console.error('降级复制方案失败:', error);
     }
   }
+
+  // 显示自定义确认对话框
+  showConfirmDialog(title, message, onConfirm, onCancel = null) {
+    // 移除已存在的确认对话框
+    const existingDialog = document.getElementById('custom-confirm-dialog');
+    if (existingDialog) {
+      existingDialog.remove();
+    }
+
+    // 创建对话框HTML
+    const dialogHTML = `
+      <div class="confirm-dialog-overlay" id="custom-confirm-dialog">
+        <div class="confirm-dialog-content">
+          <div class="confirm-dialog-header">
+            <h3>${title}</h3>
+          </div>
+          <div class="confirm-dialog-body">
+            <p>${message.replace(/\n/g, '<br>')}</p>
+          </div>
+          <div class="confirm-dialog-footer">
+            <button class="btn btn-secondary" id="confirm-cancel-btn">取消</button>
+            <button class="btn btn-danger" id="confirm-ok-btn">确定</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 添加到页面
+    document.body.insertAdjacentHTML('beforeend', dialogHTML);
+    const dialog = document.getElementById('custom-confirm-dialog');
+
+    // 绑定事件
+    const cancelBtn = dialog.querySelector('#confirm-cancel-btn');
+    const okBtn = dialog.querySelector('#confirm-ok-btn');
+
+    const closeDialog = () => {
+      dialog.remove();
+    };
+
+    // 取消按钮
+    cancelBtn.addEventListener('click', () => {
+      closeDialog();
+      if (onCancel) onCancel();
+    });
+
+    // 确定按钮
+    okBtn.addEventListener('click', () => {
+      closeDialog();
+      if (onConfirm) onConfirm();
+    });
+
+    // 点击遮罩层关闭
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        closeDialog();
+        if (onCancel) onCancel();
+      }
+    });
+
+    // ESC键关闭
+    const handleKeydown = (e) => {
+      if (e.key === 'Escape') {
+        closeDialog();
+        if (onCancel) onCancel();
+        document.removeEventListener('keydown', handleKeydown);
+      }
+    };
+    document.addEventListener('keydown', handleKeydown);
+
+    // 聚焦到确定按钮
+    setTimeout(() => {
+      okBtn.focus();
+    }, 100);
+  }
 }
 
 // 添加消息监听器处理数据更新和浮层控制
@@ -3211,9 +3326,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'OPEN_MANAGE_PANEL') {
     // 打开管理面板
     if (window.chatListWidget) {
+      console.log('收到OPEN_MANAGE_PANEL消息，开始显示管理面板');
+      // 确保插件先显示
       window.chatListWidget.showWidget();
-      window.chatListWidget.showManagePanel();
+      // 使用setTimeout确保showWidget完成后再显示管理面板
+      setTimeout(() => {
+        window.chatListWidget.showManagePanel();
+      }, 50);
       sendResponse({ success: true });
+    } else {
+      console.error('chatListWidget未找到，无法显示管理面板');
+      sendResponse({ success: false, error: 'Widget not found' });
     }
   } else if (message.type === 'WHITELIST_UPDATED') {
     // 白名单更新

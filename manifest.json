@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["utils.js", "modules/textarea-utils.js", "modules/data-import-export.js", "preview-module.js", "content.js"],
+      "js": ["utils.js", "modules/textarea-utils.js", "modules/data-import-export.js", "modules/script-management.js", "preview-module.js", "content.js"],
       "css": ["content.css"]
     }
   ],

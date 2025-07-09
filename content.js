@@ -95,6 +95,7 @@ class ChatListWidget {
     this.version = await this.getVersion();
     this.createWidget();
     this.initDataImportExport(); // 初始化数据导入导出模块
+    this.initScriptManagement(); // 初始化话术管理模块
     this.initPreviewModule();
     // this.createFocusDebugPanel();
     this.bindEvents();
@@ -179,6 +180,15 @@ class ChatListWidget {
     }
   }
 
+  // 初始化话术管理模块
+  initScriptManagement() {
+    if (window.ScriptManagement) {
+      this.scriptManagement = new window.ScriptManagement(this);
+    } else {
+      console.error('ScriptManagement 模块未加载');
+    }
+  }
+
   async refreshScripts() {
     try {
       // 显示刷新提示
@@ -208,35 +218,35 @@ class ChatListWidget {
         <div class="widget-header">
           <span class="widget-title">话术助手 <span class="version">v${this.version || '1.0.0'}</span></span>
           <div class="widget-controls">
-            <button class="btn-manage" title="管理话术"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.85643 16.1891C5.59976 15.8149 4.48117 15.1203 3.59545 14.1999C3.92587 13.8083 4.125 13.3023 4.125 12.7499C4.125 11.5072 3.11764 10.4999 1.875 10.4999C1.79983 10.4999 1.72552 10.5036 1.65225 10.5108C1.55242 10.0227 1.5 9.51743 1.5 8.99986C1.5 8.21588 1.62029 7.45999 1.84342 6.74963C1.85393 6.74978 1.86446 6.74986 1.875 6.74986C3.11764 6.74986 4.125 5.74249 4.125 4.49986C4.125 4.14312 4.04197 3.80581 3.89422 3.50611C4.76156 2.69963 5.82019 2.09608 6.99454 1.771C7.36665 2.50039 8.12501 2.99987 9 2.99987C9.87499 2.99987 10.6334 2.50039 11.0055 1.771C12.1798 2.09608 13.2384 2.69963 14.1058 3.50611C13.958 3.80581 13.875 4.14312 13.875 4.49986C13.875 5.74249 14.8824 6.74986 16.125 6.74986C16.1355 6.74986 16.1461 6.74978 16.1566 6.74963C16.3797 7.45999 16.5 8.21588 16.5 8.99986C16.5 9.51743 16.4476 10.0227 16.3478 10.5108C16.2745 10.5036 16.2002 10.4999 16.125 10.4999C14.8824 10.4999 13.875 11.5072 13.875 12.7499C13.875 13.3023 14.0741 13.8083 14.4045 14.1999C13.5188 15.1203 12.4002 15.8149 11.1436 16.1891C10.8535 15.2818 10.0035 14.6249 9 14.6249C7.9965 14.6249 7.14645 15.2818 6.85643 16.1891Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/><path d="M9 11.625C10.4497 11.625 11.625 10.4497 11.625 9C11.625 7.55025 10.4497 6.375 9 6.375C7.55025 6.375 6.375 7.55025 6.375 9C6.375 10.4497 7.55025 11.625 9 11.625Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
-            <button class="btn-close" title="关闭"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L15 15" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15L15 3" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="cls-btn-manage" title="管理话术"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.85643 16.1891C5.59976 15.8149 4.48117 15.1203 3.59545 14.1999C3.92587 13.8083 4.125 13.3023 4.125 12.7499C4.125 11.5072 3.11764 10.4999 1.875 10.4999C1.79983 10.4999 1.72552 10.5036 1.65225 10.5108C1.55242 10.0227 1.5 9.51743 1.5 8.99986C1.5 8.21588 1.62029 7.45999 1.84342 6.74963C1.85393 6.74978 1.86446 6.74986 1.875 6.74986C3.11764 6.74986 4.125 5.74249 4.125 4.49986C4.125 4.14312 4.04197 3.80581 3.89422 3.50611C4.76156 2.69963 5.82019 2.09608 6.99454 1.771C7.36665 2.50039 8.12501 2.99987 9 2.99987C9.87499 2.99987 10.6334 2.50039 11.0055 1.771C12.1798 2.09608 13.2384 2.69963 14.1058 3.50611C13.958 3.80581 13.875 4.14312 13.875 4.49986C13.875 5.74249 14.8824 6.74986 16.125 6.74986C16.1355 6.74986 16.1461 6.74978 16.1566 6.74963C16.3797 7.45999 16.5 8.21588 16.5 8.99986C16.5 9.51743 16.4476 10.0227 16.3478 10.5108C16.2745 10.5036 16.2002 10.4999 16.125 10.4999C14.8824 10.4999 13.875 11.5072 13.875 12.7499C13.875 13.3023 14.0741 13.8083 14.4045 14.1999C13.5188 15.1203 12.4002 15.8149 11.1436 16.1891C10.8535 15.2818 10.0035 14.6249 9 14.6249C7.9965 14.6249 7.14645 15.2818 6.85643 16.1891Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/><path d="M9 11.625C10.4497 11.625 11.625 10.4497 11.625 9C11.625 7.55025 10.4497 6.375 9 6.375C7.55025 6.375 6.375 7.55025 6.375 9C6.375 10.4497 7.55025 11.625 9 11.625Z" stroke="#FFFFFF" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
+            <button class="cls-btn-close" title="关闭"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L15 15" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15L15 3" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
         </div>
         <div class="widget-content">
           <div class="group-tabs"></div>
           <div class="search-container">
             <input type="text" class="search-input" placeholder="搜索话术..." />
-            <button class="btn-clear-search" title="清除搜索"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L15 15" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15L15 3" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="cls-btn-clear-search" title="清除搜索"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L15 15" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15L15 3" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
           <div class="script-list"></div>
           <div class="widget-actions">
-            <button class="btn-add-script">+ 添加话术</button>
-            <button class="btn-import-script"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 1.5V12.75" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.25 9L9 12.75L12.75 9" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.25 15.75H15.75" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg> 导入</button>
-            <button class="btn-export-script"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12.75V1.5" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.75 5.25L9 1.5L5.25 5.25" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.25 15.75H15.75" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg> 导出</button>
+            <button class="cls-btn-add-script">+ 添加话术</button>
+            <button class="cls-btn-import-script"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 1.5V12.75" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.25 9L9 12.75L12.75 9" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.25 15.75H15.75" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg> 导入</button>
+            <button class="cls-btn-export-script"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12.75V1.5" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.75 5.25L9 1.5L5.25 5.25" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.25 15.75H15.75" stroke="#FFFFFF" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg> 导出</button>
           </div>
         </div>
         <div class="manage-panel" style="display: none;">
           <div class="manage-header">
             <span>话术管理</span>
-            <button class="btn-close-manage"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="cls-btn-close-manage"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
           <div class="manage-content">
             <div class="group-management">
               <h4>分组管理</h4>
               <div class="group-list"></div>
               <div class="group-actions">
-                <button class="btn-add-group">+ 添加分组</button>
-                <button class="btn-import-data">📥 导入话术</button>
+                <button class="cls-btn-add-group">+ 添加分组</button>
+                <button class="cls-btn-import-data">📥 导入话术</button>
               </div>
             </div>
             <div class="script-management">
@@ -250,8 +260,8 @@ class ChatListWidget {
                 </select>
                 <textarea id="script-content" placeholder="话术内容"></textarea>
                 <div class="form-actions">
-                  <button class="btn-save-script">保存</button>
-                  <button class="btn-cancel-edit">取消</button>
+                  <button class="cls-btn-save-script">保存</button>
+                  <button class="cls-btn-cancel-edit">取消</button>
                 </div>
               </div>
             </div>
@@ -348,8 +358,8 @@ class ChatListWidget {
         <div class="group-item">
           <span class="group-color" style="background: ${group.color}"></span>
           <span class="group-name">${group.name}</span>
-          <button class="btn-edit-group" data-id="${group.id}">编辑</button>
-          <button class="btn-delete-group" data-id="${group.id}">删除</button>
+          <button class="cls-btn-edit-group" data-id="${group.id}">编辑</button>
+          <button class="cls-btn-delete-group" data-id="${group.id}">删除</button>
         </div>
       `).join('');
       
@@ -406,8 +416,8 @@ class ChatListWidget {
           <div class="script-header">
             <span class="script-title">${highlightedTitle}</span>
             <div class="script-actions">
-              <button class="btn-edit" data-id="${script.id}" title="编辑"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.75 9.75V15C15.75 15.4142 15.4142 15.75 15 15.75H3C2.58579 15.75 2.25 15.4142 2.25 15V3C2.25 2.58579 2.58579 2.25 3 2.25H8.25" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.25 10.02V12.75H7.99395L15.75 4.99054L13.0107 2.25L5.25 10.02Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
-              <button class="btn-delete" data-id="${script.id}" title="删除"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5.625H15L13.875 16.5H4.125L3 5.625Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M7.50098 9.37598V13.1261" stroke="#333333" stroke-width="0.75" stroke-linecap="round"/><path d="M10.501 9.375V13.1241" stroke="#333333" stroke-width="0.75" stroke-linecap="round"/><path d="M4.5 5.62496L10.6216 1.125L13.5 5.625" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="cls-btn-edit" data-id="${script.id}" title="编辑"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.75 9.75V15C15.75 15.4142 15.4142 15.75 15 15.75H3C2.58579 15.75 2.25 15.4142 2.25 15V3C2.25 2.58579 2.58579 2.25 3 2.25H8.25" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.25 10.02V12.75H7.99395L15.75 4.99054L13.0107 2.25L5.25 10.02Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
+              <button class="cls-btn-delete" data-id="${script.id}" title="删除"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 5.625H15L13.875 16.5H4.125L3 5.625Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M7.50098 9.37598V13.1261" stroke="#333333" stroke-width="0.75" stroke-linecap="round"/><path d="M10.501 9.375V13.1241" stroke="#333333" stroke-width="0.75" stroke-linecap="round"/><path d="M4.5 5.62496L10.6216 1.125L13.5 5.625" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             </div>
           </div>
 
@@ -509,7 +519,7 @@ class ChatListWidget {
     // 防止浮层点击时失去焦点，但允许输入框获得焦点
     this.widget.addEventListener('mousedown', (e) => {
       // 如果点击的是输入框或搜索相关元素，允许默认行为
-      if (ChatListUtils.matches(e.target, '.search-input, .btn-clear-search') || 
+      if (ChatListUtils.matches(e.target, '.search-input, .cls-btn-clear-search') || 
           ChatListUtils.closest(e.target, '.search-container')) {
         return;
       }
@@ -561,7 +571,7 @@ class ChatListWidget {
 
 
     // 关闭按钮事件
-    this.widget.querySelector('.btn-close').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-close').addEventListener('click', () => {
       this.hideWidget();
     });
 
@@ -573,7 +583,7 @@ class ChatListWidget {
     });
 
     // 管理面板
-    this.widget.querySelector('.btn-manage').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-manage').addEventListener('click', () => {
       try {
         console.log('点击了管理按钮');
         this.showManagePanel();
@@ -582,13 +592,13 @@ class ChatListWidget {
       }
     });
 
-    this.widget.querySelector('.btn-close-manage').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-close-manage').addEventListener('click', () => {
       this.hideManagePanel();
     });
 
     // 搜索功能
     const searchInput = this.widget.querySelector('.search-input');
-    const clearSearchBtn = this.widget.querySelector('.btn-clear-search');
+    const clearSearchBtn = this.widget.querySelector('.cls-btn-clear-search');
     
     searchInput.addEventListener('input', (e) => {
       this.searchKeyword = e.target.value.trim();
@@ -692,8 +702,8 @@ class ChatListWidget {
       console.log('Script list clicked:', e.target, e.target.classList);
       
       // 查找最近的按钮元素（处理SVG内部元素点击）
-      const editBtn = ChatListUtils.closest(e.target, '.btn-edit');
-        const deleteBtn = ChatListUtils.closest(e.target, '.btn-delete');
+      const editBtn = ChatListUtils.closest(e.target, '.cls-btn-edit');
+    const deleteBtn = ChatListUtils.closest(e.target, '.cls-btn-delete');
       
       if (editBtn) {
         console.log('Edit button clicked');
@@ -730,7 +740,7 @@ class ChatListWidget {
     // 预览浮层事件已在预览模块中处理
 
     // 添加话术
-    this.widget.querySelector('.btn-add-script').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-add-script').addEventListener('click', () => {
       try {
         console.log('点击添加话术按钮');
         this.showAddScriptModal();
@@ -740,7 +750,7 @@ class ChatListWidget {
     });
 
     // 导入话术
-    this.widget.querySelector('.btn-import-script').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-import-script').addEventListener('click', () => {
       try {
         console.log('点击导入话术按钮');
         this.showImportDialog();
@@ -750,7 +760,7 @@ class ChatListWidget {
     });
 
     // 导出话术
-    this.widget.querySelector('.btn-export-script').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-export-script').addEventListener('click', () => {
       try {
         console.log('点击导出话术按钮');
         this.exportData();
@@ -760,22 +770,22 @@ class ChatListWidget {
     });
 
     // 保存话术
-    this.widget.querySelector('.btn-save-script').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-save-script').addEventListener('click', () => {
       this.saveScript();
     });
 
     // 取消编辑
-    this.widget.querySelector('.btn-cancel-edit').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-cancel-edit').addEventListener('click', () => {
       this.clearScriptForm();
     });
 
     // 添加分组
-    this.widget.querySelector('.btn-add-group').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-add-group').addEventListener('click', () => {
       this.addGroup();
     });
 
     // 导入话术
-    this.widget.querySelector('.btn-import-data').addEventListener('click', () => {
+    this.widget.querySelector('.cls-btn-import-data').addEventListener('click', () => {
       this.showImportDialog();
     });
 
@@ -882,44 +892,44 @@ class ChatListWidget {
     
     // 创建模态框HTML
     const modalHTML = `
-        <div class="modal-overlay" id="addScriptModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">添加新话术</h3>
-                    <button class="btn-close-modal"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="cls-modal-overlay" id="addScriptModal">
+            <div class="cls-modal-content">
+                <div class="cls-modal-header">
+                    <h3 class="cls-modal-title">添加新话术</h3>
+                    <button class="cls-btn-close-modal"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 </div>
-                <div class="modal-body">
+                <div class="cls-modal-body">
                     <form id="addScriptForm">
-                        <div class="form-group">
-                            <label class="form-label" for="modalScriptTitle">话术标题 *</label>
-                            <input type="text" id="modalScriptTitle" class="form-control" placeholder="请输入话术标题" required>
-                            <div id="titleError" class="error-message" style="display: none;"></div>
+                        <div class="cls-form-group">
+                            <label class="cls-form-label" for="modalScriptTitle">话术标题 *</label>
+                            <input type="text" id="modalScriptTitle" class="cls-form-control" placeholder="请输入话术标题" required>
+                            <div id="titleError" class="cls-error-message" style="display: none;"></div>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="form-label" for="modalScriptNote">备注</label>
-              <textarea id="modalScriptNote" class="form-control" placeholder="请输入备注信息（可选）" rows="2"></textarea>
-                            <div id="noteError" class="error-message" style="display: none;"></div>
+                        <div class="cls-form-group">
+                            <label class="cls-form-label" for="modalScriptNote">备注</label>
+              <textarea id="modalScriptNote" class="cls-form-control" placeholder="请输入备注信息（可选）" rows="2"></textarea>
+                            <div id="noteError" class="cls-error-message" style="display: none;"></div>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="form-label">所属分组</label>
+                        <div class="cls-form-group">
+                            <label class="cls-form-label">所属分组</label>
                             <div class="add-group-tabs" id="modalGroupTabs">
                                 <div class="add-group-tab active" data-group="">无分组</div>
                             </div>
                             <input type="hidden" id="modalScriptGroup" value="">
                         </div>
                         
-                        <div class="form-group">
-                            <label class="form-label" for="modalScriptContent">话术内容 *</label>
-                            <textarea id="modalScriptContent" class="form-control textarea" placeholder="请输入话术内容" required></textarea>
-                            <div id="contentError" class="error-message" style="display: none;"></div>
+                        <div class="cls-form-group">
+                            <label class="cls-form-label" for="modalScriptContent">话术内容 *</label>
+                            <textarea id="modalScriptContent" class="cls-form-control textarea" placeholder="请输入话术内容" required></textarea>
+                            <div id="contentError" class="cls-error-message" style="display: none;"></div>
                         </div>
                     </form>
                     
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary btn-cancel-modal">取消</button>
-                        <button type="button" class="btn btn-primary btn-save-modal">保存话术</button>
+                    <div class="cls-form-actions">
+                        <button type="button" class="cls-btn cls-btn-secondary cls-btn-cancel-modal">取消</button>
+                        <button type="button" class="cls-btn cls-btn-primary cls-btn-save-modal">保存话术</button>
                     </div>
                 </div>
             </div>
@@ -996,19 +1006,19 @@ class ChatListWidget {
 
   bindModalEvents() {
     // 关闭按钮事件
-    const closeBtn = document.querySelector('.btn-close-modal');
+    const closeBtn = document.querySelector('.cls-btn-close-modal');
     if (closeBtn) {
       closeBtn.addEventListener('click', () => this.hideAddScriptModal());
     }
     
     // 取消按钮事件
-    const cancelBtn = document.querySelector('.btn-cancel-modal');
+    const cancelBtn = document.querySelector('.cls-btn-cancel-modal');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => this.hideAddScriptModal());
     }
     
     // 保存按钮事件
-    const saveBtn = document.querySelector('.btn-save-modal');
+    const saveBtn = document.querySelector('.cls-btn-save-modal');
     if (saveBtn) {
       saveBtn.addEventListener('click', () => this.saveNewScript());
     }
@@ -1017,7 +1027,7 @@ class ChatListWidget {
     const modal = document.getElementById('addScriptModal');
     if (modal) {
       modal.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal-overlay')) {
+        if (e.target.classList.contains('cls-modal-overlay')) {
           this.hideAddScriptModal();
         }
       });
@@ -1778,7 +1788,7 @@ class ChatListWidget {
         <div class="notification-header">
           <span class="notification-icon">🎯</span>
           <span class="notification-title">智能输入框选择</span>
-          <button class="btn-close-notification">×</button>
+          <button class="cls-btn-close-notification">×</button>
         </div>
         <div class="notification-body">
           <p>检测到 <strong>${inputs.length}</strong> 个输入框，已智能选择最佳输入框：</p>
@@ -1786,9 +1796,9 @@ class ChatListWidget {
             ${inputsList}
           </div>
           <div class="notification-actions">
-            <button class="btn-highlight-selected">高亮选中</button>
-            <button class="btn-show-all-inputs">显示全部</button>
-            <button class="btn-switch-input">切换选择</button>
+            <button class="cls-btn-highlight-selected">高亮选中</button>
+            <button class="cls-btn-show-all-inputs">显示全部</button>
+            <button class="cls-btn-switch-input">切换选择</button>
           </div>
         </div>
       </div>
@@ -1848,7 +1858,7 @@ class ChatListWidget {
         flex: 1;
       }
       
-      #multiple-inputs-notification .btn-close-notification {
+      #multiple-inputs-notification .cls-btn-close-notification {
         background: none;
         border: none;
         font-size: 20px;
@@ -1862,7 +1872,7 @@ class ChatListWidget {
         justify-content: center;
       }
       
-      #multiple-inputs-notification .btn-close-notification:hover {
+      #multiple-inputs-notification .cls-btn-close-notification:hover {
         color: #333;
         background: rgba(0, 0, 0, 0.1);
         border-radius: 50%;
@@ -1964,33 +1974,33 @@ class ChatListWidget {
         border-color: #999;
       }
       
-      #multiple-inputs-notification .btn-highlight-selected {
+      #multiple-inputs-notification .cls-btn-highlight-selected {
         background: #4CAF50;
         color: white;
         border-color: #4CAF50;
       }
       
-      #multiple-inputs-notification .btn-highlight-selected:hover {
+      #multiple-inputs-notification .cls-btn-highlight-selected:hover {
         background: #45a049;
       }
       
-      #multiple-inputs-notification .btn-switch-input {
+      #multiple-inputs-notification .cls-btn-switch-input {
         background: #2196f3;
         color: white;
         border-color: #2196f3;
       }
       
-      #multiple-inputs-notification .btn-switch-input:hover {
+      #multiple-inputs-notification .cls-btn-switch-input:hover {
         background: #1976d2;
       }
       
-      #multiple-inputs-notification .btn-show-all-inputs {
+      #multiple-inputs-notification .cls-btn-show-all-inputs {
         background: #ff9800;
         color: white;
         border-color: #ff9800;
       }
       
-      #multiple-inputs-notification .btn-show-all-inputs:hover {
+      #multiple-inputs-notification .cls-btn-show-all-inputs:hover {
         background: #f57c00;
       }
     `;
@@ -1999,25 +2009,25 @@ class ChatListWidget {
     document.body.appendChild(notification);
     
     // 绑定事件
-    notification.querySelector('.btn-close-notification').addEventListener('click', () => {
+    notification.querySelector('.cls-btn-close-notification').addEventListener('click', () => {
       notification.remove();
       style.remove();
     });
     
-    notification.querySelector('.btn-highlight-selected').addEventListener('click', () => {
+    notification.querySelector('.cls-btn-highlight-selected').addEventListener('click', () => {
       this.highlightElement(selectedInput);
       notification.remove();
       style.remove();
     });
     
-    notification.querySelector('.btn-show-all-inputs').addEventListener('click', () => {
+    notification.querySelector('.cls-btn-show-all-inputs').addEventListener('click', () => {
       this.highlightAllInputs(inputs);
       notification.remove();
       style.remove();
     });
     
     // 切换选择按钮事件
-    notification.querySelector('.btn-switch-input').addEventListener('click', () => {
+    notification.querySelector('.cls-btn-switch-input').addEventListener('click', () => {
       const currentIndex = inputs.indexOf(selectedInput);
       const nextIndex = (currentIndex + 1) % inputs.length;
       const newSelectedInput = inputs[nextIndex];
@@ -2245,363 +2255,34 @@ class ChatListWidget {
 
 
   editScript(scriptId) {
-    console.log('editScript called with ID:', scriptId);
-    const script = this.scripts.find(s => s.id === scriptId);
-    console.log('Found script:', script);
-    if (script) {
-      console.log('显示编辑话术模态框');
-      
-      // 显示编辑模态框
-      this.showEditScriptModal(script);
+    if (this.scriptManagement) {
+      this.scriptManagement.editScript(scriptId);
     } else {
-      console.error('未找到指定的话术:', scriptId);
+      console.error('ScriptManagement 模块未初始化');
     }
-  }
-
-  showEditScriptModal(script) {
-    console.log('显示编辑话术模态框', script);
-    
-    // 创建编辑模态框HTML
-    const modalHTML = `
-        <div class="modal-overlay" id="editScriptModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">编辑话术</h3>
-                    <button class="btn-close-modal"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editScriptForm">
-                        <input type="hidden" id="editScriptId" value="${script.id}">
-                        <div class="form-group">
-                            <label class="form-label" for="editModalScriptTitle">话术标题 *</label>
-                            <input type="text" id="editModalScriptTitle" class="form-control" placeholder="请输入话术标题" value="${script.title || ''}" required>
-                            <div id="editTitleError" class="error-message" style="display: none;"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="editModalScriptNote">备注</label>
-              <textarea id="editModalScriptNote" class="form-control" placeholder="请输入备注信息（可选）" rows="2">${script.note || ''}</textarea>
-                            <div id="editNoteError" class="error-message" style="display: none;"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">所属分组</label>
-                            <div class="edit-group-tabs" id="editModalGroupTabs">
-                                <div class="edit-group-tab" data-group="">无分组</div>
-                            </div>
-                            <input type="hidden" id="editModalScriptGroup" value="">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="editModalScriptContent">话术内容 *</label>
-                            <textarea id="editModalScriptContent" class="form-control textarea" placeholder="请输入话术内容" required>${script.content || ''}</textarea>
-                            <div id="editContentError" class="error-message" style="display: none;"></div>
-                        </div>
-                    </form>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary btn-cancel-edit-modal">取消</button>
-                        <button type="button" class="btn btn-primary btn-save-edit-modal">保存话术</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // 移除已存在的编辑模态框
-    const existingModal = document.getElementById('editScriptModal');
-    if (existingModal) {
-      existingModal.remove();
-    }
-    
-    // 添加模态框到页面
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // 填充分组选项并设置当前分组
-    this.populateEditGroupOptions(script.groupId);
-    
-    // 绑定编辑模态框事件
-    this.bindEditModalEvents();
-    
-    // 显示模态框
-    const modal = document.getElementById('editScriptModal');
-    modal.style.display = 'flex';
-    
-    // 设置焦点
-    setTimeout(() => {
-      const titleInput = document.getElementById('editModalScriptTitle');
-      if (titleInput) {
-        titleInput.focus();
-      }
-    }, 100);
-  }
-
-  populateEditGroupOptions(currentGroup) {
-    const groupTabs = document.getElementById('editModalGroupTabs');
-    const hiddenInput = document.getElementById('editModalScriptGroup');
-    if (!groupTabs || !hiddenInput) return;
-    
-    // 构建分组按钮HTML
-    let tabsHTML = `<div class="edit-group-tab ${!currentGroup ? 'active' : ''}" data-group="">无分组</div>`;
-    
-    this.groups.forEach(group => {
-      const isActive = group.id === currentGroup ? 'active' : '';
-      tabsHTML += `<div class="edit-group-tab ${isActive}" data-group="${group.id}" style="border-left: 3px solid ${group.color}">${group.name}</div>`;
-    });
-    
-    groupTabs.innerHTML = tabsHTML;
-    hiddenInput.value = currentGroup || '';
-    
-    // 绑定点击事件
-    groupTabs.addEventListener('click', (e) => {
-      if (e.target.classList.contains('edit-group-tab')) {
-        // 移除所有active类
-        groupTabs.querySelectorAll('.edit-group-tab').forEach(tab => {
-          tab.classList.remove('active');
-        });
-        
-        // 添加active类到当前点击的标签
-        e.target.classList.add('active');
-        
-        // 更新隐藏输入框的值
-        hiddenInput.value = e.target.dataset.group;
-      }
-    });
-  }
-
-  bindEditModalEvents() {
-    // 关闭按钮
-    const closeBtn = document.querySelector('#editScriptModal .btn-close-modal');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.hideEditScriptModal());
-    }
-    
-    // 取消按钮
-    const cancelBtn = document.querySelector('.btn-cancel-edit-modal');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.hideEditScriptModal());
-    }
-    
-    // 保存按钮
-    const saveBtn = document.querySelector('.btn-save-edit-modal');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => this.saveEditedScript());
-    }
-    
-    // 点击遮罩层关闭
-    const modal = document.getElementById('editScriptModal');
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          this.hideEditScriptModal();
-        }
-      });
-    }
-    
-    // ESC键关闭，Ctrl+Enter保存
-    const keyHandler = (e) => {
-      if (e.key === 'Escape') {
-        this.hideEditScriptModal();
-        document.removeEventListener('keydown', keyHandler);
-      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        this.saveEditedScript();
-      }
-    };
-    document.addEventListener('keydown', keyHandler);
-  }
-
-  hideEditScriptModal() {
-    console.log('隐藏编辑话术模态框');
-    const modal = document.getElementById('editScriptModal');
-    if (modal) {
-      modal.remove();
-    }
-    // 关闭预览浮层
-    this.previewModule.forceHidePreview();
-  }
-
-  saveEditedScript() {
-    console.log('保存编辑的话术');
-    
-    const scriptId = document.getElementById('editScriptId')?.value;
-    const title = document.getElementById('editModalScriptTitle')?.value?.trim();
-    const note = document.getElementById('editModalScriptNote')?.value?.trim();
-    const group = document.getElementById('editModalScriptGroup')?.value;
-    const content = document.getElementById('editModalScriptContent')?.value?.trim();
-    
-    console.log('获取表单数据:', { scriptId, title, note, group, content });
-    
-    // 验证必填字段
-    if (!title) {
-      this.showError('editTitleError', '请输入话术标题');
-      return;
-    }
-    
-    if (!content) {
-      this.showError('editContentError', '请输入话术内容');
-      return;
-    }
-    
-    // 清除错误信息
-    this.clearErrors(['editTitleError', 'editContentError']);
-    
-    // 更新话术
-    const scriptIndex = this.scripts.findIndex(s => s.id === scriptId);
-    if (scriptIndex !== -1) {
-      this.scripts[scriptIndex] = {
-        ...this.scripts[scriptIndex],
-        title,
-        note,
-        groupId: group,
-        content,
-        updatedAt: new Date().toISOString()
-      };
-      
-      // 保存到存储
-      this.saveData();
-      
-      // 刷新显示
-      this.renderScripts();
-      
-      // 隐藏模态框
-      this.hideEditScriptModal();
-      
-      // 关闭预览浮层
-      this.previewModule.forceHidePreview();
-      
-      console.log('话术更新成功');
-    } else {
-      console.error('未找到要更新的话术');
-    }
-  }
-
-  showError(errorId, message) {
-    const errorEl = document.getElementById(errorId);
-    if (errorEl) {
-      errorEl.textContent = message;
-      errorEl.style.display = 'block';
-    }
-  }
-
-  clearErrors(errorIds) {
-    errorIds.forEach(id => {
-      const errorEl = document.getElementById(id);
-      if (errorEl) {
-        errorEl.style.display = 'none';
-      }
-    });
   }
 
   deleteScript(scriptId) {
-    this.showConfirmDialog(
-      '确认删除',
-      '确定要删除这个话术吗？',
-      () => {
-        this.scripts = this.scripts.filter(s => s.id !== scriptId);
-        this.saveData();
-        this.renderScripts();
-      }
-    );
+    if (this.scriptManagement) {
+      this.scriptManagement.deleteScript(scriptId);
+    } else {
+      console.error('ScriptManagement 模块未初始化');
+    }
   }
 
   saveScript() {
-    try {
-      console.log('开始保存话术...');
-      
-      const id = this.widget.querySelector('#edit-script-id').value;
-      const title = this.widget.querySelector('#script-title').value.trim();
-      const note = this.widget.querySelector('#script-note').value.trim();
-      const groupId = this.widget.querySelector('#script-group').value;
-      const content = this.widget.querySelector('#script-content').value.trim();
-
-      console.log('获取到的表单数据:', { id, title, note, groupId, content });
-
-      if (!title || !content) {
-        console.warn('验证失败: 标题或内容为空');
-        alert('请填写话术标题和内容');
-        return;
-      }
-
-      if (id) {
-        // 编辑现有话术
-        const script = this.scripts.find(s => s.id === id);
-        if (script) {
-          script.title = title;
-          script.note = note;
-          script.content = content;
-          script.groupId = groupId;
-          console.log('更新现有话术:', script);
-        } else {
-          console.error('未找到要编辑的话术, ID:', id);
-          alert('未找到要编辑的话术');
-          return;
-        }
-      } else {
-        // 添加新话术
-        const newScript = {
-          id: Date.now().toString(),
-          title,
-          note,
-          content,
-          groupId
-        };
-        this.scripts.push(newScript);
-        console.log('添加新话术:', newScript);
-        console.log('当前话术总数:', this.scripts.length);
-      }
-
-      // 保存数据
-      this.saveData()
-        .then(() => {
-          console.log('数据保存成功');
-          this.renderScripts();
-          this.clearScriptForm();
-          this.hideManagePanel();
-          
-          // 显示成功提示
-          this.showSuccessMessage(id ? '话术更新成功' : '话术添加成功');
-        })
-        .catch((error) => {
-          console.error('保存数据失败:', error);
-          alert('保存失败，请重试');
-        });
-        
-    } catch (error) {
-      console.error('保存话术时出错:', error);
-      alert('保存失败，请检查输入内容');
+    if (this.scriptManagement) {
+      this.scriptManagement.saveScript();
+    } else {
+      console.error('ScriptManagement 模块未初始化');
     }
   }
 
   clearScriptForm() {
-    try {
-      console.log('清空话术表单...');
-      
-      const elements = {
-        'edit-script-id': this.widget.querySelector('#edit-script-id'),
-        'script-title': this.widget.querySelector('#script-title'),
-        'script-note': this.widget.querySelector('#script-note'),
-        'script-group': this.widget.querySelector('#script-group'),
-        'script-content': this.widget.querySelector('#script-content')
-      };
-      
-      // 检查所有元素是否存在
-      for (const [name, element] of Object.entries(elements)) {
-        if (!element) {
-          console.error(`表单元素不存在: ${name}`);
-          return;
-        }
-      }
-      
-      // 清空所有表单元素
-      elements['edit-script-id'].value = '';
-      elements['script-title'].value = '';
-      elements['script-note'].value = '';
-      elements['script-group'].value = '';
-      elements['script-content'].value = '';
-      
-      console.log('表单清空完成');
-    } catch (error) {
-      console.error('清空表单时出错:', error);
+    if (this.scriptManagement) {
+      this.scriptManagement.clearScriptForm();
+    } else {
+      console.error('ScriptManagement 模块未初始化');
     }
   }
 

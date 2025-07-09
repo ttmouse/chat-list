@@ -40,7 +40,7 @@
             overflow-y: auto;
         }
         
-        .btn-add-script {
+        .cls-btn-add-script {
             width: 100%;
             padding: 12px;
             background: #28a745;
@@ -53,12 +53,12 @@
             margin-bottom: 16px;
         }
         
-        .btn-add-script:hover {
+        .cls-btn-add-script:hover {
             background: #218838;
         }
         
         /* 新增话术浮层样式 */
-        .modal-overlay {
+        .cls-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -71,7 +71,7 @@
             align-items: center;
         }
         
-        .modal-content {
+        .cls-modal-content {
             background: white;
             border-radius: 12px;
             width: 90%;
@@ -93,7 +93,7 @@
             }
         }
         
-        .modal-header {
+        .cls-modal-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 16px 20px;
@@ -102,13 +102,13 @@
             align-items: center;
         }
         
-        .modal-title {
+        .cls-modal-title {
             font-size: 18px;
             font-weight: 600;
             margin: 0;
         }
         
-        .btn-close-modal {
+        .cls-btn-close-modal {
             background: none;
             border: none;
             color: white;
@@ -124,26 +124,26 @@
             transition: background 0.2s;
         }
         
-        .btn-close-modal:hover {
+        .cls-btn-close-modal:hover {
             background: rgba(255, 255, 255, 0.2);
         }
         
-        .modal-body {
+        .cls-modal-body {
             padding: 24px;
         }
         
-        .form-group {
+        .cls-form-group {
             margin-bottom: 20px;
         }
         
-        .form-label {
+        .cls-form-label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
             color: #333;
         }
         
-        .form-control {
+        .cls-form-control {
             width: 100%;
             padding: 12px;
             border: 2px solid #e1e5e9;
@@ -153,19 +153,19 @@
             box-sizing: border-box;
         }
         
-        .form-control:focus {
+        .cls-form-control:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
-        .form-control.textarea {
+        .cls-form-control.textarea {
             min-height: 120px;
             resize: vertical;
             font-family: inherit;
         }
         
-        .form-actions {
+        .cls-form-actions {
             display: flex;
             gap: 12px;
             justify-content: flex-end;
@@ -174,7 +174,7 @@
             border-top: 1px solid #e1e5e9;
         }
         
-        .btn {
+        .cls-btn {
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
@@ -185,26 +185,26 @@
             min-width: 100px;
         }
         
-        .btn-primary {
+        .cls-btn-primary {
             background: #667eea;
             color: white;
         }
         
-        .btn-primary:hover {
+        .cls-btn-primary:hover {
             background: #5a6fd8;
             transform: translateY(-1px);
         }
         
-        .btn-secondary {
+        .cls-btn-secondary {
             background: #6c757d;
             color: white;
         }
         
-        .btn-secondary:hover {
+        .cls-btn-secondary:hover {
             background: #5a6268;
         }
         
-        .success-message {
+        .cls-success-message {
             position: fixed;
             top: 20px;
             right: 20px;
@@ -228,7 +228,7 @@
             }
         }
         
-        .error-message {
+        .cls-error-message {
             background: #dc3545;
             color: white;
             padding: 8px 12px;
@@ -271,7 +271,7 @@
             </div>
         </div>
         <div class="widget-content">
-            <button class="btn-add-script" onclick="showAddScriptModal()">+ 添加话术</button>
+            <button class="cls-btn-add-script" onclick="showAddScriptModal()">+ 添加话术</button>
             <div style="color: #666; text-align: center; padding: 20px;">
                 点击上方按钮测试新增话术功能
             </div>
@@ -279,23 +279,23 @@
     </div>
 
     <!-- 新增话术模态框 -->
-    <div class="modal-overlay" id="addScriptModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">添加新话术</h3>
-                <button class="btn-close-modal" onclick="hideAddScriptModal()"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="cls-modal-overlay" id="addScriptModal">
+        <div class="cls-modal-content">
+            <div class="cls-modal-header">
+                <h3 class="cls-modal-title">添加新话术</h3>
+                <button class="cls-btn-close-modal" onclick="hideAddScriptModal()"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             </div>
-            <div class="modal-body">
+            <div class="cls-modal-body">
                 <form id="addScriptForm">
-                    <div class="form-group">
-                        <label class="form-label" for="modalScriptTitle">话术标题 *</label>
-                        <input type="text" id="modalScriptTitle" class="form-control" placeholder="请输入话术标题" required>
-                        <div id="titleError" class="error-message" style="display: none;"></div>
+                    <div class="cls-form-group">
+                        <label class="cls-form-label" for="modalScriptTitle">话术标题 *</label>
+                        <input type="text" id="modalScriptTitle" class="cls-form-control" placeholder="请输入话术标题" required>
+                        <div id="titleError" class="cls-error-message" style="display: none;"></div>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label" for="modalScriptGroup">所属分组</label>
-                        <select id="modalScriptGroup" class="form-control">
+                    <div class="cls-form-group">
+                        <label class="cls-form-label" for="modalScriptGroup">所属分组</label>
+                        <select id="modalScriptGroup" class="cls-form-control">
                             <option value="">选择分组（可选）</option>
                             <option value="1">问候语</option>
                             <option value="2">服务话术</option>
@@ -303,16 +303,16 @@
                         </select>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label" for="modalScriptContent">话术内容 *</label>
-                        <textarea id="modalScriptContent" class="form-control textarea" placeholder="请输入话术内容" required></textarea>
-                        <div id="contentError" class="error-message" style="display: none;"></div>
+                    <div class="cls-form-group">
+                        <label class="cls-form-label" for="modalScriptContent">话术内容 *</label>
+                        <textarea id="modalScriptContent" class="cls-form-control textarea" placeholder="请输入话术内容" required></textarea>
+                        <div id="contentError" class="cls-error-message" style="display: none;"></div>
                     </div>
                 </form>
                 
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="hideAddScriptModal()">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveNewScript()">保存话术</button>
+                <div class="cls-form-actions">
+                    <button type="button" class="cls-btn cls-btn-secondary" onclick="hideAddScriptModal()">取消</button>
+                    <button type="button" class="cls-btn cls-btn-primary" onclick="saveNewScript()">保存话术</button>
                 </div>
             </div>
         </div>

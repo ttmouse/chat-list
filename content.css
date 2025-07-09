@@ -101,16 +101,16 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.widget-controls .btn-close {
+.widget-controls .cls-btn-close {
   font-size: 16px;
   font-weight: bold;
 }
 
-.widget-controls .btn-close:hover {
+.widget-controls .cls-btn-close:hover {
   background: rgba(255, 0, 0, 0.1);
 }
 
-.widget-controls .btn-close:hover svg path {
+.widget-controls .cls-btn-close:hover svg path {
   stroke: #ff4444;
 }
 
@@ -197,7 +197,7 @@
   color: #6c757d;
 }
 
-.btn-clear-search {
+.cls-btn-clear-search {
   position: absolute;
   right: 8px;
   top: 50%;
@@ -217,16 +217,16 @@
   transition: all 0.2s;
 }
 
-.btn-clear-search:hover {
+.cls-btn-clear-search:hover {
   background: #e9ecef;
   color: #495057;
 }
 
-.btn-clear-search:hover svg path {
+.cls-btn-clear-search:hover svg path {
   stroke: #495057;
 }
 
-.btn-clear-search:not(.visible) {
+.cls-btn-clear-search:not(.visible) {
   display: none;
 }
 
@@ -369,7 +369,7 @@ mark {
   border-radius: 0 0 12px 12px;
 }
 
-.btn-add-script {
+.cls-btn-add-script {
   background: linear-gradient(135deg, #4CAF50, #45a049);
   color: white;
   border: none;
@@ -382,7 +382,7 @@ mark {
   flex: 1;
 }
 
-.btn-add-script:hover {
+.cls-btn-add-script:hover {
   -webkit-transform: translateY(-1px);
   -moz-transform: translateY(-1px);
   -ms-transform: translateY(-1px);
@@ -391,7 +391,7 @@ mark {
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
-.btn-import-script {
+.cls-btn-import-script {
   background: linear-gradient(135deg, #2196F3, #1976D2);
   color: white;
   border: none;
@@ -408,17 +408,17 @@ mark {
   gap: 3px;
 }
 
-.btn-import-script svg {
+.cls-btn-import-script svg {
   width: 14px;
   height: 14px;
 }
 
-.btn-import-script:hover {
+.cls-btn-import-script:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
 }
 
-.btn-export-script {
+.cls-btn-export-script {
   background: linear-gradient(135deg, #FF9800, #F57C00);
   color: white;
   border: none;
@@ -435,12 +435,12 @@ mark {
   gap: 3px;
 }
 
-.btn-export-script svg {
+.cls-btn-export-script svg {
   width: 14px;
   height: 14px;
 }
 
-.btn-export-script:hover {
+.cls-btn-export-script:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
@@ -470,7 +470,7 @@ mark {
   font-weight: 600;
 }
 
-.btn-close-manage {
+.cls-btn-close-manage {
   background: none;
   border: none;
   color: white;
@@ -481,7 +481,7 @@ mark {
   transition: background 0.2s;
 }
 
-.btn-close-manage:hover {
+.cls-btn-close-manage:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -534,8 +534,8 @@ mark {
   font-size: 13px;
 }
 
-.btn-edit-group,
-.btn-delete-group {
+.cls-btn-edit-group,
+.cls-btn-delete-group {
   background: none;
   border: 1px solid #ddd;
   padding: 4px 8px;
@@ -545,19 +545,19 @@ mark {
   transition: all 0.2s;
 }
 
-.btn-edit-group:hover {
+.cls-btn-edit-group:hover {
   background: #007bff;
   color: white;
   border-color: #007bff;
 }
 
-.btn-delete-group:hover {
+.cls-btn-delete-group:hover {
   background: #dc3545;
   color: white;
   border-color: #dc3545;
 }
 
-.btn-add-group {
+.cls-btn-add-group {
   background: #28a745;
   color: white;
   border: none;
@@ -569,7 +569,7 @@ mark {
   width: 100%;
 }
 
-.btn-add-group:hover {
+.cls-btn-add-group:hover {
   background: #218838;
 }
 
@@ -614,8 +614,8 @@ mark {
 
 
 
-.btn-save-script,
-.btn-cancel-edit {
+.cls-btn-save-script,
+.cls-btn-cancel-edit {
   flex: 1;
   padding: 10px;
   border: none;
@@ -626,21 +626,21 @@ mark {
   transition: all 0.2s;
 }
 
-.btn-save-script {
+.cls-btn-save-script {
   background: #007bff;
   color: white;
 }
 
-.btn-save-script:hover {
+.cls-btn-save-script:hover {
   background: #0056b3;
 }
 
-.btn-cancel-edit {
+.cls-btn-cancel-edit {
   background: #6c757d;
   color: white;
 }
 
-.btn-cancel-edit:hover {
+.cls-btn-cancel-edit:hover {
   background: #545b62;
 }
 
@@ -708,7 +708,7 @@ mark {
 }
 
 /* 成功消息样式 */
-.success-message {
+.cls-success-message {
     position: fixed;
     top: 20px;
     right: 20px;
@@ -732,7 +732,7 @@ mark {
 }
 
 /* 新增话术模态框样式 */
-.modal-overlay {
+.cls-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -745,7 +745,7 @@ mark {
     align-items: center;
 }
 
-.modal-content {
+.cls-modal-content {
     background: white;
     border-radius: 12px;
     width: 90%;
@@ -767,7 +767,7 @@ mark {
     }
 }
 
-.modal-header {
+.cls-modal-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 16px 20px;
@@ -776,13 +776,13 @@ mark {
     align-items: center;
 }
 
-.modal-title {
+.cls-modal-title {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
 }
 
-.btn-close-modal {
+.cls-btn-close-modal {
     background: none;
     border: none;
     color: white;
@@ -798,19 +798,19 @@ mark {
     transition: background 0.2s;
 }
 
-.btn-close-modal:hover {
+.cls-btn-close-modal:hover {
     background: rgba(255, 255, 255, 0.2);
 }
 
-.modal-body {
+.cls-modal-body {
     padding: 24px;
 }
 
-.form-group {
+.cls-form-group {
     margin-bottom: 20px;
 }
 
-.form-label {
+.cls-form-label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
@@ -818,7 +818,7 @@ mark {
     font-size: 14px;
 }
 
-.form-control {
+.cls-form-control {
     width: 100%;
     padding: 12px;
     border: 2px solid #e1e5e9;
@@ -829,13 +829,13 @@ mark {
     font-family: inherit;
 }
 
-.form-control:focus {
+.cls-form-control:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.form-control.textarea {
+.cls-form-control.textarea {
     min-height: 120px;
     resize: vertical;
     font-family: inherit;
@@ -843,7 +843,7 @@ mark {
     transition: height 0.2s ease;
 }
 
-#modalScriptNote.form-control {
+#modalScriptNote.cls-form-control {
     min-height: 60px;
     max-height: 120px;
     resize: vertical;
@@ -851,7 +851,7 @@ mark {
     transition: height 0.2s ease;
 }
 
-.form-actions {
+.cls-form-actions {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
@@ -860,7 +860,7 @@ mark {
     border-top: 1px solid #e1e5e9;
 }
 
-.script-form .form-actions {
+.script-form .cls-form-actions {
     gap: 8px;
     margin-top: 0;
     padding-top: 0;
@@ -868,7 +868,7 @@ mark {
     justify-content: stretch;
 }
 
-.btn {
+.cls-btn {
     padding: 12px 24px;
     border: none;
     border-radius: 8px;
@@ -879,26 +879,26 @@ mark {
     min-width: 100px;
 }
 
-.btn-primary {
+.cls-btn-primary {
     background: #667eea;
     color: white;
 }
 
-.btn-primary:hover {
+.cls-btn-primary:hover {
     background: #5a6fd8;
     transform: translateY(-1px);
 }
 
-.btn-secondary {
+.cls-btn-secondary {
     background: #6c757d;
     color: white;
 }
 
-.btn-secondary:hover {
+.cls-btn-secondary:hover {
     background: #5a6268;
 }
 
-.error-message {
+.cls-error-message {
     background: #dc3545;
     color: white;
     padding: 8px 12px;
@@ -964,7 +964,7 @@ mark {
   gap: 4px;
 }
 
-#script-preview-layer .btn-edit-preview {
+#script-preview-layer .cls-btn-edit-preview {
   background: none;
   border: none;
   padding: 4px;
@@ -979,11 +979,11 @@ mark {
   height: 26px;
 }
 
-#script-preview-layer .btn-edit-preview:hover {
+#script-preview-layer .cls-btn-edit-preview:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
-#script-preview-layer .btn-edit-preview svg {
+#script-preview-layer .cls-btn-edit-preview svg {
   width: 18px;
   height: 18px;
   display: block;
@@ -1101,8 +1101,8 @@ mark {
   margin-top: 12px;
 }
 
-.group-actions .btn-add-group,
-.group-actions .btn-import-data {
+.group-actions .cls-btn-add-group,
+.group-actions .cls-btn-import-data {
   flex: 1;
   padding: 8px 12px;
   font-size: 12px;
@@ -1112,21 +1112,21 @@ mark {
   transition: all 0.2s ease;
 }
 
-.group-actions .btn-add-group {
+.group-actions .cls-btn-add-group {
   background: #4CAF50;
   color: white;
 }
 
-.group-actions .btn-add-group:hover {
+.group-actions .cls-btn-add-group:hover {
   background: #45a049;
 }
 
-.group-actions .btn-import-data {
+.group-actions .cls-btn-import-data {
   background: #2196F3;
   color: white;
 }
 
-.group-actions .btn-import-data:hover {
+.group-actions .cls-btn-import-data:hover {
   background: #1976D2;
 }
 
@@ -1169,7 +1169,7 @@ mark {
   color: #333;
 }
 
-.btn-close-import {
+.cls-btn-close-import {
   background: none;
   border: none;
   font-size: 24px;
@@ -1185,12 +1185,12 @@ mark {
   transition: all 0.2s ease;
 }
 
-.btn-close-import:hover {
+.cls-btn-close-import:hover {
   background: #f5f5f5;
   color: #333;
 }
 
-.btn-close-import:hover svg path {
+.cls-btn-close-import:hover svg path {
   stroke: #333;
 }
 
@@ -1232,7 +1232,7 @@ mark {
   justify-content: flex-end;
 }
 
-.import-actions .btn {
+.import-actions .cls-btn {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -1242,21 +1242,21 @@ mark {
   transition: all 0.2s ease;
 }
 
-.import-actions .btn-primary {
+.import-actions .cls-btn-primary {
   background: #2196F3;
   color: white;
 }
 
-.import-actions .btn-primary:hover {
+.import-actions .cls-btn-primary:hover {
   background: #1976D2;
 }
 
-.import-actions .btn-secondary {
+.import-actions .cls-btn-secondary {
   background: #f5f5f5;
   color: #666;
 }
 
-.import-actions .btn-secondary:hover {
+.import-actions .cls-btn-secondary:hover {
   background: #e0e0e0;
   color: #333;
 }
@@ -1327,7 +1327,7 @@ mark {
   justify-content: flex-end;
 }
 
-.confirm-dialog-footer .btn {
+.confirm-dialog-footer .cls-btn {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -1338,27 +1338,27 @@ mark {
   min-width: 80px;
 }
 
-.confirm-dialog-footer .btn-secondary {
+.confirm-dialog-footer .cls-btn-secondary {
   background: #f5f5f5;
   color: #666;
 }
 
-.confirm-dialog-footer .btn-secondary:hover {
+.confirm-dialog-footer .cls-btn-secondary:hover {
   background: #e0e0e0;
   color: #333;
 }
 
-.confirm-dialog-footer .btn-danger {
+.confirm-dialog-footer .cls-btn-danger {
   background: #dc3545;
   color: white;
 }
 
-.confirm-dialog-footer .btn-danger:hover {
+.confirm-dialog-footer .cls-btn-danger:hover {
   background: #c82333;
   transform: translateY(-1px);
 }
 
-.confirm-dialog-footer .btn:focus {
+.confirm-dialog-footer .cls-btn:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }

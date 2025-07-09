@@ -104,8 +104,8 @@ class Utils {
             <p>${message.replace(/\n/g, '<br>')}</p>
           </div>
           <div class="confirm-dialog-footer">
-            <button class="btn btn-secondary" id="confirm-cancel-btn">取消</button>
-            <button class="btn btn-danger" id="confirm-ok-btn">确定</button>
+            <button class="cls-btn cls-btn-secondary" id="confirm-cancel-btn">取消</button>
+            <button class="cls-btn cls-btn-danger" id="confirm-ok-btn">确定</button>
           </div>
         </div>
       </div>

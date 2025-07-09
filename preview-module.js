@@ -21,7 +21,7 @@ class PreviewModule {
           <div class="preview-header">
             <div class="preview-title"></div>
             <div class="preview-actions">
-               <button class="btn-edit-preview" title="编辑"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.75 9.75V15C15.75 15.4142 15.4142 15.75 15 15.75H3C2.58579 15.75 2.25 15.4142 2.25 15V3C2.25 2.58579 2.58579 2.25 3 2.25H8.25" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.25 10.02V12.75H7.99395L15.75 4.99054L13.0107 2.25L5.25 10.02Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
+               <button class="cls-btn-edit-preview" title="编辑"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.75 9.75V15C15.75 15.4142 15.4142 15.75 15 15.75H3C2.58579 15.75 2.25 15.4142 2.25 15V3C2.25 2.58579 2.58579 2.25 3 2.25H8.25" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.25 10.02V12.75H7.99395L15.75 4.99054L13.0107 2.25L5.25 10.02Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/></svg></button>
              </div>
           </div>
           <div class="preview-group"></div>
@@ -109,7 +109,7 @@ class PreviewModule {
     this.previewLayer.querySelector('.preview-text').textContent = content;
     
     // 绑定编辑按钮事件
-    const editBtn = this.previewLayer.querySelector('.btn-edit-preview');
+    const editBtn = this.previewLayer.querySelector('.cls-btn-edit-preview');
     editBtn.onclick = () => {
       this.hidePreview();
       const script = this.chatListWidget.scripts.find(s => s.id === scriptId);

@@ -3,8 +3,7 @@ class ChatListWidget {
   constructor() {
     this.isVisible = false;
     this.widget = null;
-    this.previewLayer = null; // 独立的预览浮层
-    this.hidePreviewTimeout = null; // 预览浮层延迟隐藏定时器
+    this.previewModule = null; // 预览模块
     this.scripts = [];
     this.groups = [];
     this.currentGroup = null;
@@ -165,7 +164,7 @@ class ChatListWidget {
     // 获取版本号
     this.version = await this.getVersion();
     this.createWidget();
-    this.createPreviewLayer();
+    this.initPreviewModule();
     // this.createFocusDebugPanel();
     this.bindEvents();
     this.initialized = true; // 标记为已初始化
@@ -335,30 +334,10 @@ class ChatListWidget {
     }, 100);
   }
 
-  createPreviewLayer() {
-    // 创建独立的预览浮层
-    this.previewLayer = document.createElement('div');
-    this.previewLayer.id = 'script-preview-layer';
-    this.previewLayer.innerHTML = `
-      <div class="preview-content">
-        <div class="preview-header">
-          <div class="preview-title"></div>
-          <div class="preview-actions">
-            <button class="btn-edit-preview" title="编辑话术">
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.75 9.75V15C15.75 15.4142 15.4142 15.75 15 15.75H3C2.58579 15.75 2.25 15.4142 2.25 15V3C2.25 2.58579 2.58579 2.25 3 2.25H8.25" stroke="#666" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M5.25 10.02V12.75H7.99395L15.75 4.99054L13.0107 2.25L5.25 10.02Z" stroke="#666" stroke-width="0.75" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="preview-group"></div>
-        <div class="preview-note"></div>
-        <div class="preview-text"></div>
-      </div>
-    `;
-    
-    document.body.appendChild(this.previewLayer);
+  initPreviewModule() {
+    // 初始化预览模块
+    this.previewModule = new PreviewModule(this);
+    this.previewModule.createPreviewLayer();
   }
 
 
@@ -522,10 +501,10 @@ class ChatListWidget {
       });
       
       // 显示预览
-      this.showPreview(selectedItem);
+      this.previewModule.showPreview(selectedItem);
     } else {
       // 没有选中项时隐藏预览
-      this.hidePreview();
+      this.previewModule.hidePreview();
     }
   }
 
@@ -717,7 +696,7 @@ class ChatListWidget {
               // 重置选中索引
               this.selectedScriptIndex = -1;
               // 关闭预览浮层
-              this.forceHidePreview();
+              this.previewModule.forceHidePreview();
               // 使用setTimeout确保blur操作完成后再填充内容
               setTimeout(() => {
                 this.fillContent(script.content);
@@ -730,7 +709,7 @@ class ChatListWidget {
           e.preventDefault();
           this.selectedScriptIndex = -1;
           this.updateScriptSelection();
-          this.forceHidePreview(); // 强制隐藏预览
+          this.previewModule.forceHidePreview(); // 强制隐藏预览
           searchInput.blur();
           break;
       }
@@ -762,7 +741,7 @@ class ChatListWidget {
         const script = this.scripts.find(s => s.id === scriptId);
         if (script) {
           // 关闭预览浮层
-          this.forceHidePreview();
+          this.previewModule.forceHidePreview();
           this.fillContent(script.content);
         }
       }
@@ -792,7 +771,7 @@ class ChatListWidget {
     this.widget.querySelector('.script-list').addEventListener('mouseenter', (e) => {
       const scriptItem = ChatListUtils.closest(e.target, '.script-item');
       if (scriptItem) {
-        this.showPreview(scriptItem);
+        this.previewModule.showPreview(scriptItem);
       }
     }, true);
 
@@ -800,33 +779,15 @@ class ChatListWidget {
     this.widget.addEventListener('mouseleave', () => {
       console.log('主面板 mouseleave 事件触发');
       // 延迟300ms隐藏，如果鼠标进入预览浮层则取消隐藏
-      this.hidePreviewTimeout = setTimeout(() => {
-        console.log('延迟隐藏定时器执行');
-        this.forceHidePreview();
+      this.previewModule.hidePreviewTimeout = setTimeout(() => {
+          console.log('延迟隐藏预览浮层');
+          this.previewModule.forceHidePreview();
       }, 100);
     });
 
     // 移除话术项的mouseleave事件，避免与主面板的延迟隐藏逻辑冲突
 
-    // 预览浮层本身的鼠标事件
-    this.previewLayer.addEventListener('mouseenter', () => {
-      console.log('预览浮层 mouseenter 事件触发');
-      // 取消延迟隐藏
-      if (this.hidePreviewTimeout) {
-        console.log('取消延迟隐藏定时器');
-        clearTimeout(this.hidePreviewTimeout);
-        this.hidePreviewTimeout = null;
-      }
-      // 只有在浮层已经可见时才添加hover状态
-      if (this.previewLayer.classList.contains('visible')) {
-        this.previewLayer.classList.add('hover');
-      }
-    });
-
-    this.previewLayer.addEventListener('mouseleave', () => {
-      console.log('预览浮层 mouseleave 事件触发');
-      this.forceHidePreview();
-    });
+    // 预览浮层事件已在预览模块中处理
 
     // 添加话术
     this.widget.querySelector('.btn-add-script').addEventListener('click', () => {
@@ -1246,7 +1207,7 @@ class ChatListWidget {
         this.renderScripts();
         this.hideAddScriptModal();
         // 关闭预览浮层
-        this.forceHidePreview();
+        this.previewModule.forceHidePreview();
       }).catch(error => {
         console.error('保存话术失败:', error);
         alert('保存失败，请重试');
@@ -2338,120 +2299,7 @@ class ChatListWidget {
     return ChatListUtils.showSuccessMessage(message);
   }
 
-  showPreview(scriptItem) {
-    console.log('showPreview 被调用');
-    const title = scriptItem.dataset.title;
-    const content = scriptItem.dataset.content;
-    const note = scriptItem.dataset.note || '';
-    const groupId = scriptItem.dataset.groupId;
-    const scriptId = scriptItem.dataset.id;
-    
-    if (!title || !content) {
-      console.log('缺少标题或内容，退出预览');
-      return;
-    }
-    console.log('显示预览:', title);
-    
-    // 更新预览内容
-    this.previewLayer.querySelector('.preview-title').textContent = title;
-    
-    // 显示分组信息
-    const groupElement = this.previewLayer.querySelector('.preview-group');
-    const group = this.groups.find(g => g.id === groupId);
-    if (group) {
-      groupElement.innerHTML = `<span class="group-tag" style="background-color: ${group.color}">${group.name}</span>`;
-      groupElement.style.display = 'block';
-    } else {
-      groupElement.style.display = 'none';
-    }
-    
-    const noteElement = this.previewLayer.querySelector('.preview-note');
-    if (note) {
-      noteElement.textContent = note;
-      noteElement.style.display = 'block';
-    } else {
-      noteElement.style.display = 'none';
-    }
-    this.previewLayer.querySelector('.preview-text').textContent = content;
-    
-    // 绑定编辑按钮事件
-    const editBtn = this.previewLayer.querySelector('.btn-edit-preview');
-    editBtn.onclick = () => {
-      this.hidePreview();
-      const script = this.scripts.find(s => s.id === scriptId);
-      if (script) {
-        this.showEditScriptModal(script);
-      } else {
-        console.error('未找到对应的话术:', scriptId);
-      }
-    };
-    
-    // 先显示预览浮层以获取实际尺寸（但设置为不可见）
-    this.previewLayer.style.visibility = 'hidden';
-    this.previewLayer.style.opacity = '0';
-    this.previewLayer.style.display = 'block';
-    
-    // 计算位置
-    const itemRect = scriptItem.getBoundingClientRect();
-    const widgetRect = this.widget.getBoundingClientRect();
-    
-    // 获取预览浮层的实际尺寸
-    const previewRect = this.previewLayer.getBoundingClientRect();
-    const previewWidth = previewRect.width;
-    const previewHeight = previewRect.height;
-    
-    // 预览浮层右对齐，距离主界面5px
-    let left = widgetRect.right + 5;
-    let top = itemRect.top;
-    
-    // 检查是否会超出右边界
-    if (left + previewWidth > window.innerWidth) {
-      // 显示在左侧
-      left = widgetRect.left - previewWidth - 5;
-    }
-    
-    // 检查是否会超出下边界
-    if (top + previewHeight > window.innerHeight) {
-      top = window.innerHeight - previewHeight - 10;
-    }
-    
-    // 检查是否会超出上边界
-    if (top < 10) {
-      top = 10;
-    }
-    
-    // 设置最终位置并正常显示
-    this.previewLayer.style.left = left + 'px';
-    this.previewLayer.style.top = top + 'px';
-    // 清除临时样式并添加visible类
-    this.previewLayer.style.visibility = '';
-    this.previewLayer.style.opacity = '';
-    this.previewLayer.style.display = '';
-    this.previewLayer.classList.add('visible');
-    console.log('预览浮层已显示，visible类已添加');
-  }
 
-  hidePreview() {
-    if (!this.previewLayer.classList.contains('hover')) {
-      this.previewLayer.classList.remove('visible');
-    }
-  }
-
-  // 强制隐藏预览浮层（用于主面板mouseleave事件）
-  forceHidePreview() {
-    console.log('forceHidePreview 被调用');
-    // 清除延迟隐藏定时器
-    if (this.hidePreviewTimeout) {
-      clearTimeout(this.hidePreviewTimeout);
-      this.hidePreviewTimeout = null;
-    }
-    // 清除所有样式并移除CSS类
-    this.previewLayer.style.visibility = '';
-    this.previewLayer.style.opacity = '';
-    this.previewLayer.style.display = '';
-    this.previewLayer.classList.remove('visible', 'hover');
-    console.log('预览浮层已隐藏，visible类已移除');
-  }
 
   editScript(scriptId) {
     console.log('editScript called with ID:', scriptId);
@@ -2626,7 +2474,7 @@ class ChatListWidget {
       modal.remove();
     }
     // 关闭预览浮层
-    this.forceHidePreview();
+    this.previewModule.forceHidePreview();
   }
 
   saveEditedScript() {
@@ -2676,7 +2524,7 @@ class ChatListWidget {
       this.hideEditScriptModal();
       
       // 关闭预览浮层
-      this.forceHidePreview();
+      this.previewModule.forceHidePreview();
       
       console.log('话术更新成功');
     } else {

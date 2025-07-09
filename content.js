@@ -94,6 +94,7 @@ class ChatListWidget {
     // 获取版本号
     this.version = await this.getVersion();
     this.createWidget();
+    this.initDataImportExport(); // 初始化数据导入导出模块
     this.initPreviewModule();
     // this.createFocusDebugPanel();
     this.bindEvents();
@@ -167,6 +168,15 @@ class ChatListWidget {
       'https://oa.zalo.me/chat',
       'https://chat.zalo.me/'
     ];
+  }
+
+  // 初始化数据导入导出模块
+  initDataImportExport() {
+    if (window.DataImportExport) {
+      this.dataImportExport = new window.DataImportExport(this);
+    } else {
+      console.error('DataImportExport 模块未加载');
+    }
   }
 
   async refreshScripts() {
@@ -2765,118 +2775,26 @@ class ChatListWidget {
   }
 
   showImportDialog() {
-    // 直接创建文件输入元素并触发选择
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json';
-    fileInput.style.display = 'none';
-    
-    // 文件选择处理
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        this.importData(e.target.files[0]);
-      }
-      // 清理临时元素
-      document.body.removeChild(fileInput);
-    });
-    
-    // 添加到页面并触发点击
-    document.body.appendChild(fileInput);
-    fileInput.click();
+    if (this.dataImportExport) {
+      this.dataImportExport.showImportDialog();
+    } else {
+      console.error('数据导入导出模块未初始化');
+    }
   }
   
   async importData(file) {
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      
-      if (!data.scripts || !Array.isArray(data.scripts)) {
-        throw new Error('无效的数据格式');
-      }
-      
-      // 分析导入数据
-      const existingTitles = new Set(this.scripts.map(script => script.title));
-      const newScripts = data.scripts.filter(script => !existingTitles.has(script.title));
-      const duplicateScripts = data.scripts.filter(script => existingTitles.has(script.title));
-      
-      // 处理分组数据
-      const existingGroupIds = new Set(this.groups.map(group => group.id));
-      const newGroups = (data.groups || []).filter(group => !existingGroupIds.has(group.id));
-      
-      // 显示导入预览
-      const importMessage = [
-        `共 ${data.scripts.length} 个话术，${(data.groups || []).length} 个分组`,
-        `新话术：${newScripts.length} 个`,
-        `重复话术：${duplicateScripts.length} 个（将跳过）`,
-        `新分组：${newGroups.length} 个`,
-        '',
-        '是否继续增量导入？'
-      ].join('\n');
-      
-      this.showConfirmDialog(
-        '导入确认',
-        importMessage,
-        async () => {
-          // 生成新的ID避免冲突
-          const maxId = Math.max(0, ...this.scripts.map(s => parseInt(s.id) || 0));
-          newScripts.forEach((script, index) => {
-            script.id = String(maxId + index + 1);
-          });
-          
-          // 合并数据
-          this.scripts = [...this.scripts, ...newScripts];
-          this.groups = [...this.groups, ...newGroups];
-          
-          await this.saveData();
-          
-          // 重新渲染界面
-          this.renderGroups();
-          this.renderScripts();
-          
-          const resultMessage = [
-            '导入完成！',
-            `新增话术：${newScripts.length} 个`,
-            `跳过重复：${duplicateScripts.length} 个`,
-            `新增分组：${newGroups.length} 个`
-          ].join('\n');
-          
-          this.showSuccessMessage(resultMessage);
-        }
-      );
-    } catch (error) {
-      console.error('导入失败:', error);
-      alert('导入失败，请检查文件格式是否正确');
+    if (this.dataImportExport) {
+      await this.dataImportExport.importData(file);
+    } else {
+      console.error('数据导入导出模块未初始化');
     }
   }
 
   exportData() {
-    try {
-      const exportData = {
-        scripts: this.scripts,
-        groups: this.groups,
-        exportTime: new Date().toISOString(),
-        version: '1.0'
-      };
-      
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `chat-scripts-${new Date().toISOString().split('T')[0]}.json`;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      URL.revokeObjectURL(url);
-      
-      this.showSuccessMessage('导出成功！');
-      console.log('话术数据导出成功');
-    } catch (error) {
-      console.error('导出失败:', error);
-      alert('导出失败，请稍后重试');
+    if (this.dataImportExport) {
+      this.dataImportExport.exportData();
+    } else {
+      console.error('数据导入导出模块未初始化');
     }
   }
 
@@ -2989,75 +2907,12 @@ if (document.readyState === 'loading') {
   window.chatListWidget = new ChatListWidget();
   
   // 初始化自适应高度功能
-  initAutoResizeTextareas();
-}
-
-// 自适应高度功能
-function autoResizeTextarea(textarea) {
-  // 重置高度以获取正确的scrollHeight
-  textarea.style.height = 'auto';
-  
-  // 计算新高度
-  const newHeight = Math.max(textarea.scrollHeight, parseInt(getComputedStyle(textarea).minHeight));
-  
-  // 设置新高度
-  textarea.style.height = newHeight + 'px';
-}
-
-// 初始化所有textarea的自适应高度
-function initAutoResizeTextareas() {
-  // 为现有的textarea添加自适应功能
-  document.querySelectorAll('textarea').forEach(textarea => {
-    setupTextareaAutoResize(textarea);
-  });
-  
-  // 监听动态添加的textarea
-  const observer = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-      mutation.addedNodes.forEach(node => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          // 检查新添加的节点是否是textarea
-          if (node.tagName === 'TEXTAREA') {
-            setupTextareaAutoResize(node);
-          }
-          // 检查新添加节点内部的textarea
-          node.querySelectorAll && node.querySelectorAll('textarea').forEach(textarea => {
-            setupTextareaAutoResize(textarea);
-          });
-        }
-      });
-    });
-  });
-  
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-}
-
-// 为单个textarea设置自适应功能
-function setupTextareaAutoResize(textarea) {
-  // 避免重复绑定
-  if (textarea.hasAttribute('data-auto-resize')) {
-    return;
+  if (window.TextareaUtils) {
+    window.TextareaUtils.initAutoResizeTextareas();
+  } else {
+    // 兼容性处理：如果模块未加载，使用全局函数
+    if (typeof initAutoResizeTextareas === 'function') {
+      initAutoResizeTextareas();
+    }
   }
-  
-  textarea.setAttribute('data-auto-resize', 'true');
-  
-  // 输入事件
-  textarea.addEventListener('input', () => {
-    autoResizeTextarea(textarea);
-  });
-  
-  // 粘贴事件
-  textarea.addEventListener('paste', () => {
-    setTimeout(() => {
-      autoResizeTextarea(textarea);
-    }, 0);
-  });
-  
-  // 初始调整
-  setTimeout(() => {
-    autoResizeTextarea(textarea);
-  }, 0);
 }

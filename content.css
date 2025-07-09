@@ -965,19 +965,28 @@ mark {
 }
 
 #script-preview-layer .btn-edit-preview {
-  background: rgba(102, 126, 234, 0.1);
+  background: none;
   border: none;
-  border-radius: 4px;
-  padding: 4px 6px;
+  padding: 4px;
   cursor: pointer;
+  border-radius: 4px;
   transition: background 0.2s;
+  font-size: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 26px;
+  height: 26px;
 }
 
 #script-preview-layer .btn-edit-preview:hover {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+#script-preview-layer .btn-edit-preview svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 #script-preview-layer .preview-group {

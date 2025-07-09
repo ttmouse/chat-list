@@ -53,77 +53,7 @@ class ChatListWidget {
     // this.updateDebugPanel();
   }
 
-  // updateDebugPanel() {
-  //   if (!this.focusDebugPanel) return;
-  //   
-  //   const currentActive = document.activeElement;
-  //   const currentActiveEl = this.focusDebugPanel.querySelector('#current-active');
-  //   const lastFocusedEl = this.focusDebugPanel.querySelector('#last-focused');
-  //   const focusHistoryEl = this.focusDebugPanel.querySelector('#focus-history');
-  //   const availableInputsEl = this.focusDebugPanel.querySelector('#available-inputs');
-  //   const isValidInputEl = this.focusDebugPanel.querySelector('#is-valid-input');
-  //   
-  //   // 更新当前活动元素
-  //   if (currentActive && currentActive !== document.body) {
-  //     const elementInfo = this.getElementInfo(currentActive);
-  //     currentActiveEl.textContent = elementInfo;
-  //     currentActiveEl.className = 'debug-value';
-  //   } else {
-  //     currentActiveEl.textContent = '无';
-  //     currentActiveEl.className = 'debug-value';
-  //   }
-  //   
-  //   // 更新最后记录的焦点
-  //   if (this.lastFocusedElement && document.contains(this.lastFocusedElement)) {
-  //     const elementInfo = this.getElementInfo(this.lastFocusedElement);
-  //     lastFocusedEl.textContent = elementInfo;
-  //     lastFocusedEl.className = 'debug-value valid';
-  //   } else {
-  //     lastFocusedEl.textContent = '无';
-  //     lastFocusedEl.className = 'debug-value invalid';
-  //   }
-  //   
-  //   // 更新焦点历史记录
-  //   if (this.focusHistory.length > 0) {
-  //     const historyInfo = this.focusHistory
-  //       .filter(el => document.contains(el))
-  //       .map((el, index) => `${index + 1}. ${this.getElementInfo(el)}`)
-  //       .join('\n');
-  //     focusHistoryEl.textContent = historyInfo || '历史记录中的元素已失效';
-  //     focusHistoryEl.className = historyInfo ? 'debug-value valid' : 'debug-value invalid';
-  //   } else {
-  //     focusHistoryEl.textContent = '无';
-  //     focusHistoryEl.className = 'debug-value';
-  //   }
-  //   
-  //   // 更新可用输入框数量 - 显示更详细的调试信息
-  //   const allInputs = this.findAllInputs(); // 找到所有输入框
-  //   const validInputs = this.findValidInputs(); // 经过过滤的输入框
-  //   const inputCount = validInputs.length;
-  //   
-  //   availableInputsEl.innerHTML = `
-  //     <div>有效输入框: ${inputCount} 个${inputCount > 1 ? ' (多个)' : ''}</div>
-  //     <div style="font-size: 11px; color: #666;">总输入框: ${allInputs.length} 个</div>
-  //   `;
-  //   availableInputsEl.className = inputCount > 1 ? 'debug-value' : inputCount === 1 ? 'debug-value valid' : 'debug-value invalid';
-  //   
-  //   // 添加详细的悬停提示
-  //   const allDetails = allInputs.map((input, index) => {
-  //     const isValid = validInputs.includes(input);
-  //     const isMessage = this.isMessageInput(input);
-  //     const isValidElement = this.isValidInputElement(input);
-  //     const status = isValid ? '✓' : '✗';
-  //     const reason = !isValidElement ? '(无效元素)' : !isMessage ? '(非消息输入框)' : '';
-  //     return `${status} ${index + 1}. ${this.getElementInfo(input)} ${reason}`;
-  //   }).join('\n');
-  //   
-  //   availableInputsEl.title = `所有输入框详情:\n${allDetails}\n\n✓ = 有效输入框\n✗ = 被过滤的输入框`;
-  //   
-  //   // 更新是否为有效输入
-  //   const isValid = currentActive && this.isValidInput(currentActive);
-  //   isValidInputEl.textContent = isValid ? '是' : '否';
-  //   isValidInputEl.className = isValid ? 'debug-value valid' : 'debug-value invalid';
-  // }
+ 
 
   getElementInfo(element) {
     return ChatListUtils.getElementInfo(element);
@@ -1296,9 +1226,9 @@ class ChatListWidget {
     const target = this.selectBestInput(inputs);
     
     // 如果有多个输入框，显示提示信息
-    if (inputs.length > 1) {
-      this.showMultipleInputsNotification(inputs, target);
-    }
+    // if (inputs.length > 1) {
+    //   this.showMultipleInputsNotification(inputs, target);
+    // }
     
     this.insertContent(target, content);
   }
@@ -1808,6 +1738,9 @@ class ChatListWidget {
   }
   
   showMultipleInputsNotification(inputs, selectedInput) {
+    // 智能输入框选择面板已被禁用
+    return;
+    
     // 获取所有输入框的评分信息
     const scoredInputs = this.getInputScores(inputs);
     const selectedScore = scoredInputs.find(item => item.input === selectedInput)?.score || 0;

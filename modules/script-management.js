@@ -225,8 +225,14 @@ class ScriptManagement {
       // 保存到存储
       this.widget.saveData();
       
+      // 重置选中状态
+      this.widget.selectedScriptIndex = -1;
+      
       // 刷新显示
       this.widget.renderScripts();
+      
+      // 确保清除选中状态和预览
+      this.widget.updateScriptSelection();
       
       // 隐藏模态框
       this.hideEditScriptModal();
@@ -270,7 +276,14 @@ class ScriptManagement {
         () => {
           this.widget.scripts = this.widget.scripts.filter(s => s.id !== scriptId);
           this.widget.saveData();
+          
+          // 重置选中状态
+          this.widget.selectedScriptIndex = -1;
+          
           this.widget.renderScripts();
+          
+          // 确保清除选中状态和预览
+          this.widget.updateScriptSelection();
         }
       );
     } else {
@@ -329,7 +342,15 @@ class ScriptManagement {
       this.widget.saveData()
         .then(() => {
           console.log('数据保存成功');
+          
+          // 重置选中状态
+          this.widget.selectedScriptIndex = -1;
+          
           this.widget.renderScripts();
+          
+          // 确保清除选中状态和预览
+          this.widget.updateScriptSelection();
+          
           this.clearScriptForm();
           if (this.widget.hideManagePanel) {
             this.widget.hideManagePanel();

@@ -99,9 +99,15 @@ class DataImportExport {
       
       await this.widget.saveData();
       
+      // 重置选中状态
+      this.widget.selectedScriptIndex = -1;
+      
       // 重新渲染界面
       this.widget.renderGroups();
       this.widget.renderScripts();
+      
+      // 确保清除选中状态和预览
+      this.widget.updateScriptSelection();
       
       const resultMessage = [
         '导入完成！',

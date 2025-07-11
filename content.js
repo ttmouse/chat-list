@@ -96,13 +96,12 @@ class ChatListWidget {
     console.log('当前网站在白名单中，初始化话术扩展');
     // 获取版本号
     this.version = await this.getVersion();
-    this.initUIRenderer(); // 初始化UI渲染器
-    this.createWidget();
-    this.initDataImportExport(); // 初始化数据导入导出模块
-    this.initScriptManagement(); // 初始化话术管理模块
-    this.initGroupManagement(); // 初始化分组管理模块
-    this.initModalManagement(); // 初始化模态框管理模块
+    
+    // 使用统一的模块加载器初始化所有模块
+    this.initAllModules();
+    
     this.initDragPositionManager(); // 初始化拖拽位置管理模块
+    this.createWidget();
     this.initPreviewModule();
     // this.createFocusDebugPanel();
     this.bindEvents();
@@ -178,55 +177,28 @@ class ChatListWidget {
     ];
   }
 
-  // 初始化数据导入导出模块
-  initDataImportExport() {
-    if (window.DataImportExport) {
-      this.dataImportExport = new window.DataImportExport(this);
-    } else {
-      console.error('DataImportExport 模块未加载');
-    }
-  }
-
-  // 初始化话术管理模块
-  initScriptManagement() {
-    if (window.ScriptManagement) {
-      this.scriptManagement = new window.ScriptManagement(this);
-    } else {
-      console.error('ScriptManagement 模块未加载');
-    }
-  }
-
-  // 初始化分组管理模块
-  initGroupManagement() {
-    if (window.GroupManagement) {
-      this.groupManagement = new window.GroupManagement(this);
-    } else {
-      console.error('GroupManagement 模块未加载');
-    }
-  }
-
-  // 初始化模态框管理模块
-  initModalManagement() {
-    if (window.ModalManagement) {
-      this.modalManagement = new window.ModalManagement(this);
-    } else {
-      console.error('ModalManagement 模块未加载');
-    }
+  // 初始化所有模块 - 使用通用模块加载器简化代码
+  initAllModules() {
+    // 创建模块加载器
+    this.moduleLoader = new ModuleLoader(this);
+    
+    // 定义所有需要加载的模块
+    const moduleConfigs = [
+      { name: '数据导入导出', className: 'DataImportExport', property: 'dataImportExport' },
+      { name: '话术管理', className: 'ScriptManagement', property: 'scriptManagement' },
+      { name: '分组管理', className: 'GroupManagement', property: 'groupManagement' },
+      { name: '模态框管理', className: 'ModalManagement', property: 'modalManagement' },
+      { name: '分组面板管理', className: 'GroupPanelManagement', property: 'groupPanelManagement' },
+      { name: 'UI渲染器', className: 'UIRenderer', property: 'uiRenderer' }
+    ];
+    
+    // 批量加载模块
+    this.moduleLoader.loadModules(moduleConfigs);
   }
   
   // 临时的拖拽位置管理初始化方法（避免未定义方法调用错误）
   initDragPositionManager() {
-    console.log('拖拽位置管理模块尚未实现，使用内置拖拽功能');
     // 继续使用内置拖拽功能
-  }
-
-  // 初始化UI渲染器模块
-  initUIRenderer() {
-    if (window.UIRenderer) {
-      this.uiRenderer = new window.UIRenderer(this);
-    } else {
-      console.error('UIRenderer 模块未加载');
-    }
   }
 
   async refreshScripts() {
@@ -440,7 +412,6 @@ class ChatListWidget {
     // 管理面板
     this.widget.querySelector('.cls-btn-manage').addEventListener('click', () => {
       try {
-        console.log('点击了管理按钮');
         this.showManagePanel();
       } catch (error) {
         console.error('点击管理按钮时出错:', error);
@@ -557,19 +528,14 @@ class ChatListWidget {
 
     // 编辑和删除按钮
     this.widget.querySelector('.script-list').addEventListener('click', (e) => {
-      console.log('Script list clicked:', e.target, e.target.classList);
-      
       // 查找最近的按钮元素（处理SVG内部元素点击）
       const editBtn = ChatListUtils.closest(e.target, '.cls-btn-edit');
     const deleteBtn = ChatListUtils.closest(e.target, '.cls-btn-delete');
       
       if (editBtn) {
-        console.log('Edit button clicked');
         const scriptId = editBtn.dataset.id;
-        console.log('Script ID:', scriptId);
         this.editScript(scriptId);
       } else if (deleteBtn) {
-        console.log('Delete button clicked');
         const scriptId = deleteBtn.dataset.id;
         this.deleteScript(scriptId);
       }
@@ -585,10 +551,8 @@ class ChatListWidget {
 
     // 当鼠标离开整个主面板时延迟隐藏预览（给用户时间移动到预览浮层）
     this.widget.addEventListener('mouseleave', () => {
-      console.log('主面板 mouseleave 事件触发');
       // 延迟300ms隐藏，如果鼠标进入预览浮层则取消隐藏
       this.previewModule.hidePreviewTimeout = setTimeout(() => {
-          console.log('延迟隐藏预览浮层');
           this.previewModule.forceHidePreview();
       }, 100);
     });
@@ -598,19 +562,23 @@ class ChatListWidget {
     // 预览浮层事件已在预览模块中处理
 
     // 添加话术
-    this.widget.querySelector('.cls-btn-add-script').addEventListener('click', () => {
-      try {
-        console.log('点击添加话术按钮');
-        this.showAddScriptModal();
-      } catch (error) {
-        console.error('添加话术按钮点击处理出错:', error);
-      }
-    });
+    const addScriptBtn = this.widget.querySelector('.cls-btn-add-script');
+    
+    if (addScriptBtn) {
+      addScriptBtn.addEventListener('click', () => {
+        try {
+          this.showAddScriptModal();
+        } catch (error) {
+          console.error('添加话术按钮点击处理出错:', error);
+        }
+      });
+    } else {
+      console.error('找不到添加话术按钮 .cls-btn-add-script');
+    }
 
     // 导入话术
     this.widget.querySelector('.cls-btn-import-script').addEventListener('click', () => {
       try {
-        console.log('点击导入话术按钮');
         this.showImportDialog();
       } catch (error) {
         console.error('导入话术按钮点击处理出错:', error);
@@ -620,7 +588,6 @@ class ChatListWidget {
     // 导出话术
     this.widget.querySelector('.cls-btn-export-script').addEventListener('click', () => {
       try {
-        console.log('点击导出话术按钮');
         this.exportData();
       } catch (error) {
         console.error('导出话术按钮点击处理出错:', error);
@@ -685,15 +652,12 @@ class ChatListWidget {
   }
 
   showManagePanel() {
-    if (this.modalManagement) {
-      this.modalManagement.showManagePanel();
+    if (this.groupPanelManagement && typeof this.groupPanelManagement.showManagePanel === 'function') {
+      this.groupPanelManagement.showManagePanel();
     } else {
       try {
-        console.log('开始显示管理面板');
-        
         // 确保插件是可见的
         if (!this.isVisible) {
-          console.log('插件不可见，先显示插件');
           this.showWidget();
         }
         
@@ -702,7 +666,6 @@ class ChatListWidget {
         
         if (!managePanel) {
           console.error('找不到管理面板元素 .manage-panel');
-          console.log('Widget HTML:', this.widget.innerHTML.substring(0, 500));
           return;
         }
         
@@ -710,11 +673,6 @@ class ChatListWidget {
           console.error('找不到内容区域元素 .widget-content');
           return;
         }
-        
-        console.log('管理面板元素:', managePanel);
-        console.log('内容区域元素:', widgetContent);
-        console.log('管理面板当前样式:', managePanel.style.display);
-        console.log('内容区域当前样式:', widgetContent.style.display);
         
         // 更新分组选项
         this.renderGroups();
@@ -729,22 +687,8 @@ class ChatListWidget {
         this.widget.style.display = 'block';
         this.widget.style.visibility = 'visible';
         
-        console.log('管理面板显示成功');
-        console.log('设置后管理面板样式:', managePanel.style.display);
-        console.log('设置后内容区域样式:', widgetContent.style.display);
-        console.log('设置后插件容器样式:', this.widget.style.display);
-        
-        // 验证元素是否真的可见
-        const rect = managePanel.getBoundingClientRect();
-        console.log('管理面板位置和尺寸:', rect);
-        
-        if (rect.width === 0 || rect.height === 0) {
-          console.warn('管理面板尺寸为0，可能存在CSS问题');
-        }
-        
       } catch (error) {
         console.error('显示管理面板时出错:', error);
-        console.error('错误堆栈:', error.stack);
       }
     }
   }
@@ -755,6 +699,8 @@ class ChatListWidget {
       this.modalManagement.showAddScriptModal();
     } else {
       console.error('模态框管理模块未初始化，无法显示添加话术模态框');
+      // 提供备用方案
+      alert('模态框管理模块未初始化，请刷新页面重试');
     }
   }
 
@@ -800,8 +746,8 @@ class ChatListWidget {
   }
 
   hideManagePanel() {
-    if (this.modalManagement) {
-      this.modalManagement.hideManagePanel();
+    if (this.groupPanelManagement && typeof this.groupPanelManagement.hideManagePanel === 'function') {
+      this.groupPanelManagement.hideManagePanel();
     } else {
       this.widget.querySelector('.manage-panel').style.display = 'none';
       this.widget.querySelector('.widget-content').style.display = 'block';
@@ -1114,7 +1060,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'OPEN_MANAGE_PANEL') {
     // 打开管理面板
     if (window.chatListWidget) {
-      console.log('收到OPEN_MANAGE_PANEL消息，开始显示管理面板');
       // 确保插件先显示
       window.chatListWidget.showWidget();
       // 使用setTimeout确保showWidget完成后再显示管理面板

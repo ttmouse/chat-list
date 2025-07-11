@@ -1,3 +1,6 @@
+/* 引入全局样式 */
+@import url('./styles/global.css');
+
 /* 话术助手样式 */
 #chat-list-widget {
   position: fixed;
@@ -761,6 +764,176 @@ mark {
     overflow: hidden;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: modalSlideIn 0.3s ease-out;
+}
+
+/* 分组管理模态框特殊样式 */
+#managePanelModal .cls-modal-content,
+#batchEditModal .cls-modal-content {
+    max-width: 90%;
+    width: 700px;
+    min-width: 600px;
+}
+
+/* 分组管理面板内部样式 */
+#managePanelModal .group-management {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#managePanelModal .group-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+#managePanelModal .group-management-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+#managePanelModal .batch-actions {
+    display: flex;
+    gap: 8px;
+}
+
+#managePanelModal .batch-actions button {
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+#managePanelModal .batch-actions button:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+#managePanelModal .group-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+#managePanelModal .group-table thead {
+    background: #f8f9fa;
+}
+
+#managePanelModal .group-table th,
+#managePanelModal .group-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+#managePanelModal .group-table th {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+}
+
+#managePanelModal .group-table td {
+    font-size: 14px;
+    color: #495057;
+}
+
+#managePanelModal .group-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+#managePanelModal .group-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#managePanelModal .text-center {
+    text-align: center !important;
+}
+
+#managePanelModal .group-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#managePanelModal .group-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+#managePanelModal .group-actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+#managePanelModal .edit-group-btn,
+#managePanelModal .delete-group-btn {
+    padding: 6px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    min-width: 50px;
+}
+
+#managePanelModal .edit-group-btn:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+#managePanelModal .delete-group-btn:hover {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
+#managePanelModal .group-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+#managePanelModal .cls-btn-add-group {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+#managePanelModal .cls-btn-add-group:hover {
+    background: #218838;
+}
+
+#managePanelModal .empty-group-message {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 40px 20px;
 }
 
 @keyframes modalSlideIn {

@@ -12,11 +12,14 @@
       "matches": ["<all_urls>"],
       "js": [
         "utils.js", 
+        "modules/common-utils.js",
+        "modules/module-loader.js",
         "modules/textarea-utils.js", 
         "modules/data-import-export.js", 
         "modules/script-management.js", 
         "modules/group-management.js",
         "modules/modal-management.js",
+        "modules/group-panel-management.js",
         "modules/input-detector.js",
         "modules/input-selector.js",
         "modules/content-filler.js",
@@ -25,7 +28,10 @@
         "preview-module.js", 
         "content.js"
       ],
-      "css": ["content.css"]
+      "css": [
+        "styles/unified-styles.css",
+        "content.css"
+      ]
     }
   ],
   "action": {

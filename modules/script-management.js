@@ -356,7 +356,9 @@ class ScriptManagement {
         this.clearScriptForm();
         
         // 如果是在管理面板中，更新分组列表
-        if (this.widget.modalManagement) {
+        if (this.widget.groupPanelManagement) {
+          this.widget.groupPanelManagement.renderGroupList();
+        } else if (this.widget.modalManagement) {
           this.widget.modalManagement.renderGroupList();
         }
       }).catch(error => {

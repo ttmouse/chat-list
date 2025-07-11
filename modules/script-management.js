@@ -340,6 +340,7 @@ class ScriptManagement {
           note,
           content,
           groupId,
+          usageCount: 0,
           createTime: new Date().toISOString(),
           updateTime: new Date().toISOString()
         };

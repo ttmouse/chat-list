@@ -175,10 +175,13 @@
   margin-bottom: 4px;
   background: white;
   flex-shrink: 0; /* 不参与收缩，固定在顶部 */
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
 .search-input {
-  width: 100%;
+  flex: 1;
   padding: 6px 28px 6px 10px;
   border: 1px solid #e9ecef;
   border-radius: 5px;
@@ -186,7 +189,6 @@
   background: #f8f9fa;
   transition: all 0.2s;
   box-sizing: border-box;
-
 }
 
 .search-input:focus {

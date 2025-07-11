@@ -14,11 +14,17 @@ class ChatListWidget {
     // this.focusDebugPanel = null; // 焦点调试面板
     this.whitelist = []; // 网页白名单，将从存储中加载
     this.initialized = false; // 初始化状态标记
+    this.currentSortBy = 'usage'; // 当前排序方式：'default', 'usage'
+    this.openedByShortcut = false; // 标记面板是否通过快捷键打开
     
     // 初始化新的输入框管理器
     this.inputManager = new InputManager();
     
     this.init();
+  }
+
+  showSuccessMessage(message) {
+    return ChatListUtils.showSuccessMessage(message);
   }
 
   // 添加元素到焦点历史记录
@@ -140,6 +146,10 @@ class ChatListWidget {
       this.scripts = result.chatScripts || this.getDefaultScripts();
       this.groups = result.chatGroups || this.getDefaultGroups();
       this.whitelist = result.siteWhitelist || this.getDefaultWhitelist();
+      
+      // 数据迁移：为现有话术添加使用次数字段
+      this.migrateScriptData();
+      
     } catch (error) {
       console.error('加载数据失败:', error);
       this.scripts = this.getDefaultScripts();
@@ -153,6 +163,29 @@ class ChatListWidget {
     }
   }
 
+  // 数据迁移：为现有话术添加使用次数字段
+  migrateScriptData() {
+    let needsSave = false;
+    
+    this.scripts = this.scripts.map(script => {
+      if (script.usageCount === undefined) {
+        needsSave = true;
+        return { ...script, usageCount: 0 };
+      }
+      return script;
+    });
+    
+    // 如果有数据需要迁移，保存到存储
+    if (needsSave) {
+      console.log('正在迁移话术数据，添加使用次数字段...');
+      this.saveData().then(() => {
+        console.log('话术数据迁移完成');
+      }).catch(error => {
+        console.error('话术数据迁移失败:', error);
+      });
+    }
+  }
+
   getDefaultGroups() {
     return [
       { id: 'greeting', name: '问候语', color: '#4CAF50' },
@@ -163,9 +196,9 @@ class ChatListWidget {
 
   getDefaultScripts() {
     return [
-      { id: '1', title: '欢迎语', note: '标准问候语', content: '您好，很高兴为您服务！有什么可以帮助您的吗？', groupId: 'greeting' },
-      { id: '2', title: '产品介绍', note: '突出产品优势', content: '我们的产品具有以下特点：高质量、高性价比、优质服务。', groupId: 'service' },
-      { id: '3', title: '感谢语', note: '礼貌结束对话', content: '感谢您的咨询，祝您生活愉快！', groupId: 'closing' }
+      { id: '1', title: '欢迎语', note: '标准问候语', content: '您好，很高兴为您服务！有什么可以帮助您的吗？', groupId: 'greeting', usageCount: 0 },
+      { id: '2', title: '产品介绍', note: '突出产品优势', content: '我们的产品具有以下特点：高质量、高性价比、优质服务。', groupId: 'service', usageCount: 0 },
+      { id: '3', title: '感谢语', note: '礼貌结束对话', content: '感谢您的咨询，祝您生活愉快！', groupId: 'closing', usageCount: 0 }
     ];
   }
 
@@ -377,20 +410,18 @@ class ChatListWidget {
           // this.updateDebugPanel();
         }
         
-        // 切换面板显示状态：如果已显示则关闭，如果未显示则打开
-        if (this.isVisible) {
-          // 面板已显示，关闭它
-          this.hideWidget();
-        } else {
+        // 只打开面板并聚焦搜索框，不再用于关闭面板
+        if (!this.isVisible) {
           // 面板未显示，显示它并聚焦搜索框
+          this.openedByShortcut = true; // 标记为通过快捷键打开
           this.showWidget();
-          
-          // 聚焦到搜索输入框
-          const searchInput = this.widget.querySelector('.search-input');
-          if (searchInput) {
-            searchInput.focus();
-            searchInput.select(); // 选中现有文本，方便用户直接输入新的搜索词
-          }
+        }
+        
+        // 无论面板是否已显示，都聚焦到搜索输入框
+        const searchInput = this.widget.querySelector('.search-input');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select(); // 选中现有文本，方便用户直接输入新的搜索词
         }
       }
     }, true); // 使用事件捕获阶段，确保优先处理
@@ -406,6 +437,7 @@ class ChatListWidget {
 
     // 触发器点击事件
     this.trigger.addEventListener('click', () => {
+      this.openedByShortcut = false; // 标记为通过点击打开
       this.showWidget();
     });
 
@@ -473,9 +505,11 @@ class ChatListWidget {
               this.selectedScriptIndex = -1;
               // 关闭预览浮层
               this.previewModule.forceHidePreview();
-              // 使用setTimeout确保blur操作完成后再填充内容
+              // 使用setTimeout确保blur操作完成后再填充内容并隐藏面板
               setTimeout(() => {
-                this.fillContent(script.content);
+                this.fillContent(script.content, scriptId);
+                // 填充内容后自动隐藏面板
+                this.hideWidget();
               }, 10);
             }
           }
@@ -521,7 +555,11 @@ class ChatListWidget {
         if (script) {
           // 关闭预览浮层
           this.previewModule.forceHidePreview();
-          this.fillContent(script.content);
+          this.fillContent(script.content, scriptId);
+          // 只有通过快捷键打开的面板才在填充内容后自动隐藏
+          if (this.openedByShortcut) {
+            this.hideWidget();
+          }
         }
       }
     });
@@ -629,13 +667,24 @@ class ChatListWidget {
   }
 
   hideWidget() {
-    if (this.modalManagement) {
-      this.modalManagement.hideWidget();
-    } else {
-      this.widget.style.display = 'none';
-      this.trigger.style.display = 'block'; // 显示触发器
-      this.isVisible = false;
+    // 先强制隐藏预览浮层
+    if (this.previewModule) {
+      this.previewModule.forceHidePreview();
     }
+    
+    // 使用setTimeout确保预览图层完全隐藏后再隐藏主面板
+    setTimeout(() => {
+      // 重置打开方式标记
+      this.openedByShortcut = false;
+      
+      if (this.modalManagement) {
+        this.modalManagement.hideWidget();
+      } else {
+        this.widget.style.display = 'none';
+        this.trigger.style.display = 'block'; // 显示触发器
+        this.isVisible = false;
+      }
+    }, 10);
   }
 
   showWidget() {
@@ -755,7 +804,7 @@ class ChatListWidget {
     }
   }
 
-  fillContent(content) {
+  fillContent(content, scriptId = null) {
     // 复制到剪贴板
     this.copyToClipboard(content);
     
@@ -765,13 +814,67 @@ class ChatListWidget {
       getValidFocusFromHistory: () => this.getValidFocusFromHistory()
     });
     
+    // 如果填充成功且提供了scriptId，增加使用次数
+    if (success && scriptId) {
+      this.incrementScriptUsage(scriptId);
+    }
+    
     if (!success) {
       alert('未找到可填充的输入框，请先点击输入框');
     }
   }
 
-  showSuccessMessage(message) {
-    return ChatListUtils.showSuccessMessage(message);
+  // 增加话术使用次数
+  incrementScriptUsage(scriptId) {
+    const script = this.scripts.find(s => s.id === scriptId);
+    if (script) {
+      script.usageCount = (script.usageCount || 0) + 1;
+      
+      // 保存数据
+      this.saveData().then(() => {
+        console.log(`话术 "${script.title}" 使用次数已更新为 ${script.usageCount}`);
+        
+        // 如果当前按使用次数排序，重新渲染列表
+        if (this.currentSortBy === 'usage') {
+          this.renderScripts();
+        }
+      }).catch(error => {
+        console.error('保存使用次数失败:', error);
+      });
+    }
+  }
+
+  // 获取排序后的话术列表
+  getSortedScripts() {
+    let filteredScripts = this.scripts;
+    
+    // 按分组筛选
+    if (this.currentGroup) {
+      filteredScripts = this.scripts.filter(script => script.groupId === this.currentGroup);
+    }
+    
+    // 按搜索关键词筛选
+    if (this.searchKeyword) {
+      const keyword = this.searchKeyword.toLowerCase();
+      filteredScripts = filteredScripts.filter(script => 
+        script.title.toLowerCase().includes(keyword) || 
+        script.content.toLowerCase().includes(keyword) ||
+        (script.note && script.note.toLowerCase().includes(keyword))
+      );
+    }
+    
+    // 排序
+    if (this.currentSortBy === 'usage') {
+      // 按使用次数降序排列
+      filteredScripts = [...filteredScripts].sort((a, b) => {
+        const aUsage = a.usageCount || 0;
+        const bUsage = b.usageCount || 0;
+        return bUsage - aUsage;
+      });
+    }
+    // 默认排序保持原有顺序
+    
+    return filteredScripts;
   }
 
 

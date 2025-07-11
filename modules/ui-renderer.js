@@ -179,22 +179,13 @@ class UIRenderer {
 
   /**
    * 渲染话术列表
-   * 支持搜索过滤和关键词高亮
+   * 支持搜索过滤、关键词高亮和按使用次数排序
    */
   renderScripts() {
     const scriptList = this.widget.widget.querySelector('.script-list');
-    let filteredScripts = this.widget.currentGroup 
-      ? this.widget.scripts.filter(script => script.groupId === this.widget.currentGroup)
-      : this.widget.scripts;
-
-    // 搜索过滤
-    if (this.widget.searchKeyword) {
-      filteredScripts = filteredScripts.filter(script => 
-        script.title.toLowerCase().includes(this.widget.searchKeyword.toLowerCase()) ||
-        (script.note && script.note.toLowerCase().includes(this.widget.searchKeyword.toLowerCase())) ||
-        script.content.toLowerCase().includes(this.widget.searchKeyword.toLowerCase())
-      );
-    }
+    
+    // 使用新的排序逻辑获取过滤和排序后的话术
+    let filteredScripts = this.widget.getSortedScripts();
 
     if (filteredScripts.length === 0) {
       scriptList.innerHTML = `

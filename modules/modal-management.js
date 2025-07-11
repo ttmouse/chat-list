@@ -41,13 +41,21 @@ class ModalManagement {
    * 隐藏插件
    */
   hideWidget() {
-    if (this.widget.widget) {
-      this.widget.widget.style.display = 'none';
-      if (this.widget.trigger) {
-        this.widget.trigger.style.display = 'block'; // 显示触发器
-      }
-      this.widget.isVisible = false;
+    // 先强制隐藏预览浮层
+    if (this.widget.previewModule) {
+      this.widget.previewModule.forceHidePreview();
     }
+    
+    // 使用setTimeout确保预览图层完全隐藏后再隐藏主面板
+    setTimeout(() => {
+      if (this.widget.widget) {
+        this.widget.widget.style.display = 'none';
+        if (this.widget.trigger) {
+          this.widget.trigger.style.display = 'block'; // 显示触发器
+        }
+        this.widget.isVisible = false;
+      }
+    }, 10);
   }
 
   /**
@@ -236,6 +244,7 @@ class ModalManagement {
         note,
         content,
         groupId,
+        usageCount: 0,
         createTime: new Date().toISOString()
       };
       

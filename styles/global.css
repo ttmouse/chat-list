@@ -1,0 +1,16 @@
+/* 全局CSS设计系统 - 主入口文件 */
+
+/* 1. CSS变量定义 */
+@import url('./variables.css');
+
+/* 2. 基础样式 */
+@import url('./base.css');
+
+/* 3. 组件样式 */
+@import url('./components/buttons.css');
+@import url('./components/forms.css');
+@import url('./components/modals.css');
+@import url('./components/group-tabs.css');
+
+/* 4. 工具类 */
+@import url('./utilities.css');

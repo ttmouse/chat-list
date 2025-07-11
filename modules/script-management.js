@@ -11,13 +11,18 @@ class ScriptManagement {
     console.log('Found script:', script);
     if (script) {
       console.log('显示编辑话术模态框');
-      this.showEditScriptModal(script);
+      // 使用ModalManagement模块的方法
+      if (this.widget.modalManagement) {
+        this.widget.modalManagement.showEditScriptModal(script);
+      } else {
+        this.showEditScriptModal(script);
+      }
     } else {
       console.error('未找到指定的话术:', scriptId);
     }
   }
 
-  // 显示编辑话术模态框
+  // 显示编辑话术模态框 (备用方法，优先使用ModalManagement中的方法)
   showEditScriptModal(script) {
     console.log('显示编辑话术模态框', script);
     
@@ -207,121 +212,124 @@ class ScriptManagement {
       return;
     }
     
-    // 清除错误信息
-    this.clearErrors(['editTitleError', 'editContentError']);
+    // 清除所有错误提示
+    this.clearErrors(['editTitleError', 'editNoteError', 'editContentError']);
     
-    // 更新话术
+    // 查找原始话术
     const scriptIndex = this.widget.scripts.findIndex(s => s.id === scriptId);
-    if (scriptIndex !== -1) {
-      this.widget.scripts[scriptIndex] = {
-        ...this.widget.scripts[scriptIndex],
-        title,
-        note,
-        groupId: group,
-        content,
-        updatedAt: new Date().toISOString()
-      };
-      
-      // 保存到存储
-      this.widget.saveData();
-      
-      // 重置选中状态
-      this.widget.selectedScriptIndex = -1;
-      
-      // 刷新显示
-      this.widget.renderScripts();
-      
-      // 确保清除选中状态和预览
-      this.widget.updateScriptSelection();
-      
-      // 隐藏模态框
-      this.hideEditScriptModal();
-      
-      // 关闭预览浮层
-      if (this.widget.previewModule) {
-        this.widget.previewModule.forceHidePreview();
-      }
-      
-      console.log('话术更新成功');
-    } else {
-      console.error('未找到要更新的话术');
+    if (scriptIndex === -1) {
+      console.error('找不到要更新的话术:', scriptId);
+      alert('更新失败，找不到话术');
+      return;
     }
+    
+    // 更新话术数据
+    const originalScript = this.widget.scripts[scriptIndex];
+    const updatedScript = {
+      ...originalScript,
+      title,
+      note,
+      content,
+      groupId: group,
+      updateTime: new Date().toISOString()
+    };
+    
+    // 替换原有话术
+    this.widget.scripts[scriptIndex] = updatedScript;
+    
+    // 保存数据
+    this.widget.saveData().then(() => {
+      console.log('话术更新成功');
+      this.widget.showSuccessMessage('话术更新成功！');
+      this.widget.renderScripts();
+      this.hideEditScriptModal();
+    }).catch(error => {
+      console.error('更新话术失败:', error);
+      alert('更新失败，请重试');
+    });
   }
 
   // 显示错误信息
   showError(errorId, message) {
-    const errorEl = document.getElementById(errorId);
-    if (errorEl) {
-      errorEl.textContent = message;
-      errorEl.style.display = 'block';
+    const errorElement = document.getElementById(errorId);
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
     }
   }
 
   // 清除错误信息
   clearErrors(errorIds) {
     errorIds.forEach(id => {
-      const errorEl = document.getElementById(id);
-      if (errorEl) {
-        errorEl.style.display = 'none';
+      const errorElement = document.getElementById(id);
+      if (errorElement) {
+        errorElement.style.display = 'none';
       }
     });
   }
 
   // 删除话术
   deleteScript(scriptId) {
-    if (this.widget.showConfirmDialog) {
-      this.widget.showConfirmDialog(
-        '确认删除',
-        '确定要删除这个话术吗？',
-        () => {
-          this.widget.scripts = this.widget.scripts.filter(s => s.id !== scriptId);
-          this.widget.saveData();
-          
-          // 重置选中状态
-          this.widget.selectedScriptIndex = -1;
-          
+    this.widget.showConfirmDialog(
+      '确认删除',
+      '确定要删除这条话术吗？此操作不可恢复。',
+      () => {
+        // 删除话术
+        this.widget.scripts = this.widget.scripts.filter(s => s.id !== scriptId);
+        
+        // 保存数据
+        this.widget.saveData().then(() => {
+          console.log('话术删除成功');
+          this.widget.showSuccessMessage('话术删除成功！');
           this.widget.renderScripts();
-          
-          // 确保清除选中状态和预览
-          this.widget.updateScriptSelection();
-        }
-      );
-    } else {
-      console.error('showConfirmDialog 方法未找到');
-    }
+        }).catch(error => {
+          console.error('删除话术失败:', error);
+          alert('删除失败，请重试');
+        });
+      }
+    );
   }
 
-  // 保存话术（管理面板中的保存功能）
+  // 保存话术 (管理面板中的保存)
   saveScript() {
     try {
-      console.log('开始保存话术...');
+      console.log('保存话术');
       
-      const id = this.widget.widget.querySelector('#edit-script-id').value;
-      const title = this.widget.widget.querySelector('#script-title').value.trim();
-      const note = this.widget.widget.querySelector('#script-note').value.trim();
-      const groupId = this.widget.widget.querySelector('#script-group').value;
-      const content = this.widget.widget.querySelector('#script-content').value.trim();
-
-      console.log('获取到的表单数据:', { id, title, note, groupId, content });
-
-      if (!title || !content) {
-        console.warn('验证失败: 标题或内容为空');
-        alert('请填写话术标题和内容');
+      const scriptId = document.getElementById('edit-script-id')?.value;
+      const title = document.getElementById('script-title')?.value?.trim();
+      const note = document.getElementById('script-note')?.value?.trim();
+      const groupId = document.getElementById('script-group')?.value;
+      const content = document.getElementById('script-content')?.value?.trim();
+      
+      console.log('表单数据:', { scriptId, title, note, groupId, content });
+      
+      // 验证必填字段
+      if (!title) {
+        alert('请输入话术标题');
         return;
       }
-
-      if (id) {
+      
+      if (!content) {
+        alert('请输入话术内容');
+        return;
+      }
+      
+      if (scriptId) {
         // 编辑现有话术
-        const script = this.widget.scripts.find(s => s.id === id);
-        if (script) {
-          script.title = title;
-          script.note = note;
-          script.content = content;
-          script.groupId = groupId;
-          console.log('更新现有话术:', script);
+        const index = this.widget.scripts.findIndex(s => s.id === scriptId);
+        if (index !== -1) {
+          this.widget.scripts[index] = {
+            ...this.widget.scripts[index],
+            title,
+            note,
+            content,
+            groupId,
+            updateTime: new Date().toISOString()
+          };
+          
+          console.log('更新话术:', this.widget.scripts[index]);
         } else {
-          console.error('未找到要编辑的话术, ID:', id);
-          alert('未找到要编辑的话术');
+          console.error('找不到要更新的话术:', scriptId);
           return;
         }
       } else {
@@ -331,79 +339,50 @@ class ScriptManagement {
           title,
           note,
           content,
-          groupId
+          groupId,
+          createTime: new Date().toISOString(),
+          updateTime: new Date().toISOString()
         };
+        
         this.widget.scripts.push(newScript);
         console.log('添加新话术:', newScript);
-        console.log('当前话术总数:', this.widget.scripts.length);
       }
-
+      
       // 保存数据
-      this.widget.saveData()
-        .then(() => {
-          console.log('数据保存成功');
-          
-          // 重置选中状态
-          this.widget.selectedScriptIndex = -1;
-          
-          this.widget.renderScripts();
-          
-          // 确保清除选中状态和预览
-          this.widget.updateScriptSelection();
-          
-          this.clearScriptForm();
-          if (this.widget.hideManagePanel) {
-            this.widget.hideManagePanel();
-          }
-          
-          // 显示成功提示
-          if (this.widget.showSuccessMessage) {
-            this.widget.showSuccessMessage(id ? '话术更新成功' : '话术添加成功');
-          }
-        })
-        .catch((error) => {
-          console.error('保存数据失败:', error);
-          alert('保存失败，请重试');
-        });
+      this.widget.saveData().then(() => {
+        console.log('话术保存成功');
+        this.widget.showSuccessMessage('话术保存成功！');
+        this.widget.renderScripts();
+        this.clearScriptForm();
         
+        // 如果是在管理面板中，更新分组列表
+        if (this.widget.modalManagement) {
+          this.widget.modalManagement.renderGroupList();
+        }
+      }).catch(error => {
+        console.error('保存话术失败:', error);
+        alert('保存失败，请重试');
+      });
+      
     } catch (error) {
       console.error('保存话术时出错:', error);
-      alert('保存失败，请检查输入内容');
+      alert('保存失败，请重试');
     }
   }
 
-  // 清空话术表单
+  // 清除话术表单
   clearScriptForm() {
-    try {
-      console.log('清空话术表单...');
-      
-      const elements = {
-        'edit-script-id': this.widget.widget.querySelector('#edit-script-id'),
-        'script-title': this.widget.widget.querySelector('#script-title'),
-        'script-note': this.widget.widget.querySelector('#script-note'),
-        'script-group': this.widget.widget.querySelector('#script-group'),
-        'script-content': this.widget.widget.querySelector('#script-content')
-      };
-      
-      // 检查所有元素是否存在
-      for (const [name, element] of Object.entries(elements)) {
-        if (!element) {
-          console.error(`表单元素不存在: ${name}`);
-          return;
-        }
-      }
-      
-      // 清空所有表单元素
-      elements['edit-script-id'].value = '';
-      elements['script-title'].value = '';
-      elements['script-note'].value = '';
-      elements['script-group'].value = '';
-      elements['script-content'].value = '';
-      
-      console.log('表单清空完成');
-    } catch (error) {
-      console.error('清空表单时出错:', error);
-    }
+    const idInput = document.getElementById('edit-script-id');
+    const titleInput = document.getElementById('script-title');
+    const noteInput = document.getElementById('script-note');
+    const groupSelect = document.getElementById('script-group');
+    const contentInput = document.getElementById('script-content');
+    
+    if (idInput) idInput.value = '';
+    if (titleInput) titleInput.value = '';
+    if (noteInput) noteInput.value = '';
+    if (groupSelect) groupSelect.value = '';
+    if (contentInput) contentInput.value = '';
   }
 }
 

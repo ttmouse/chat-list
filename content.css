@@ -451,11 +451,11 @@ mark {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  max-height: 100%;
   background: white;
   z-index: 100;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto;
   display: flex;
   flex-direction: column;
 }
@@ -489,7 +489,9 @@ mark {
   padding: 12px;
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
+  min-height: 300px;
+  height: 100%;
+  position: relative;
 }
 
 .manage-content h4 {
@@ -578,6 +580,8 @@ mark {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  z-index: 200;
 }
 
 .script-form input,
@@ -589,6 +593,9 @@ mark {
   font-size: 12px;
   transition: border-color 0.2s;
   font-family: inherit;
+  background-color: white;
+  position: relative;
+  z-index: 201;
 }
 
 .script-form input:focus,
@@ -1027,49 +1034,41 @@ mark {
 /* 模态框分组按钮样式 */
 .edit-group-tabs,
 .add-group-tabs {
+  /* 直接使用与主界面相同的group-tabs样式 */
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 8px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  gap: 4px;
+  padding: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+  flex-shrink: 0;
+  align-items: flex-start;
+  line-height: 1.2;
 }
 
 .edit-group-tab,
 .add-group-tab {
-  padding: 8px 12px;
-  background: white;
-  border: 2px solid #e9ecef;
-  border-radius: 16px;
+  /* 直接使用与主界面相同的group-tab样式 */
+  padding: 4px 10px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 12px;
+  transition: all 0.2s;
+  font-size: 11px;
   font-weight: 500;
   color: #495057;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  min-height: 32px;
-  max-width: 120px;
+  white-space: nowrap;
+  min-height: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  position: relative;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  line-height: 1.2;
-  box-sizing: border-box;
 }
 
 .edit-group-tab:hover,
 .add-group-tab:hover {
-  background: #f8f9fa;
-  border-color: #007bff;
-  color: #007bff;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  background: #e9ecef;
+  color: #212529;
 }
 
 .edit-group-tab.active,
@@ -1078,15 +1077,12 @@ mark {
   color: white;
   border-color: #007bff;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,123,255,0.3);
 }
 
 /* 分组按钮左侧颜色条样式优化 */
 .edit-group-tab[style*="border-left"],
 .add-group-tab[style*="border-left"] {
-  border-left-width: 3px !important;
-  padding-left: 8px;
-  padding-right: 8px;
+  border-left-width: 2px !important;
 }
 
 .edit-group-tab.active[style*="border-left"],
@@ -1361,4 +1357,241 @@ mark {
 .confirm-dialog-footer .cls-btn:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  position: relative;
+  z-index: 202;
+}
+
+/* 管理面板相关样式 */
+.manage-modal-content {
+  width: 700px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.manage-modal-content .cls-modal-body {
+  padding: 0;
+}
+
+.manage-modal-content .manage-content {
+  padding: 20px;
+  min-height: 400px;
+  display: flex;
+  gap: 20px;
+}
+
+/* 分组管理区域 */
+.group-management {
+  flex: 1;
+  border-right: 1px solid #eee;
+  padding-right: 20px;
+}
+
+.group-management h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #333;
+}
+
+.group-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.group-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  background: #f9f9f9;
+  position: relative;
+}
+
+.group-item:last-child {
+  margin-bottom: 0;
+}
+
+.group-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.group-name {
+  flex-grow: 1;
+  font-size: 14px;
+}
+
+.group-count {
+  color: #999;
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.group-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.group-item:hover .group-actions {
+  opacity: 1;
+}
+
+.cls-btn-edit-group,
+.cls-btn-delete-group {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.cls-btn-edit-group:hover {
+  color: #2196F3;
+  background: rgba(33, 150, 243, 0.1);
+}
+
+.cls-btn-delete-group:hover {
+  color: #F44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+/* 分组操作按钮 */
+.group-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.group-actions .cls-btn-add-group,
+.group-actions .cls-btn-import-data {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.group-actions .cls-btn-add-group {
+  background: #4CAF50;
+  color: white;
+}
+
+.group-actions .cls-btn-add-group:hover {
+  background: #43A047;
+}
+
+.group-actions .cls-btn-import-data {
+  background: #2196F3;
+  color: white;
+}
+
+.group-actions .cls-btn-import-data:hover {
+  background: #1E88E5;
+}
+
+/* 话术编辑区域 */
+.script-management {
+  flex: 1.5;
+}
+
+.script-management h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #333;
+}
+
+.script-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.script-form input,
+.script-form textarea,
+.script-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.script-form input:focus,
+.script-form textarea:focus,
+.script-form select:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.25);
+}
+
+.script-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.script-form #script-note {
+  min-height: 60px;
+}
+
+.script-form #script-content {
+  min-height: 150px;
+}
+
+/* 表单操作按钮 */
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.cls-btn-save-script,
+.cls-btn-cancel-edit {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cls-btn-save-script {
+  background: #2196F3;
+  color: white;
+}
+
+.cls-btn-save-script:hover {
+  background: #1E88E5;
+}
+
+.cls-btn-cancel-edit {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.cls-btn-cancel-edit:hover {
+  background: #e0e0e0;
 }

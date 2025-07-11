@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全局CSS设计系统演示</title>
+    <link rel="stylesheet" href="styles/global.css">
+    <style>
+        /* 仅保留必要的页面布局样式 */
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-2xl);
+        }
+        
+        .demo-section {
+            margin-bottom: var(--spacing-3xl);
+            padding: var(--spacing-2xl);
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+        }
+        
+        .widget-container {
+            position: fixed;
+            top: var(--spacing-xl);
+            right: var(--spacing-xl);
+            width: 320px;
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            z-index: var(--z-widget);
+        }
+        
+        .widget-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--white);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .widget-content {
+            padding: var(--spacing-lg);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="text-center mb-5">全局CSS设计系统演示</h1>
+        
+        <!-- 按钮组件演示 -->
+        <div class="demo-section">
+            <h2 class="mb-4">按钮组件</h2>
+            <div class="demo-grid">
+                <div>
+                    <h3 class="text-lg mb-3">基础按钮</h3>
+                    <div class="d-flex flex-wrap" style="gap: var(--spacing-sm);">
+                        <button class="btn btn-primary">主要按钮</button>
+                        <button class="btn btn-secondary">次要按钮</button>
+                        <button class="btn btn-outline">轮廓按钮</button>
+                        <button class="btn btn-ghost">幽灵按钮</button>
+                        <button class="btn btn-danger">危险按钮</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg mb-3">按钮尺寸</h3>
+                    <div class="d-flex flex-wrap items-center" style="gap: var(--spacing-sm);">
+                        <button class="btn btn-primary btn-sm">小按钮</button>
+                        <button class="btn btn-primary">默认按钮</button>
+                        <button class="btn btn-primary btn-lg">大按钮</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 表单组件演示 -->
+        <div class="demo-section">
+            <h2 class="mb-4">表单组件</h2>
+            <div class="demo-grid">
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">标准输入框</label>
+                        <input type="text" class="form-control" placeholder="请输入内容">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">搜索框</label>
+                        <input type="text" class="form-control search-input" placeholder="搜索...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">文本域</label>
+                        <textarea class="form-control form-textarea" placeholder="请输入多行文本"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">错误状态</label>
+                        <input type="text" class="form-control is-invalid" value="错误的输入">
+                        <div class="invalid-feedback">这是一个错误信息</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">禁用状态</label>
+                        <input type="text" class="form-control" value="禁用的输入框" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分组标签演示 -->
+        <div class="demo-section">
+            <h2 class="mb-4">分组标签</h2>
+            <div class="group-tabs">
+                <div class="group-tab active" data-group="">全部</div>
+                <div class="group-tab" data-group="1">问候语 <span class="group-tab-count">5</span></div>
+                <div class="group-tab" data-group="2">服务话术 <span class="group-tab-count">12</span></div>
+                <div class="group-tab" data-group="3">结束语 <span class="group-tab-count">3</span></div>
+                <div class="group-tab" data-group="4">常见问题 <span class="group-tab-count">8</span></div>
+                <div class="group-tab" data-group="5">投诉处理 <span class="group-tab-count">6</span></div>
+            </div>
+        </div>
+        
+        <!-- 工具类演示 -->
+        <div class="demo-section">
+            <h2 class="mb-4">工具类演示</h2>
+            <div class="demo-grid">
+                <div>
+                    <h3 class="text-lg mb-3">文本样式</h3>
+                    <p class="text-primary">主色文本</p>
+                    <p class="text-success">成功文本</p>
+                    <p class="text-warning">警告文本</p>
+                    <p class="text-danger">危险文本</p>
+                    <p class="text-muted">静音文本</p>
+                </div>
+                <div>
+                    <h3 class="text-lg mb-3">间距和布局</h3>
+                    <div class="p-3 mb-2 border rounded">padding: 12px</div>
+                    <div class="p-4 mb-2 border rounded">padding: 16px</div>
+                    <div class="p-5 border rounded">padding: 20px</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模拟插件界面 -->
+    <div class="widget-container">
+        <div class="widget-header">
+            <span>话术助手 v1.4.2</span>
+            <button class="btn-ghost" style="color: white; padding: var(--spacing-xs);">×</button>
+        </div>
+        <div class="widget-content">
+            <button class="btn btn-primary w-100 mb-3" onclick="showModal()">+ 添加话术</button>
+            
+            <!-- 使用新的分组标签样式 -->
+            <div class="group-tabs mb-3">
+                <div class="group-tab active" data-group="">全部</div>
+                <div class="group-tab" data-group="1">问候语</div>
+                <div class="group-tab" data-group="2">服务话术</div>
+                <div class="group-tab" data-group="3">结束语</div>
+            </div>
+            
+            <div class="form-group">
+                <input type="text" class="form-control search-input" placeholder="搜索话术...">
+            </div>
+            
+            <div class="text-center text-muted p-4">
+                点击上方按钮测试新增话术功能
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框演示 -->
+    <div class="modal" id="demoModal">
+        <div class="modal-backdrop" onclick="hideModal()"></div>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">添加新话术</h3>
+                    <button class="modal-close" onclick="hideModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">话术标题 *</label>
+                        <input type="text" class="form-control" placeholder="请输入话术标题">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">所属分组</label>
+                        <div class="group-tabs">
+                            <div class="group-tab active" data-group="">无分组</div>
+                            <div class="group-tab" data-group="1">问候语</div>
+                            <div class="group-tab" data-group="2">服务话术</div>
+                            <div class="group-tab" data-group="3">结束语</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">话术内容 *</label>
+                        <textarea class="form-control form-textarea" placeholder="请输入话术内容"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="hideModal()">取消</button>
+                    <button class="btn btn-primary">保存话术</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 分组标签交互
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('group-tab')) {
+                // 移除同一容器内所有标签的active类
+                const container = e.target.closest('.group-tabs');
+                container.querySelectorAll('.group-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // 添加active类到点击的标签
+                e.target.classList.add('active');
+            }
+        });
+        
+        // 模态框控制
+        function showModal() {
+            document.getElementById('demoModal').classList.add('show');
+        }
+        
+        function hideModal() {
+            document.getElementById('demoModal').classList.remove('show');
+        }
+        
+        // 键盘事件
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideModal();
+            }
+        });
+    </script>
+</body>
+</html>

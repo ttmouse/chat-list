@@ -108,15 +108,19 @@ class PreviewModule {
     }
     this.previewLayer.querySelector('.preview-text').textContent = content;
     
-    // 绑定编辑按钮事件
+    // 绑定编辑按钮事件 - 使用统一的编辑功能
     const editBtn = this.previewLayer.querySelector('.cls-btn-edit-preview');
     editBtn.onclick = () => {
       this.hidePreview();
-      const script = this.chatListWidget.scripts.find(s => s.id === scriptId);
-      if (script) {
-        this.chatListWidget.showEditScriptModal(script);
+      
+      // 使用scriptManagement模块的editScript方法，与列表中的编辑按钮使用相同的功能
+      if (this.chatListWidget.scriptManagement) {
+        this.chatListWidget.scriptManagement.editScript(scriptId);
+      } else if (this.chatListWidget.editScript) {
+        // 备用方案：使用主模块的editScript方法
+        this.chatListWidget.editScript(scriptId);
       } else {
-        console.error('未找到对应的话术:', scriptId);
+        console.error('未找到可用的编辑方法');
       }
     };
     
@@ -199,10 +203,6 @@ class PreviewModule {
     if (this.previewLayer) {
       this.previewLayer.remove();
       this.previewLayer = null;
-    }
-    if (this.hidePreviewTimeout) {
-      clearTimeout(this.hidePreviewTimeout);
-      this.hidePreviewTimeout = null;
     }
   }
 }

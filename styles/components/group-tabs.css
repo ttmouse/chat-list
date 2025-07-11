@@ -1,0 +1,64 @@
+/* 分组标签组件样式 */
+.group-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.group-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  user-select: none;
+}
+
+.group-tab:hover {
+  background-color: var(--gray-200);
+  border-color: var(--gray-300);
+}
+
+.group-tab.active {
+  background-color: var(--white);
+  border-color: var(--gray-300);
+  color: var(--gray-800);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 支持内联样式的border-left颜色条 */
+.group-tab[style*="border-left"] {
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+  padding-left: calc(var(--spacing-lg) - 2px); /* 调整左边距以补偿边框宽度 */
+}
+
+.group-tab.active[style*="border-left"] {
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+}
+
+/* 分组标签计数 */
+.group-tab-count {
+  margin-left: var(--spacing-xs);
+  padding: 2px var(--spacing-xs);
+  background-color: var(--gray-300);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--gray-600);
+  transition: all var(--transition-base);
+}
+
+.group-tab.active .group-tab-count {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+}

@@ -100,6 +100,9 @@ class ChatListWidget {
     this.createWidget();
     this.initDataImportExport(); // 初始化数据导入导出模块
     this.initScriptManagement(); // 初始化话术管理模块
+    this.initGroupManagement(); // 初始化分组管理模块
+    this.initModalManagement(); // 初始化模态框管理模块
+    this.initDragPositionManager(); // 初始化拖拽位置管理模块
     this.initPreviewModule();
     // this.createFocusDebugPanel();
     this.bindEvents();
@@ -191,6 +194,30 @@ class ChatListWidget {
     } else {
       console.error('ScriptManagement 模块未加载');
     }
+  }
+
+  // 初始化分组管理模块
+  initGroupManagement() {
+    if (window.GroupManagement) {
+      this.groupManagement = new window.GroupManagement(this);
+    } else {
+      console.error('GroupManagement 模块未加载');
+    }
+  }
+
+  // 初始化模态框管理模块
+  initModalManagement() {
+    if (window.ModalManagement) {
+      this.modalManagement = new window.ModalManagement(this);
+    } else {
+      console.error('ModalManagement 模块未加载');
+    }
+  }
+  
+  // 临时的拖拽位置管理初始化方法（避免未定义方法调用错误）
+  initDragPositionManager() {
+    console.log('拖拽位置管理模块尚未实现，使用内置拖拽功能');
+    // 继续使用内置拖拽功能
   }
 
   // 初始化UI渲染器模块
@@ -610,400 +637,176 @@ class ChatListWidget {
       this.clearScriptForm();
     });
 
-    // 添加分组
-    this.widget.querySelector('.cls-btn-add-group').addEventListener('click', () => {
-      this.addGroup();
-    });
-
     // 导入话术
     this.widget.querySelector('.cls-btn-import-data').addEventListener('click', () => {
       this.showImportDialog();
     });
 
-    // 分组管理
-    this.widget.querySelector('.group-list').addEventListener('click', (e) => {
-      if (e.target.classList.contains('btn-edit-group')) {
-        const groupId = e.target.dataset.id;
-        this.editGroup(groupId);
-      } else if (e.target.classList.contains('btn-delete-group')) {
-        const groupId = e.target.dataset.id;
-        this.deleteGroup(groupId);
-      }
-    });
+    // 分组管理事件由GroupManagement模块处理
+    if (this.groupManagement) {
+      this.groupManagement.bindEvents();
+    }
 
     // 添加拖拽功能
     this.initDragFunctionality();
   }
 
   toggleWidget() {
-    const content = this.widget.querySelector('.widget-content');
-    this.isVisible = !this.isVisible;
-    content.style.display = this.isVisible ? 'block' : 'none';
+    if (this.modalManagement) {
+      this.modalManagement.toggleWidget();
+    } else {
+      const content = this.widget.querySelector('.widget-content');
+      this.isVisible = !this.isVisible;
+      content.style.display = this.isVisible ? 'block' : 'none';
+    }
   }
 
   hideWidget() {
-    this.widget.style.display = 'none';
-    this.trigger.style.display = 'block'; // 显示触发器
-    this.isVisible = false;
+    if (this.modalManagement) {
+      this.modalManagement.hideWidget();
+    } else {
+      this.widget.style.display = 'none';
+      this.trigger.style.display = 'block'; // 显示触发器
+      this.isVisible = false;
+    }
   }
 
   showWidget() {
-    this.widget.style.display = 'block';
-    this.trigger.style.display = 'none'; // 隐藏触发器
-    this.isVisible = true;
-    // 确保内容区域也是显示的
-    const content = this.widget.querySelector('.widget-content');
-    content.style.display = 'block';
+    if (this.modalManagement) {
+      this.modalManagement.showWidget();
+    } else {
+      this.widget.style.display = 'block';
+      this.trigger.style.display = 'none'; // 隐藏触发器
+      this.isVisible = true;
+      // 确保内容区域也是显示的
+      const content = this.widget.querySelector('.widget-content');
+      content.style.display = 'block';
+    }
   }
 
   showManagePanel() {
-    try {
-      console.log('开始显示管理面板');
-      
-      // 确保插件是可见的
-      if (!this.isVisible) {
-        console.log('插件不可见，先显示插件');
-        this.showWidget();
+    if (this.modalManagement) {
+      this.modalManagement.showManagePanel();
+    } else {
+      try {
+        console.log('开始显示管理面板');
+        
+        // 确保插件是可见的
+        if (!this.isVisible) {
+          console.log('插件不可见，先显示插件');
+          this.showWidget();
+        }
+        
+        const managePanel = this.widget.querySelector('.manage-panel');
+        const widgetContent = this.widget.querySelector('.widget-content');
+        
+        if (!managePanel) {
+          console.error('找不到管理面板元素 .manage-panel');
+          console.log('Widget HTML:', this.widget.innerHTML.substring(0, 500));
+          return;
+        }
+        
+        if (!widgetContent) {
+          console.error('找不到内容区域元素 .widget-content');
+          return;
+        }
+        
+        console.log('管理面板元素:', managePanel);
+        console.log('内容区域元素:', widgetContent);
+        console.log('管理面板当前样式:', managePanel.style.display);
+        console.log('内容区域当前样式:', widgetContent.style.display);
+        
+        // 更新分组选项
+        this.renderGroups();
+        
+        // 强制设置样式
+        managePanel.style.display = 'block';
+        managePanel.style.visibility = 'visible';
+        managePanel.style.opacity = '1';
+        widgetContent.style.display = 'none';
+        
+        // 确保插件容器也是可见的
+        this.widget.style.display = 'block';
+        this.widget.style.visibility = 'visible';
+        
+        console.log('管理面板显示成功');
+        console.log('设置后管理面板样式:', managePanel.style.display);
+        console.log('设置后内容区域样式:', widgetContent.style.display);
+        console.log('设置后插件容器样式:', this.widget.style.display);
+        
+        // 验证元素是否真的可见
+        const rect = managePanel.getBoundingClientRect();
+        console.log('管理面板位置和尺寸:', rect);
+        
+        if (rect.width === 0 || rect.height === 0) {
+          console.warn('管理面板尺寸为0，可能存在CSS问题');
+        }
+        
+      } catch (error) {
+        console.error('显示管理面板时出错:', error);
+        console.error('错误堆栈:', error.stack);
       }
-      
-      const managePanel = this.widget.querySelector('.manage-panel');
-      const widgetContent = this.widget.querySelector('.widget-content');
-      
-      if (!managePanel) {
-        console.error('找不到管理面板元素 .manage-panel');
-        console.log('Widget HTML:', this.widget.innerHTML.substring(0, 500));
-        return;
-      }
-      
-      if (!widgetContent) {
-        console.error('找不到内容区域元素 .widget-content');
-        return;
-      }
-      
-      console.log('管理面板元素:', managePanel);
-      console.log('内容区域元素:', widgetContent);
-      console.log('管理面板当前样式:', managePanel.style.display);
-      console.log('内容区域当前样式:', widgetContent.style.display);
-      
-      // 更新分组选项
-      this.renderGroups();
-      
-      // 强制设置样式
-      managePanel.style.display = 'block';
-      managePanel.style.visibility = 'visible';
-      managePanel.style.opacity = '1';
-      widgetContent.style.display = 'none';
-      
-      // 确保插件容器也是可见的
-      this.widget.style.display = 'block';
-      this.widget.style.visibility = 'visible';
-      
-      console.log('管理面板显示成功');
-      console.log('设置后管理面板样式:', managePanel.style.display);
-      console.log('设置后内容区域样式:', widgetContent.style.display);
-      console.log('设置后插件容器样式:', this.widget.style.display);
-      
-      // 验证元素是否真的可见
-      const rect = managePanel.getBoundingClientRect();
-      console.log('管理面板位置和尺寸:', rect);
-      
-      if (rect.width === 0 || rect.height === 0) {
-        console.warn('管理面板尺寸为0，可能存在CSS问题');
-      }
-      
-    } catch (error) {
-      console.error('显示管理面板时出错:', error);
-      console.error('错误堆栈:', error.stack);
     }
   }
 
   // 新增话术模态框相关方法
   showAddScriptModal() {
-    console.log('显示添加话术模态框');
-    
-    // 创建模态框HTML
-    const modalHTML = `
-        <div class="cls-modal-overlay" id="addScriptModal">
-            <div class="cls-modal-content">
-                <div class="cls-modal-header">
-                    <h3 class="cls-modal-title">添加新话术</h3>
-                    <button class="cls-btn-close-modal"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#333333" stroke-width="0.75" stroke-linejoin="round"/><path d="M11.1211 6.87891L6.87842 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.87891 6.87891L11.1215 11.1215" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                </div>
-                <div class="cls-modal-body">
-                    <form id="addScriptForm">
-                        <div class="cls-form-group">
-                            <label class="cls-form-label" for="modalScriptTitle">话术标题 *</label>
-                            <input type="text" id="modalScriptTitle" class="cls-form-control" placeholder="请输入话术标题" required>
-                            <div id="titleError" class="cls-error-message" style="display: none;"></div>
-                        </div>
-                        
-                        <div class="cls-form-group">
-                            <label class="cls-form-label" for="modalScriptNote">备注</label>
-              <textarea id="modalScriptNote" class="cls-form-control" placeholder="请输入备注信息（可选）" rows="2"></textarea>
-                            <div id="noteError" class="cls-error-message" style="display: none;"></div>
-                        </div>
-                        
-                        <div class="cls-form-group">
-                            <label class="cls-form-label">所属分组</label>
-                            <div class="add-group-tabs" id="modalGroupTabs">
-                                <div class="add-group-tab active" data-group="">无分组</div>
-                            </div>
-                            <input type="hidden" id="modalScriptGroup" value="">
-                        </div>
-                        
-                        <div class="cls-form-group">
-                            <label class="cls-form-label" for="modalScriptContent">话术内容 *</label>
-                            <textarea id="modalScriptContent" class="cls-form-control textarea" placeholder="请输入话术内容" required></textarea>
-                            <div id="contentError" class="cls-error-message" style="display: none;"></div>
-                        </div>
-                    </form>
-                    
-                    <div class="cls-form-actions">
-                        <button type="button" class="cls-btn cls-btn-secondary cls-btn-cancel-modal">取消</button>
-                        <button type="button" class="cls-btn cls-btn-primary cls-btn-save-modal">保存话术</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // 移除已存在的模态框
-    const existingModal = document.getElementById('addScriptModal');
-    if (existingModal) {
-      existingModal.remove();
+    if (this.modalManagement) {
+      this.modalManagement.showAddScriptModal();
+    } else {
+      console.error('模态框管理模块未初始化，无法显示添加话术模态框');
     }
-    
-    // 添加模态框到页面
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // 填充分组选项
-    this.populateGroupOptions();
-    
-    // 绑定事件
-    this.bindModalEvents();
-    
-    // 显示模态框
-    const modal = document.getElementById('addScriptModal');
-    modal.style.display = 'flex';
-    
-    // 设置焦点
-    setTimeout(() => {
-      const titleInput = document.getElementById('modalScriptTitle');
-      if (titleInput) {
-        titleInput.focus();
-      }
-    }, 100);
   }
 
   hideAddScriptModal() {
-    console.log('隐藏添加话术模态框');
-    const modal = document.getElementById('addScriptModal');
-    if (modal) {
-      modal.remove();
+    if (this.modalManagement) {
+      this.modalManagement.hideAddScriptModal();
+    } else {
+      console.error('模态框管理模块未初始化，无法隐藏添加话术模态框');
     }
   }
 
   populateGroupOptions() {
-    const groupTabs = document.getElementById('modalGroupTabs');
-    const hiddenInput = document.getElementById('modalScriptGroup');
-    if (!groupTabs || !hiddenInput) return;
-    
-    // 构建分组按钮HTML
-    let tabsHTML = `<div class="add-group-tab active" data-group="">无分组</div>`;
-    
-    this.groups.forEach(group => {
-      tabsHTML += `<div class="add-group-tab" data-group="${group.id}" style="border-left: 3px solid ${group.color}">${group.name}</div>`;
-    });
-    
-    groupTabs.innerHTML = tabsHTML;
-    hiddenInput.value = '';
-    
-    // 绑定点击事件
-    groupTabs.addEventListener('click', (e) => {
-      if (e.target.classList.contains('add-group-tab')) {
-        // 移除所有active类
-        groupTabs.querySelectorAll('.add-group-tab').forEach(tab => {
-          tab.classList.remove('active');
-        });
-        
-        // 添加active类到当前点击的标签
-        e.target.classList.add('active');
-        
-        // 更新隐藏输入框的值
-        hiddenInput.value = e.target.dataset.group;
-      }
-    });
+    if (this.modalManagement) {
+      this.modalManagement.populateGroupOptions();
+    } else {
+      console.error('模态框管理模块未初始化，无法填充分组选项');
+    }
   }
 
   bindModalEvents() {
-    // 关闭按钮事件
-    const closeBtn = document.querySelector('.cls-btn-close-modal');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.hideAddScriptModal());
-    }
-    
-    // 取消按钮事件
-    const cancelBtn = document.querySelector('.cls-btn-cancel-modal');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.hideAddScriptModal());
-    }
-    
-    // 保存按钮事件
-    const saveBtn = document.querySelector('.cls-btn-save-modal');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => this.saveNewScript());
-    }
-    
-    // 点击遮罩层关闭
-    const modal = document.getElementById('addScriptModal');
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target.classList.contains('cls-modal-overlay')) {
-          this.hideAddScriptModal();
-        }
-      });
-    }
-    
-    // 键盘事件
-    document.addEventListener('keydown', (e) => {
-      const modal = document.getElementById('addScriptModal');
-      if (modal && modal.style.display === 'flex') {
-        if (e.key === 'Escape') {
-          this.hideAddScriptModal();
-        } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-          this.saveNewScript();
-        }
-      }
-    });
-    
-    // 实时验证
-    const titleInput = document.getElementById('modalScriptTitle');
-    const contentInput = document.getElementById('modalScriptContent');
-    
-    if (titleInput) {
-      titleInput.addEventListener('input', () => {
-        const titleError = document.getElementById('titleError');
-        if (titleError && titleError.style.display === 'block') {
-          this.validateModalForm();
-        }
-      });
-    }
-    
-    if (contentInput) {
-      contentInput.addEventListener('input', () => {
-        const contentError = document.getElementById('contentError');
-        if (contentError && contentError.style.display === 'block') {
-          this.validateModalForm();
-        }
-      });
+    if (this.modalManagement) {
+      this.modalManagement.bindModalEvents();
+    } else {
+      console.error('模态框管理模块未初始化，无法绑定模态框事件');
     }
   }
 
   validateModalForm() {
-    const title = document.getElementById('modalScriptTitle')?.value.trim() || '';
-    const note = document.getElementById('modalScriptNote')?.value.trim() || '';
-    const content = document.getElementById('modalScriptContent')?.value.trim() || '';
-    
-    let isValid = true;
-    
-    // 验证标题
-    const titleError = document.getElementById('titleError');
-    if (titleError) {
-      if (!title) {
-        titleError.textContent = '请输入话术标题';
-        titleError.style.display = 'block';
-        isValid = false;
-      } else if (title.length > 50) {
-        titleError.textContent = '标题长度不能超过50个字符';
-        titleError.style.display = 'block';
-        isValid = false;
-      } else {
-        titleError.style.display = 'none';
-      }
+    if (this.modalManagement) {
+      return this.modalManagement.validateModalForm();
+    } else {
+      console.error('模态框管理模块未初始化，无法验证表单');
+      return false;
     }
-    
-    // 验证备注
-    const noteError = document.getElementById('noteError');
-    if (noteError) {
-      if (note.length > 100) {
-        noteError.textContent = '备注长度不能超过100个字符';
-        noteError.style.display = 'block';
-        isValid = false;
-      } else {
-        noteError.style.display = 'none';
-      }
-    }
-    
-    // 验证内容
-    const contentError = document.getElementById('contentError');
-    if (contentError) {
-      if (!content) {
-        contentError.textContent = '请输入话术内容';
-        contentError.style.display = 'block';
-        isValid = false;
-      } else if (content.length > 1000) {
-        contentError.textContent = '内容长度不能超过1000个字符';
-        contentError.style.display = 'block';
-        isValid = false;
-      } else {
-        contentError.style.display = 'none';
-      }
-    }
-    
-    return isValid;
   }
 
   saveNewScript() {
-    console.log('开始保存新话术');
-    
-    try {
-      if (!this.validateModalForm()) {
-        console.log('表单验证失败');
-        return;
-      }
-      
-      const title = document.getElementById('modalScriptTitle')?.value.trim() || '';
-      const note = document.getElementById('modalScriptNote')?.value.trim() || '';
-      const groupId = document.getElementById('modalScriptGroup')?.value || '';
-      const content = document.getElementById('modalScriptContent')?.value.trim() || '';
-      
-      const newScript = {
-        id: Date.now().toString(),
-        title,
-        note,
-        content,
-        groupId,
-        createTime: new Date().toISOString()
-      };
-      
-      console.log('新话术数据:', newScript);
-      
-      // 添加到话术列表
-      this.scripts.push(newScript);
-      
-      // 保存数据
-      this.saveData().then(() => {
-        console.log('话术保存成功');
-        this.showSuccessMessage('话术添加成功！');
-        this.renderScripts();
-        this.hideAddScriptModal();
-        // 关闭预览浮层
-        this.previewModule.forceHidePreview();
-      }).catch(error => {
-        console.error('保存话术失败:', error);
-        alert('保存失败，请重试');
-      });
-      
-    } catch (error) {
-      console.error('保存新话术时出错:', error);
-      alert('保存失败，请重试');
+    if (this.modalManagement) {
+      this.modalManagement.saveNewScript();
+    } else {
+      console.error('模态框管理模块未初始化，无法保存新话术');
     }
   }
 
   hideManagePanel() {
-    this.widget.querySelector('.manage-panel').style.display = 'none';
-    this.widget.querySelector('.widget-content').style.display = 'block';
-    this.clearScriptForm();
+    if (this.modalManagement) {
+      this.modalManagement.hideManagePanel();
+    } else {
+      this.widget.querySelector('.manage-panel').style.display = 'none';
+      this.widget.querySelector('.widget-content').style.display = 'block';
+      this.clearScriptForm();
+    }
   }
 
   fillContent(content) {
@@ -1060,51 +863,27 @@ class ChatListWidget {
   }
 
   addGroup() {
-    const name = prompt('请输入分组名称:');
-    if (name && name.trim()) {
-      const colors = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#00BCD4'];
-      const newGroup = {
-        id: Date.now().toString(),
-        name: name.trim(),
-        color: colors[Math.floor(Math.random() * colors.length)]
-      };
-      this.groups.push(newGroup);
-      this.saveData();
-      this.renderGroups();
+    if (this.groupManagement) {
+      this.groupManagement.addGroup();
+    } else {
+      console.error('GroupManagement 模块未初始化');
     }
   }
 
   editGroup(groupId) {
-    const group = this.groups.find(g => g.id === groupId);
-    if (group) {
-      const newName = prompt('请输入新的分组名称:', group.name);
-      if (newName && newName.trim()) {
-        group.name = newName.trim();
-        this.saveData();
-        this.renderGroups();
-        this.renderScripts();
-      }
+    if (this.groupManagement) {
+      this.groupManagement.editGroup(groupId);
+    } else {
+      console.error('GroupManagement 模块未初始化');
     }
   }
 
   deleteGroup(groupId) {
-    this.showConfirmDialog(
-      '确认删除分组',
-      '确定要删除这个分组吗？分组下的话术将移到未分组。',
-      () => {
-        // 将该分组下的话术移到未分组
-        this.scripts.forEach(script => {
-          if (script.groupId === groupId) {
-            script.groupId = '';
-          }
-        });
-        
-        this.groups = this.groups.filter(g => g.id !== groupId);
-        this.saveData();
-        this.renderGroups();
-        this.renderScripts();
-      }
-    );
+    if (this.groupManagement) {
+      this.groupManagement.deleteGroup(groupId);
+    } else {
+      console.error('GroupManagement 模块未初始化');
+    }
   }
 
   initDragFunctionality() {
@@ -1281,6 +1060,23 @@ class ChatListWidget {
   // 显示自定义确认对话框
   showConfirmDialog(title, message, onConfirm, onCancel = null) {
     return ChatListUtils.showConfirmDialog(title, message, onConfirm, onCancel);
+  }
+
+  /**
+   * 显示编辑话术模态框
+   * @param {Object} script 要编辑的话术对象
+   */
+  showEditScriptModal(script) {
+    // 统一使用scriptManagement模块的editScript方法
+    if (this.scriptManagement && script && script.id) {
+      this.scriptManagement.editScript(script.id);
+    } else if (this.modalManagement) {
+      // 备用方案：直接使用modalManagement模块
+      this.modalManagement.showEditScriptModal(script);
+    } else {
+      console.error('模态框管理模块未加载，无法显示编辑话术模态框');
+      alert('无法显示编辑话术模态框，请刷新页面重试');
+    }
   }
 }
 

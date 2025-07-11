@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新增话术浮层方案</title>
+    <title>新增话术浮层方案演示</title>
+    <link rel="stylesheet" href="content.css">
+    <link rel="stylesheet" href="styles/global.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -245,6 +247,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        
+
     </style>
 </head>
 <body>
@@ -294,13 +298,14 @@
                     </div>
                     
                     <div class="cls-form-group">
-                        <label class="cls-form-label" for="modalScriptGroup">所属分组</label>
-                        <select id="modalScriptGroup" class="cls-form-control">
-                            <option value="">选择分组（可选）</option>
-                            <option value="1">问候语</option>
-                            <option value="2">服务话术</option>
-                            <option value="3">结束语</option>
-                        </select>
+                        <label class="cls-form-label">所属分组</label>
+                        <div class="group-tabs" id="modalGroupTabs">
+                            <div class="group-tab active" data-group="">无分组</div>
+                            <div class="group-tab" data-group="1" style="border-left: 3px solid #4CAF50">问候语</div>
+                            <div class="group-tab" data-group="2" style="border-left: 3px solid #2196F3">服务话术</div>
+                            <div class="group-tab" data-group="3" style="border-left: 3px solid #FF9800">结束语</div>
+                        </div>
+                        <input type="hidden" id="modalScriptGroup" value="">
                     </div>
                     
                     <div class="cls-form-group">
@@ -328,8 +333,10 @@
             
             // 清空表单
             document.getElementById('modalScriptTitle').value = '';
-            document.getElementById('modalScriptGroup').value = '';
             document.getElementById('modalScriptContent').value = '';
+            
+            // 重置分组选择
+            resetGroupSelection();
             
             // 隐藏错误信息
             document.getElementById('titleError').style.display = 'none';
@@ -339,6 +346,27 @@
             setTimeout(() => {
                 document.getElementById('modalScriptTitle').focus();
             }, 100);
+        }
+        
+        function resetGroupSelection() {
+            const groupTabs = document.getElementById('modalGroupTabs');
+            const hiddenInput = document.getElementById('modalScriptGroup');
+            
+            if (groupTabs && hiddenInput) {
+                // 移除所有active类
+                groupTabs.querySelectorAll('.group-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // 激活"无分组"选项
+                const firstTab = groupTabs.querySelector('.group-tab[data-group=""]');
+                if (firstTab) {
+                    firstTab.classList.add('active');
+                }
+                
+                // 清空隐藏输入框
+                hiddenInput.value = '';
+            }
         }
         
         function hideAddScriptModal() {
@@ -445,8 +473,29 @@
         
         // 点击遮罩层关闭模态框
         document.getElementById('addScriptModal').addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) {
+            if (e.target.classList.contains('cls-modal-overlay')) {
                 hideAddScriptModal();
+            }
+        });
+        
+        // 分组标签点击事件
+        document.getElementById('modalGroupTabs').addEventListener('click', (e) => {
+            if (e.target.classList.contains('group-tab')) {
+                const groupTabs = document.getElementById('modalGroupTabs');
+                const hiddenInput = document.getElementById('modalScriptGroup');
+                
+                // 移除所有active类
+                groupTabs.querySelectorAll('.group-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // 添加active类到当前点击的标签
+                e.target.classList.add('active');
+                
+                // 更新隐藏输入框的值
+                hiddenInput.value = e.target.dataset.group;
+                
+                console.log('选择分组:', e.target.dataset.group, e.target.textContent);
             }
         });
         

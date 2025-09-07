@@ -13,6 +13,7 @@ class ChatListWidget {
     this.selectedScriptIndex = -1; // 当前选中的话术索引
     // this.focusDebugPanel = null; // 焦点调试面板
     this.whitelist = []; // 网页白名单，将从存储中加载
+    this.settings = { enableWhitelist: true }; // 设置，包含是否启用白名单
     this.initialized = false; // 初始化状态标记
     this.currentSortBy = 'usage'; // 当前排序方式：'default', 'usage'
     this.openedByShortcut = false; // 标记面板是否通过快捷键打开
@@ -70,48 +71,112 @@ class ChatListWidget {
 
   // 检查当前网页是否在白名单中
   isWhitelistedSite() {
-    const currentUrl = window.location.href;
-    
-    // 检查完整URL匹配
-    if (this.whitelist.includes(currentUrl)) {
-      return true;
-    }
-    
-    // 检查URL前缀匹配（支持带参数的URL）
-    return this.whitelist.some(whitelistUrl => {
-      // 如果白名单URL包含查询参数，进行完整匹配
-      if (whitelistUrl.includes('?')) {
-        return currentUrl.startsWith(whitelistUrl);
+    try {
+      // 确保settings存在，如果不存在则使用默认值
+      const settings = this.settings || { enableWhitelist: true };
+      
+      // 如果禁用了白名单限制，则所有网站都允许
+      if (!settings.enableWhitelist) {
+        console.log('白名单限制已禁用，允许所有网站');
+        return true;
       }
-      // 否则只匹配基础URL部分
-      const currentBaseUrl = currentUrl.split('?')[0];
-      return currentBaseUrl === whitelistUrl || currentUrl.startsWith(whitelistUrl);
-    });
+      
+      // 确保whitelist是数组
+      const whitelist = Array.isArray(this.whitelist) ? this.whitelist : [];
+      
+      if (whitelist.length === 0) {
+        console.log('白名单为空，不允许任何网站');
+        return false;
+      }
+      
+      const currentUrl = window.location.href;
+      console.log(`检查当前URL是否在白名单中: ${currentUrl}`);
+      console.log('白名单内容:', whitelist);
+      
+      // 检查完整URL匹配
+      if (whitelist.includes(currentUrl)) {
+        console.log('URL完全匹配白名单');
+        return true;
+      }
+      
+      // 检查URL前缀匹配（支持带参数的URL）
+      const isMatched = whitelist.some(whitelistUrl => {
+        // 如果白名单URL包含查询参数，进行完整匹配
+        if (whitelistUrl.includes('?')) {
+          return currentUrl.startsWith(whitelistUrl);
+        }
+        // 否则只匹配基础URL部分
+        const currentBaseUrl = currentUrl.split('?')[0];
+        return currentBaseUrl === whitelistUrl || currentUrl.startsWith(whitelistUrl);
+      });
+      
+      console.log(`白名单检查结果: ${isMatched}`);
+      return isMatched;
+    } catch (error) {
+      console.error('白名单检查出错:', error);
+      // 出错时默认不允许，避免意外显示
+      return false;
+    }
   }
 
   async init() {
+    console.log('开始初始化话术扩展...');
+    
     // 先加载数据（包括白名单）
-    await this.loadData();
+    try {
+      await this.loadData();
+      console.log('数据加载完成:', {
+        scriptsCount: this.scripts?.length || 0,
+        groupsCount: this.groups?.length || 0,
+        whitelistCount: this.whitelist?.length || 0,
+        settings: this.settings
+      });
+    } catch (error) {
+      console.error('数据加载失败:', error);
+      return;
+    }
     
     // 检查白名单，如果不在白名单中则不初始化UI
-    if (!this.isWhitelistedSite()) {
+    const isWhitelisted = this.isWhitelistedSite();
+    if (!isWhitelisted) {
       console.log('当前网站不在白名单中，跳过初始化话术扩展');
       return;
     }
     
-    console.log('当前网站在白名单中，初始化话术扩展');
-    // 获取版本号
-    this.version = await this.getVersion();
+    console.log('当前网站在白名单中，继续初始化话术扩展');
     
-    // 使用统一的模块加载器初始化所有模块
-    this.initAllModules();
-    
-    this.initDragPositionManager(); // 初始化拖拽位置管理模块
-    this.createWidget();
-    this.initPreviewModule();
-    // this.createFocusDebugPanel();
-    this.bindEvents();
-    this.initialized = true; // 标记为已初始化
+    try {
+      // 获取版本号
+      this.version = await this.getVersion();
+      console.log('版本号获取完成:', this.version);
+      
+      // 使用统一的模块加载器初始化所有模块
+      this.initAllModules();
+      console.log('模块加载完成');
+      
+      this.initDragPositionManager(); // 初始化拖拽位置管理模块
+      console.log('拖拽位置管理器初始化完成');
+      
+      this.createWidget();
+      console.log('组件创建完成');
+      
+      this.initPreviewModule();
+      console.log('预览模块初始化完成');
+      
+      // this.createFocusDebugPanel();
+      this.bindEvents();
+      console.log('事件绑定完成');
+      
+      this.initialized = true; // 标记为已初始化
+      console.log('话术扩展初始化成功');
+    } catch (error) {
+      console.error('初始化过程中出错:', error);
+      // 尝试清理部分初始化的资源
+      this.cleanup();
+      
+      // 显示错误提示
+      this.showInitErrorNotice(error);
+    }
   }
 
   // 获取插件版本号
@@ -136,31 +201,149 @@ class ChatListWidget {
       // 检查扩展上下文是否有效
       if (!this.isExtensionContextValid()) {
         console.warn('扩展上下文已失效，使用默认数据');
-        this.scripts = this.getDefaultScripts();
-        this.groups = this.getDefaultGroups();
-        this.whitelist = this.getDefaultWhitelist();
+        this.resetToDefaultData();
         return;
       }
       
-      const result = await chrome.storage.local.get(['chatScripts', 'chatGroups', 'siteWhitelist']);
-      this.scripts = result.chatScripts || this.getDefaultScripts();
-      this.groups = result.chatGroups || this.getDefaultGroups();
-      this.whitelist = result.siteWhitelist || this.getDefaultWhitelist();
+      const result = await chrome.storage.local.get(['chatScripts', 'chatGroups', 'siteWhitelist', 'chatSettings']);
+      
+      // 数据验证和修复
+      this.scripts = this.validateScripts(result.chatScripts) || this.getDefaultScripts();
+      this.groups = this.validateGroups(result.chatGroups) || this.getDefaultGroups();
+      this.whitelist = this.validateWhitelist(result.siteWhitelist) || this.getDefaultWhitelist();
+      this.settings = this.validateSettings(result.chatSettings) || { enableWhitelist: true };
+      
+      console.log('加载的原始数据:', {
+        chatScripts: result.chatScripts,
+        chatGroups: result.chatGroups,
+        siteWhitelist: result.siteWhitelist,
+        chatSettings: result.chatSettings
+      });
       
       // 数据迁移：为现有话术添加使用次数字段
       this.migrateScriptData();
       
     } catch (error) {
       console.error('加载数据失败:', error);
-      this.scripts = this.getDefaultScripts();
-      this.groups = this.getDefaultGroups();
-      this.whitelist = this.getDefaultWhitelist();
+      this.resetToDefaultData();
       
       // 如果是扩展上下文失效错误，提示用户刷新页面
       if (error.message && error.message.includes('Extension context invalidated')) {
         this.showContextInvalidatedNotice();
       }
     }
+  }
+  
+  // 重置为默认数据
+  resetToDefaultData() {
+    console.log('重置为默认数据');
+    this.scripts = this.getDefaultScripts();
+    this.groups = this.getDefaultGroups();
+    this.whitelist = this.getDefaultWhitelist();
+    this.settings = { enableWhitelist: true };
+  }
+  
+  // 验证脚本数据
+  validateScripts(scripts) {
+    if (!Array.isArray(scripts)) {
+      console.warn('scripts数据不是数组，将使用默认值');
+      return null;
+    }
+    return scripts;
+  }
+  
+  // 验证分组数据
+  validateGroups(groups) {
+    if (!Array.isArray(groups)) {
+      console.warn('groups数据不是数组，将使用默认值');
+      return null;
+    }
+    return groups;
+  }
+  
+  // 验证白名单数据
+  validateWhitelist(whitelist) {
+    if (!Array.isArray(whitelist)) {
+      console.warn('whitelist数据不是数组，将使用默认值');
+      return null;
+    }
+    return whitelist;
+  }
+  
+  // 验证设置数据
+  validateSettings(settings) {
+    if (!settings || typeof settings !== 'object') {
+      console.warn('settings数据无效，将使用默认值');
+      return null;
+    }
+    
+    // 确保enableWhitelist有默认值
+    const validatedSettings = { enableWhitelist: true, ...settings };
+    return validatedSettings;
+  }
+  
+  // 清理部分初始化的资源
+  cleanup() {
+    try {
+      if (this.widget && this.widget.parentNode) {
+        this.widget.parentNode.removeChild(this.widget);
+        console.log('清理了widget组件');
+      }
+      
+      // 清理其他可能创建的DOM元素
+      const existingElements = document.querySelectorAll('[id^="chat-list-"]');
+      existingElements.forEach(el => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+      
+      this.initialized = false;
+      console.log('清理完成');
+    } catch (error) {
+      console.error('清理过程中出错:', error);
+    }
+  }
+  
+  // 显示初始化错误提示
+  showInitErrorNotice(error) {
+    console.log('显示初始化错误提示:', error.message);
+    
+    // 创建错误提示元素
+    const notice = document.createElement('div');
+    notice.id = 'chat-list-init-error-notice';
+    notice.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ff4444;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 10000;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      cursor: pointer;
+    `;
+    notice.innerHTML = `
+      <div style="margin-bottom: 8px;"><strong>话术助手初始化失败</strong></div>
+      <div style="font-size: 12px; opacity: 0.9;">点击此处尝试重新加载</div>
+    `;
+    
+    // 点击重新加载
+    notice.addEventListener('click', () => {
+      location.reload();
+    });
+    
+    document.body.appendChild(notice);
+    
+    // 5秒后自动消失
+    setTimeout(() => {
+      if (notice.parentNode) {
+        notice.parentNode.removeChild(notice);
+      }
+    }, 5000);
   }
 
   // 数据迁移：为现有话术添加使用次数字段
@@ -386,7 +569,7 @@ class ChatListWidget {
       e.preventDefault(); // 防止默认的焦点转移
     });
 
-    // 全局快捷键监听 - ⌘+g 启动搜索
+    // 全局快捷键监听 - ⌘+g 启动搜索, ESC 分层关闭
     document.addEventListener('keydown', (e) => {
       // 增强的快捷键检测，提高跨浏览器兼容性
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -422,6 +605,31 @@ class ChatListWidget {
         if (searchInput) {
           searchInput.focus();
           searchInput.select(); // 选中现有文本，方便用户直接输入新的搜索词
+        }
+      }
+      
+      // ESC 键分层关闭：第一次关闭预览，第二次关闭面板
+      if (e.key === 'Escape' && this.isVisible) {
+        // 如果不是在插件内部的输入框，处理 ESC
+        const currentFocus = document.activeElement;
+        const isInWidget = currentFocus && ChatListUtils.closest(currentFocus, '#chat-list-widget');
+        
+        if (!isInWidget) {
+          e.preventDefault();
+          
+          // 检查是否有预览在显示
+          const hasActivePreview = this.previewModule && this.previewModule.previewElement && 
+                                   this.previewModule.previewElement.style.display !== 'none';
+          
+          if (hasActivePreview) {
+            // 第一次 ESC：关闭预览
+            this.previewModule.forceHidePreview();
+            this.selectedScriptIndex = -1;
+            this.updateScriptSelection();
+          } else {
+            // 第二次 ESC：关闭面板
+            this.hideWidget();
+          }
         }
       }
     }, true); // 使用事件捕获阶段，确保优先处理
@@ -1173,6 +1381,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else {
       console.error('chatListWidget未找到，无法显示管理面板');
       sendResponse({ success: false, error: 'Widget not found' });
+    }
+  } else if (message.type === 'SETTINGS_UPDATED') {
+    // 设置更新
+    if (window.chatListWidget) {
+      window.chatListWidget.settings = { enableWhitelist: true, ...message.settings };
+      
+      // 检查当前页面是否在白名单中
+      if (!window.chatListWidget.isWhitelistedSite()) {
+        // 如果不在白名单中，隐藏并销毁组件
+        window.chatListWidget.hideWidget();
+        console.log('当前网站不符合白名单限制，话术助手已隐藏');
+      } else {
+        // 如果符合白名单但组件未初始化，重新初始化
+        if (!window.chatListWidget.initialized) {
+          window.chatListWidget.init();
+        }
+      }
+      sendResponse({ success: true });
     }
   } else if (message.type === 'WHITELIST_UPDATED') {
     // 白名单更新

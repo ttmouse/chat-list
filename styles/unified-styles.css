@@ -925,7 +925,7 @@
 .cls-btn-ghost:hover { background: var(--cls-bg-secondary); }
 
 /* 底部三个按钮的颜色映射（兼容旧类名） */
-#chat-list-widget .cls-btn-add-script { background: var(--cls-success); border-color: var(--cls-success); color: var(--cls-text-primary); }
+#chat-list-widget .cls-btn-add-script { background: #0075db;border-radius:50px;color: #fff;font-size: 20px; border-color: var(--cls-success); }
 #chat-list-widget .cls-btn-import-script { background: var(--cls-primary); border-color: var(--cls-primary); color: var(--cls-text-primary); }
 #chat-list-widget .cls-btn-export-script { background: var(--cls-warning); border-color: var(--cls-warning); color: var(--cls-text-primary); }
 #chat-list-widget .cls-btn-add-script:hover,

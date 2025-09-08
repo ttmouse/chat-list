@@ -48,7 +48,7 @@ class UIRenderer {
           </div>
           <div class="script-list"></div>
           <div class="widget-actions">
-            <button class="cls-btn-add-script">+ 添加话术</button>
+            <button class="cls-btn-add-script" aria-label="添加话术" title="添加话术">＋</button>
           </div>
         </div>
         <div class="manage-panel" style="display: none;">

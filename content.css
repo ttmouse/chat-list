@@ -133,7 +133,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0; /* 允许子 flex 项在父容器内收缩 */
-  padding-bottom: 50px; /* 底部留出空间给悬浮按钮 */
+  padding-bottom: 72px; /* 底部留出空间给悬浮按钮（FAB） */
   background: var(--cls-bg-primary);
   color: var(--cls-text-primary);
 }
@@ -337,22 +337,31 @@
 /* 操作按钮 */
 .widget-actions {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--cls-bg-primary);
-  border-top: 1px solid var(--cls-border-primary);
-  padding: var(--cls-space-2);
-  display: flex;
-  gap: var(--cls-space-2);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-  border-radius: 0 0 var(--cls-radius-xl) var(--cls-radius-xl);
+  bottom: 12px;
+  right: 12px;
+  left: auto;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: block;
+  box-shadow: none;
+  border-radius: 0;
+  z-index: 10;
 }
 
-/* 统一按钮：使用通用样式，仅保留容器内的布局细节 */
-.widget-actions .cls-btn { flex: 1; }
-.cls-btn-import-script svg,
-.cls-btn-export-script svg { width: 14px; height: 14px; }
+/* 悬浮添加按钮（FAB）样式 */
+.widget-actions .cls-btn-add-script {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 28px;
+  line-height: 56px;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+.widget-actions .cls-btn-add-script:hover { transform: scale(0.98); }
+.widget-actions .cls-btn-add-script:active { transform: scale(0.96); }
 
 /* 管理面板 */
 .manage-panel {

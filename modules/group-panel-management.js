@@ -31,6 +31,8 @@ class GroupPanelManagement {
                 <div class="group-management-header">
                   <h4>分组列表</h4>
                   <div class="batch-actions">
+                    <button id="importDataBtn">导入JSON</button>
+                    <button id="exportDataBtn">导出JSON</button>
                     <button id="batchEditBtn">批量编辑</button>
                   </div>
                 </div>
@@ -68,6 +70,14 @@ class GroupPanelManagement {
       
       // 绑定批量编辑按钮事件
       document.getElementById('batchEditBtn')?.addEventListener('click', () => this.showBatchEditPanel());
+
+      // 导入/导出事件
+      document.getElementById('importDataBtn')?.addEventListener('click', () => {
+        try { this.widget.showImportDialog(); } catch (e) { console.error('导入失败', e); }
+      });
+      document.getElementById('exportDataBtn')?.addEventListener('click', () => {
+        try { this.widget.exportData(); } catch (e) { console.error('导出失败', e); }
+      });
       
       // 渲染分组列表
       this.renderGroupList();

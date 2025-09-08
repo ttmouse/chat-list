@@ -460,46 +460,326 @@
   box-shadow: var(--cls-shadow-md);
 }
 
-#chat-list-widget .group-management {
+/* 头部更多菜单 */
+#chat-list-widget .cls-more-container { position: relative; }
+#chat-list-widget .cls-btn-more { padding: 2px 8px; font-size: 18px; line-height: 1; }
+#chat-list-widget .cls-more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 140px;
+  background: var(--cls-bg-primary);
+  border: 1px solid var(--cls-border-primary);
+  border-radius: var(--cls-radius-md);
+  box-shadow: var(--cls-shadow-lg);
+  z-index: 10003;
+  padding: 6px;
+}
+#chat-list-widget .cls-more-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--cls-radius-sm);
+  color: var(--cls-text-secondary);
+  cursor: pointer;
+}
+#chat-list-widget .cls-more-item:hover { background: var(--cls-bg-secondary); color: var(--cls-text-primary); }
+
+/* ==========================================================================
+   分组管理面板 - 简约风格设计
+   ========================================================================== */
+#chat-list-widget .manage-panel {
+  background: var(--cls-bg-primary);
+  border-radius: var(--cls-radius-md);
+  box-shadow: var(--cls-shadow-md);
+}
+
+#chat-list-widget .manage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: var(--cls-space-4);
+  border-bottom: 1px solid var(--cls-border-primary);
+  background: var(--cls-bg-secondary);
+  border-radius: var(--cls-radius-md) var(--cls-radius-md) 0 0;
+}
+
+#chat-list-widget .manage-header span {
+  font-size: var(--cls-text-lg);
+  font-weight: var(--cls-font-semibold);
+  color: var(--cls-text-primary);
+}
+
+#chat-list-widget .manage-content {
+  padding: var(--cls-space-4);
+  display: flex;
+  gap: var(--cls-space-6);
+}
+
+#chat-list-widget .group-management {
+  flex: 1;
+  min-width: 280px;
+}
+
+#chat-list-widget .group-management h4 {
+  margin: 0 0 var(--cls-space-4) 0;
+  font-size: var(--cls-text-base);
+  font-weight: var(--cls-font-semibold);
+  color: var(--cls-text-primary);
+  border-bottom: 2px solid var(--cls-primary);
+  padding-bottom: var(--cls-space-2);
+}
+
+#chat-list-widget .group-list {
+  margin-bottom: var(--cls-space-4);
 }
 
 #chat-list-widget .group-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: var(--cls-space-3);
-}
-
-#chat-list-widget .group-table th,
-#chat-list-widget .group-table td {
-  padding: var(--cls-space-3);
-  text-align: left;
-  border-bottom: 1px solid var(--cls-border-primary);
+  background: var(--cls-bg-primary);
+  border: 1px solid var(--cls-border-primary);
+  border-radius: var(--cls-radius-md);
+  overflow: hidden;
 }
 
 #chat-list-widget .group-table th {
-  background-color: var(--cls-bg-secondary);
-  font-weight: var(--cls-font-medium);
+  background: var(--cls-bg-secondary);
+  padding: var(--cls-space-3) var(--cls-space-4);
+  text-align: left;
+  font-weight: var(--cls-font-semibold);
   color: var(--cls-text-primary);
+  font-size: var(--cls-text-sm);
+  border-bottom: 1px solid var(--cls-border-primary);
+}
+
+#chat-list-widget .group-table td {
+  padding: var(--cls-space-3) var(--cls-space-4);
+  border-bottom: 1px solid var(--cls-border-primary);
+  color: var(--cls-text-secondary);
+  font-size: var(--cls-text-sm);
 }
 
 #chat-list-widget .group-table tbody tr:hover {
-  background-color: var(--cls-bg-secondary);
+  background: var(--cls-bg-tertiary);
+}
+
+#chat-list-widget .group-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 #chat-list-widget .group-color-dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   display: inline-block;
   margin-right: var(--cls-space-2);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: var(--cls-shadow-sm);
 }
 
 #chat-list-widget .group-actions {
   display: flex;
   gap: var(--cls-space-2);
+  margin-top: var(--cls-space-4);
+  padding-top: var(--cls-space-4);
+  border-top: 1px solid var(--cls-border-primary);
 }
 
+/* 分组管理按钮 - 高对比度简约风格 */
+#chat-list-widget .cls-btn-add-group {
+  background: var(--cls-success);
+  border: 1px solid var(--cls-success);
+  color: var(--cls-text-primary);
+  font-weight: var(--cls-font-medium);
+  padding: var(--cls-space-2) var(--cls-space-3);
+  border-radius: var(--cls-radius-md);
+  font-size: var(--cls-text-sm);
+  transition: all var(--cls-transition-normal);
+}
+
+#chat-list-widget .cls-btn-add-group:hover {
+  background: var(--cls-success);
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+  box-shadow: var(--cls-shadow-md);
+}
+
+#chat-list-widget .cls-btn-import-data {
+  background: var(--cls-primary);
+  border: 1px solid var(--cls-primary);
+  color: var(--cls-text-primary);
+  font-weight: var(--cls-font-medium);
+  padding: var(--cls-space-2) var(--cls-space-3);
+  border-radius: var(--cls-radius-md);
+  font-size: var(--cls-text-sm);
+  transition: all var(--cls-transition-normal);
+}
+
+#chat-list-widget .cls-btn-import-data:hover {
+  background: var(--cls-primary-hover);
+  border-color: var(--cls-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--cls-shadow-md);
+}
+
+/* 表格内的操作按钮 */
+#chat-list-widget .group-table .cls-btn {
+  padding: var(--cls-space-1) var(--cls-space-2);
+  font-size: var(--cls-text-xs);
+  min-width: auto;
+  border-radius: var(--cls-radius-sm);
+}
+
+#chat-list-widget .group-table .cls-btn-outline-primary {
+  color: var(--cls-primary);
+  border-color: var(--cls-primary);
+  background: transparent;
+}
+
+#chat-list-widget .group-table .cls-btn-outline-primary:hover {
+  background: var(--cls-primary);
+  color: white;
+}
+
+#chat-list-widget .group-table .cls-btn-outline-danger {
+  color: var(--cls-danger);
+  border-color: var(--cls-danger);
+  background: transparent;
+}
+
+#chat-list-widget .group-table .cls-btn-outline-danger:hover {
+  background: var(--cls-danger);
+  color: white;
+}
+
+
+/* ==========================================================================
+   话术编辑面板 - 简约风格设计
+   ========================================================================== */
+#chat-list-widget .script-management {
+  flex: 1;
+  min-width: 320px;
+}
+
+#chat-list-widget .script-management h4 {
+  margin: 0 0 var(--cls-space-4) 0;
+  font-size: var(--cls-text-base);
+  font-weight: var(--cls-font-semibold);
+  color: var(--cls-text-primary);
+  border-bottom: 2px solid var(--cls-primary);
+  padding-bottom: var(--cls-space-2);
+}
+
+#chat-list-widget .script-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cls-space-3);
+}
+
+#chat-list-widget .script-form input,
+#chat-list-widget .script-form textarea,
+#chat-list-widget .script-form select {
+  width: 100%;
+  padding: var(--cls-space-3);
+  border: 1px solid var(--cls-border-primary);
+  border-radius: var(--cls-radius-md);
+  font-size: var(--cls-text-sm);
+  font-family: inherit;
+  color: var(--cls-text-primary);
+  background: var(--cls-bg-primary);
+  transition: all var(--cls-transition-normal);
+  box-sizing: border-box;
+}
+
+#chat-list-widget .script-form input:focus,
+#chat-list-widget .script-form textarea:focus,
+#chat-list-widget .script-form select:focus {
+  outline: none;
+  border-color: var(--cls-primary);
+  box-shadow: 0 0 0 2px var(--cls-primary-light);
+}
+
+#chat-list-widget .script-form textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+#chat-list-widget .script-form textarea#script-content {
+  min-height: 120px;
+}
+
+#chat-list-widget .form-actions {
+  display: flex;
+  gap: var(--cls-space-2);
+  margin-top: var(--cls-space-4);
+  padding-top: var(--cls-space-4);
+  border-top: 1px solid var(--cls-border-primary);
+}
+
+/* 话术编辑按钮 - 高对比度简约风格 */
+#chat-list-widget .cls-btn-save-script {
+  background: var(--cls-primary);
+  border: 1px solid var(--cls-primary);
+  color: white;
+  font-weight: var(--cls-font-medium);
+  padding: var(--cls-space-2) var(--cls-space-4);
+  border-radius: var(--cls-radius-md);
+  font-size: var(--cls-text-sm);
+  transition: all var(--cls-transition-normal);
+  cursor: pointer;
+}
+
+#chat-list-widget .cls-btn-save-script:hover {
+  background: var(--cls-primary-hover);
+  border-color: var(--cls-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--cls-shadow-md);
+}
+
+#chat-list-widget .cls-btn-cancel-edit {
+  background: transparent;
+  border: 1px solid var(--cls-border-secondary);
+  color: var(--cls-text-secondary);
+  font-weight: var(--cls-font-medium);
+  padding: var(--cls-space-2) var(--cls-space-4);
+  border-radius: var(--cls-radius-md);
+  font-size: var(--cls-text-sm);
+  transition: all var(--cls-transition-normal);
+  cursor: pointer;
+}
+
+#chat-list-widget .cls-btn-cancel-edit:hover {
+  background: var(--cls-bg-secondary);
+  color: var(--cls-text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--cls-shadow-sm);
+}
+
+/* 关闭管理面板按钮 */
+#chat-list-widget .cls-btn-close-manage {
+  background: transparent;
+  border: none;
+  color: var(--cls-text-secondary);
+  padding: var(--cls-space-1);
+  border-radius: var(--cls-radius-sm);
+  cursor: pointer;
+  transition: all var(--cls-transition-normal);
+}
+
+#chat-list-widget .cls-btn-close-manage:hover {
+  background: var(--cls-bg-tertiary);
+  color: var(--cls-text-primary);
+  transform: scale(1.05);
+}
+
+#chat-list-widget .cls-btn-close-manage svg {
+  display: block;
+}
 
 /* ==========================================================================
    表单组件 - 通用表单样式（在模态与部件中均可用）

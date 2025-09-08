@@ -736,23 +736,41 @@ class ChatListWidget {
       console.error('找不到添加话术按钮 .cls-btn-add-script');
     }
 
-    // 导入话术
-    this.widget.querySelector('.cls-btn-import-script').addEventListener('click', () => {
-      try {
+    // 头部“更多”菜单交互
+    const moreBtn = this.widget.querySelector('.cls-btn-more');
+    const moreMenu = this.widget.querySelector('.cls-more-menu');
+    if (moreBtn && moreMenu) {
+      const closeMenu = (e) => {
+        if (!moreMenu) return;
+        if (!e || !moreMenu.contains(e.target) && e.target !== moreBtn) {
+          moreMenu.style.display = 'none';
+          document.removeEventListener('click', closeMenu, true);
+          document.removeEventListener('keydown', onEsc, true);
+        }
+      };
+      const onEsc = (e) => { if (e.key === 'Escape') closeMenu(); };
+      moreBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moreMenu.style.display = moreMenu.style.display === 'none' ? 'block' : 'none';
+        if (moreMenu.style.display === 'block') {
+          document.addEventListener('click', closeMenu, true);
+          document.addEventListener('keydown', onEsc, true);
+        }
+      });
+      // 菜单项
+      moreMenu.querySelector('.cls-menu-manage')?.addEventListener('click', () => {
+        moreMenu.style.display = 'none';
+        this.showManagePanel();
+      });
+      moreMenu.querySelector('.cls-menu-import')?.addEventListener('click', () => {
+        moreMenu.style.display = 'none';
         this.showImportDialog();
-      } catch (error) {
-        console.error('导入话术按钮点击处理出错:', error);
-      }
-    });
-
-    // 导出话术
-    this.widget.querySelector('.cls-btn-export-script').addEventListener('click', () => {
-      try {
+      });
+      moreMenu.querySelector('.cls-menu-export')?.addEventListener('click', () => {
+        moreMenu.style.display = 'none';
         this.exportData();
-      } catch (error) {
-        console.error('导出话术按钮点击处理出错:', error);
-      }
-    });
+      });
+    }
 
     // 保存话术
     this.widget.querySelector('.cls-btn-save-script').addEventListener('click', () => {

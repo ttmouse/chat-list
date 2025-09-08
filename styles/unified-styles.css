@@ -1,62 +1,159 @@
 /**
- * 统一的CSS样式定义 - 消除重复样式
- * 遵循奥卡姆剃刀原理：一处定义，多处使用
+ * 统一的CSS样式定义 - 浅色主题专用
+ * 强制使用浅色主题，不受系统深色模式影响
  */
 
 /* ==========================================================================
-   CSS变量定义 - 统一颜色和尺寸
+   话术助手插件专用样式 - 限制作用域避免冲突
    ========================================================================== */
-:root {
-  /* 主色调 */
-  --primary-color: #007bff;
-  --primary-hover: #0056b3;
-  --secondary-color: #6c757d;
-  --success-color: #28a745;
-  --danger-color: #dc3545;
-  --warning-color: #ffc107;
+#chat-list-widget {
+  /* 主色调 - 浅灰色系 */
+  --cls-primary: #293267;
+  --cls-primary-hover: #e8e8e8;
+  --cls-primary-active: #d0d0d0;
+  --cls-primary-light: #fafafa;
   
-  /* 中性色 */
-  --white: #ffffff;
-  --light-gray: #f8f9fa;
-  --medium-gray: #e9ecef;
-  --dark-gray: #6c757d;
-  --text-dark: #333333;
+  /* 文字层次 - 深色文字在浅色背景上 */
+  --cls-text-primary: #2a2a2a;      /* 主要文字 - 深色确保对比度 */
+  --cls-text-secondary: #505050;    /* 次要文字 - 中等深度 */
+  --cls-text-tertiary: #707070;     /* 辅助信息 - 较浅但仍可读 */
+  --cls-text-disabled: #a0a0a0;     /* 禁用状态 */
   
-  /* 尺寸 */
-  --border-radius: 4px;
-  --border-radius-lg: 8px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 24px;
+  /* 界面背景 - 浅色调 */
+  --cls-bg-primary: #fafafa;        /* 主背景 - 浅灰白 */
+  --cls-bg-secondary: #f0f0f0;      /* 次要背景 - 稍深的浅灰 */
+  --cls-bg-tertiary: #e8e8e8;       /* 悬停背景 - 更深一点的灰 */
   
-  /* 字体 */
-  --font-size-sm: 12px;
-  --font-size-base: 14px;
-  --font-size-lg: 16px;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-bold: 600;
+  /* 边框颜色 - 浅色系 */
+  --cls-border-primary: #d8d8d8;    /* 主要边框 - 浅灰 */
+  --cls-border-secondary: #c0c0c0;  /* 悬停边框 - 稍深 */
+  --cls-border-focus: var(--cls-primary-active); /* 焦点边框 */
+  
+  /* 功能色 - 浅色调 */
+  --cls-success: #e8f5e8;
+  --cls-success-light: #f5f9f5;
+  --cls-warning: #f8f4e6;
+  --cls-warning-light: #fcf9f1;
+  --cls-danger: #f5e8e8;
+  --cls-danger-light: #f9f5f5;
   
   /* 阴影 */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+  --cls-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --cls-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --cls-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.05);
+  
+  /* 间距系统 */
+  --cls-space-1: 4px;   /* 紧密间距 */
+  --cls-space-2: 8px;   /* 标准间距 */
+  --cls-space-3: 12px;  /* 舒适间距 */
+  --cls-space-4: 16px;  /* 松散间距 */
+  --cls-space-6: 24px;  /* 区块间距 */
+  
+  /* 字体尺寸 */
+  --cls-text-xs: 12px;
+  --cls-text-sm: 13px;
+  --cls-text-base: 14px;
+  --cls-text-lg: 16px;
+  --cls-text-xl: 20px;
+  
+  /* 字体粗细 */
+  --cls-font-normal: 400;
+  --cls-font-medium: 500;
+  --cls-font-semibold: 600;
+  
+  /* 圆角 */
+  --cls-radius-sm: 4px;
+  --cls-radius-md: 6px;
+  --cls-radius-lg: 8px;
+  --cls-radius-xl: 12px;
+  
+  /* 过渡动画 */
+  --cls-transition-fast: 150ms ease;
+  --cls-transition-normal: 200ms ease;
+  --cls-transition-slow: 300ms ease;
+
+  /* 响应式断点 */
+  --cls-breakpoint-sm: 480px;   /* 小手机 */
+  --cls-breakpoint-md: 768px;   /* 平板和手机 */
+  --cls-breakpoint-lg: 1024px;  /* 小桌面 */
+  --cls-breakpoint-xl: 1920px;  /* 大屏幕 */
 }
 
+/* Ensure preview layer uses the same light theme variables */
+#script-preview-layer {
+  --cls-primary: #f5f5f5;
+  --cls-primary-hover: #e8e8e8;
+  --cls-primary-active: #d0d0d0;
+  --cls-primary-light: #fafafa;
+
+  --cls-text-primary: #2a2a2a;
+  --cls-text-secondary: #505050;
+  --cls-text-tertiary: #707070;
+  --cls-text-disabled: #a0a0a0;
+
+  --cls-bg-primary: #fafafa;
+  --cls-bg-secondary: #f0f0f0;
+  --cls-bg-tertiary: #e8e8e8;
+
+  --cls-border-primary: #d8d8d8;
+  --cls-border-secondary: #c0c0c0;
+  --cls-border-focus: var(--cls-primary-active);
+
+  --cls-success: #e8f5e8;
+  --cls-success-light: #f5f9f5;
+  --cls-warning: #f8f4e6;
+  --cls-warning-light: #fcf9f1;
+  --cls-danger: #f5e8e8;
+  --cls-danger-light: #f9f5f5;
+
+  --cls-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --cls-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --cls-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+  --cls-space-1: 4px;
+  --cls-space-2: 8px;
+  --cls-space-3: 12px;
+  --cls-space-4: 16px;
+  --cls-space-6: 24px;
+
+  --cls-text-xs: 12px;
+  --cls-text-sm: 13px;
+  --cls-text-base: 14px;
+  --cls-text-lg: 16px;
+  --cls-text-xl: 20px;
+
+  --cls-font-normal: 400;
+  --cls-font-medium: 500;
+  --cls-font-semibold: 600;
+
+  --cls-radius-sm: 4px;
+  --cls-radius-md: 6px;
+  --cls-radius-lg: 8px;
+  --cls-radius-xl: 12px;
+
+  --cls-transition-fast: 150ms ease;
+  --cls-transition-normal: 200ms ease;
+  --cls-transition-slow: 300ms ease;
+
+  --cls-breakpoint-sm: 480px;
+  --cls-breakpoint-md: 768px;
+  --cls-breakpoint-lg: 1024px;
+  --cls-breakpoint-xl: 1920px;
+}
+
+
 /* ==========================================================================
-   通用按钮样式 - 统一所有按钮
+   插件内按钮样式 - 限定作用域
    ========================================================================== */
-.cls-btn {
+#chat-list-widget .cls-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--cls-space-2) var(--cls-space-3);
   border: 1px solid transparent;
-  border-radius: var(--border-radius);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
+  border-radius: var(--cls-radius-sm);
+  font-size: var(--cls-text-base);
+  font-weight: var(--cls-font-medium);
   line-height: 1.5;
   text-decoration: none;
   cursor: pointer;
@@ -65,65 +162,135 @@
   white-space: nowrap;
 }
 
-.cls-btn:disabled {
+#chat-list-widget .cls-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* 按钮尺寸变体 */
-.cls-btn-sm {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-sm);
+#chat-list-widget .cls-btn-sm {
+  padding: var(--cls-space-1) var(--cls-space-2);
+  font-size: var(--cls-text-sm);
 }
 
-.cls-btn-lg {
-  padding: var(--spacing-md) var(--spacing-lg);
-  font-size: var(--font-size-lg);
+#chat-list-widget .cls-btn-lg {
+  padding: var(--cls-space-3) var(--cls-space-4);
+  font-size: var(--cls-text-lg);
 }
 
 /* 按钮颜色变体 */
-.cls-btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: var(--white);
+#chat-list-widget .cls-btn-primary {
+  background-color: var(--cls-primary);
+  border-color: var(--cls-primary);
+  color: var(--cls-bg-primary);
 }
 
-.cls-btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
+#chat-list-widget .cls-btn-primary:hover:not(:disabled) {
+  background-color: var(--cls-primary-hover);
+  border-color: var(--cls-primary-hover);
 }
 
-.cls-btn-secondary {
-  background-color: var(--secondary-color);
-  border-color: var(--secondary-color);
-  color: var(--white);
+#chat-list-widget .cls-btn-secondary {
+  background-color: var(--cls-text-secondary);
+  border-color: var(--cls-text-secondary);
+  color: var(--cls-bg-primary);
 }
 
-.cls-btn-success {
-  background-color: var(--success-color);
-  border-color: var(--success-color);
-  color: var(--white);
+#chat-list-widget .cls-btn-secondary:hover:not(:disabled) {
+  background-color: var(--cls-text-primary);
+  border-color: var(--cls-text-primary);
 }
 
-.cls-btn-danger {
-  background-color: var(--danger-color);
-  border-color: var(--danger-color);
-  color: var(--white);
+#chat-list-widget .cls-btn-success {
+  background-color: var(--cls-success);
+  border-color: var(--cls-success);
+  color: var(--cls-text-primary);
 }
 
-.cls-btn-outline {
+#chat-list-widget .cls-btn-success:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+#chat-list-widget .cls-btn-danger {
+  background-color: var(--cls-danger);
+  border-color: var(--cls-danger);
+  color: var(--cls-text-primary);
+}
+
+#chat-list-widget .cls-btn-danger:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+#chat-list-widget .cls-btn-outline {
   background-color: transparent;
-  border-color: var(--primary-color);
-  color: var(--primary-color);
+  border-color: var(--cls-primary);
+  color: var(--cls-primary);
 }
 
-.cls-btn-outline:hover:not(:disabled) {
-  background-color: var(--primary-color);
-  color: var(--white);
+#chat-list-widget .cls-btn-outline:hover:not(:disabled) {
+  background-color: var(--cls-primary);
+  color: var(--cls-bg-primary);
+}
+
+/* 额外颜色变体 */
+#chat-list-widget .cls-btn-warning {
+  background-color: var(--cls-warning);
+  border-color: var(--cls-warning);
+  color: var(--cls-bg-primary);
+}
+
+#chat-list-widget .cls-btn-warning:hover:not(:disabled) {
+  background-color: var(--cls-warning);
+  filter: brightness(0.98);
+}
+
+
+/* Outline变体 - 各种颜色 */
+#chat-list-widget .cls-btn-outline-success {
+  background-color: transparent;
+  border-color: var(--cls-success);
+  color: var(--cls-success);
+}
+
+#chat-list-widget .cls-btn-outline-success:hover:not(:disabled) {
+  background-color: var(--cls-success);
+  color: var(--cls-text-primary);
+}
+
+#chat-list-widget .cls-btn-outline-warning {
+  background-color: transparent;
+  border-color: var(--cls-warning);
+  color: var(--cls-warning);
+}
+
+#chat-list-widget .cls-btn-outline-warning:hover:not(:disabled) {
+  background-color: var(--cls-warning);
+  color: var(--cls-text-primary);
+}
+
+#chat-list-widget .cls-btn-outline-danger {
+  background-color: transparent;
+  border-color: var(--cls-danger);
+  color: var(--cls-danger);
+}
+
+#chat-list-widget .cls-btn-outline-danger:hover:not(:disabled) {
+  background-color: var(--cls-danger);
+  color: var(--cls-text-primary);
+}
+
+#chat-list-widget .cls-btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--cls-text-primary);
+}
+
+#chat-list-widget .cls-btn-ghost:hover:not(:disabled) {
+  background-color: var(--cls-bg-secondary);
 }
 
 /* ==========================================================================
-   模态框样式 - 统一所有模态框
+   插件内模态框样式 - 限定作用域
    ========================================================================== */
 .cls-modal-overlay {
   position: fixed;
@@ -137,6 +304,49 @@
   justify-content: center;
   z-index: 20002;
   transition: all 0.3s ease;
+
+  /* 为独立挂载到 body 的模态提供变量默认值，避免透明背景/无边框等问题 */
+  --cls-primary: #f5f5f5;
+  --cls-primary-hover: #e8e8e8;
+  --cls-primary-active: #d0d0d0;
+  --cls-primary-light: #fafafa;
+
+  --cls-text-primary: #2a2a2a;
+  --cls-text-secondary: #505050;
+  --cls-text-tertiary: #707070;
+
+  --cls-bg-primary: #fafafa;
+  --cls-bg-secondary: #f0f0f0;
+  --cls-bg-tertiary: #e8e8e8;
+
+  --cls-border-primary: #d8d8d8;
+  --cls-border-secondary: #c0c0c0;
+
+  --cls-success: #e8f5e8;
+  --cls-warning: #f8f4e6;
+  --cls-danger: #f5e8e8;
+
+  --cls-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --cls-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --cls-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+  --cls-space-1: 4px;
+  --cls-space-2: 8px;
+  --cls-space-3: 12px;
+  --cls-space-4: 16px;
+
+  --cls-text-sm: 13px;
+  --cls-text-base: 14px;
+  --cls-text-lg: 16px;
+
+  --cls-font-normal: 400;
+  --cls-font-medium: 500;
+  --cls-font-semibold: 600;
+
+  --cls-radius-sm: 4px;
+  --cls-radius-md: 6px;
+  --cls-radius-lg: 8px;
+  --cls-radius-xl: 12px;
 }
 
 .cls-modal-overlay.show {
@@ -144,9 +354,9 @@
 }
 
 .cls-modal-content {
-  background: var(--white);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-lg);
+  background: var(--cls-bg-primary);
+  border-radius: var(--cls-radius-lg);
+  box-shadow: var(--cls-shadow-lg);
   max-width: 90vw;
   max-height: 90vh;
   overflow: hidden;
@@ -159,8 +369,8 @@
 }
 
 .cls-modal-header {
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--medium-gray);
+  padding: var(--cls-space-4);
+  border-bottom: 1px solid var(--cls-border-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,114 +378,327 @@
 
 .cls-modal-title {
   margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-dark);
+  font-size: var(--cls-text-lg);
+  font-weight: var(--cls-font-semibold);
+  color: var(--cls-text-primary);
 }
 
 .cls-modal-body {
-  padding: var(--spacing-lg);
+  padding: var(--cls-space-4);
   overflow-y: auto;
+}
+
+/* 话术编辑/新增模态尺寸（通用） */
+.cls-modal-content {
+  width: min(600px, 92vw);
+}
+
+.cls-btn-close-modal {
+  background: none;
+  border: none;
+  color: var(--cls-text-primary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: var(--cls-space-1) var(--cls-space-2);
+  border-radius: var(--cls-radius-sm);
+}
+
+.cls-btn-close-modal:hover {
+  background: var(--cls-bg-secondary);
 }
 
 /* ==========================================================================
    分组相关样式 - 统一所有分组组件
    ========================================================================== */
-.group-tabs {
+#chat-list-widget .group-tabs {
   display: flex;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--medium-gray);
+  flex-wrap: wrap; /* 允许分类标签换行 */
+  align-items: flex-start; /* 多行时顶部对齐 */
+  gap: var(--cls-space-1);
+  padding: var(--cls-space-2) var(--cls-space-3); /* 上下8px，左右12px */
+  margin-bottom: var(--cls-space-3); /* 底部分隔与下方内容 */
+  border-bottom: 1px solid var(--cls-border-primary);
 }
 
-.group-tab {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+#chat-list-widget .group-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--cls-space-2) var(--cls-space-3);
+  background: var(--cls-bg-secondary);
+  border: 1px solid var(--cls-border-primary);
+  border-radius: var(--cls-radius-xl);
   cursor: pointer;
-  font-size: var(--font-size-base);
-  color: var(--dark-gray);
+  font-size: var(--cls-text-sm);
+  font-weight: var(--cls-font-medium);
+  color: var(--cls-text-secondary);
   transition: all 0.2s ease;
   white-space: nowrap;
+  min-height: 24px;
+  box-shadow: var(--cls-shadow-sm);
 }
 
-.group-tab:hover {
-  color: var(--primary-color);
-  background-color: var(--light-gray);
+#chat-list-widget .group-tab:hover {
+  background: var(--cls-bg-tertiary);
+  border-top-color: var(--cls-border-secondary);
+  border-right-color: var(--cls-border-secondary);
+  border-bottom-color: var(--cls-border-secondary);
+  /* 保持左边框颜色不变，由内联样式控制 */
+  color: var(--cls-text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--cls-shadow-md);
 }
 
-.group-tab.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-  font-weight: var(--font-weight-medium);
+#chat-list-widget .group-tab.active {
+  background: var(--cls-primary-active);
+  border-top-color: var(--cls-primary-active);
+  border-right-color: var(--cls-primary-active);
+  border-bottom-color: var(--cls-primary-active);
+  /* 保持左边框颜色不变，由内联样式控制 */
+  color: var(--cls-text-primary);
+  font-weight: var(--cls-font-semibold);
+  box-shadow: var(--cls-shadow-md);
 }
 
-.group-management {
-  padding: var(--spacing-lg);
+#chat-list-widget .group-management {
+  padding: var(--cls-space-4);
 }
 
-.group-table {
+#chat-list-widget .group-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: var(--spacing-md);
+  margin-top: var(--cls-space-3);
 }
 
-.group-table th,
-.group-table td {
-  padding: var(--spacing-md);
+#chat-list-widget .group-table th,
+#chat-list-widget .group-table td {
+  padding: var(--cls-space-3);
   text-align: left;
-  border-bottom: 1px solid var(--medium-gray);
+  border-bottom: 1px solid var(--cls-border-primary);
 }
 
-.group-table th {
-  background-color: var(--light-gray);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-dark);
+#chat-list-widget .group-table th {
+  background-color: var(--cls-bg-secondary);
+  font-weight: var(--cls-font-medium);
+  color: var(--cls-text-primary);
 }
 
-.group-table tbody tr:hover {
-  background-color: var(--light-gray);
+#chat-list-widget .group-table tbody tr:hover {
+  background-color: var(--cls-bg-secondary);
 }
 
-.group-color-dot {
+#chat-list-widget .group-color-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   display: inline-block;
-  margin-right: var(--spacing-sm);
+  margin-right: var(--cls-space-2);
 }
 
-.group-actions {
+#chat-list-widget .group-actions {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--cls-space-2);
+}
+
+
+/* ==========================================================================
+   表单组件 - 通用表单样式（在模态与部件中均可用）
+   ========================================================================== */
+.cls-form-group,
+#chat-list-widget .cls-form-group {
+  margin-bottom: var(--cls-space-4);
+}
+
+.cls-form-label,
+#chat-list-widget .cls-form-label {
+  display: block;
+  margin-bottom: var(--cls-space-2);
+  font-weight: var(--cls-font-medium);
+  color: var(--cls-text-primary);
+  font-size: var(--cls-text-base);
+}
+
+.cls-form-control,
+#chat-list-widget .cls-form-control {
+  width: 100%;
+  padding: var(--cls-space-3);
+  border: 2px solid var(--cls-border-primary);
+  border-radius: var(--cls-radius-md);
+  font-size: var(--cls-text-base);
+  font-family: inherit;
+  color: var(--cls-text-primary);
+  background-color: var(--cls-bg-primary);
+  transition: border-color var(--cls-transition-normal), box-shadow var(--cls-transition-normal);
+  box-sizing: border-box;
+}
+
+.cls-form-control:focus,
+#chat-list-widget .cls-form-control:focus {
+  outline: none;
+  border-color: var(--cls-primary);
+  box-shadow: 0 0 0 3px var(--cls-primary-light);
+}
+
+.cls-form-control.textarea,
+#chat-list-widget .cls-form-control.textarea {
+  min-height: 120px;
+  resize: vertical;
+  overflow-y: hidden;
+  transition: height var(--cls-transition-normal);
+}
+
+.cls-form-actions,
+#chat-list-widget .cls-form-actions {
+  display: flex;
+  gap: var(--cls-space-3);
+  justify-content: flex-end;
+  margin-top: var(--cls-space-4);
+  padding-top: var(--cls-space-4);
+  border-top: 1px solid var(--cls-border-primary);
+}
+
+#chat-list-widget .cls-error-message {
+  background: var(--cls-danger);
+  color: var(--cls-bg-primary);
+  padding: var(--cls-space-2) var(--cls-space-3);
+  border-radius: var(--cls-radius-sm);
+  margin-top: var(--cls-space-2);
+  font-size: var(--cls-text-sm);
+}
+
+#chat-list-widget .cls-success-message {
+  background: var(--cls-success);
+  color: var(--cls-text-primary);
+  padding: var(--cls-space-2) var(--cls-space-3);
+  border-radius: var(--cls-radius-sm);
+  margin-top: var(--cls-space-2);
+  font-size: var(--cls-text-sm);
 }
 
 /* ==========================================================================
    工具类 - 常用的辅助样式
    ========================================================================== */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
+#chat-list-widget .text-center { text-align: center; }
+#chat-list-widget .text-left { text-align: left; }
+#chat-list-widget .text-right { text-align: right; }
 
-.d-flex { display: flex; }
-.d-inline-flex { display: inline-flex; }
-.d-block { display: block; }
-.d-none { display: none; }
+#chat-list-widget .d-flex { display: flex; }
+#chat-list-widget .d-inline-flex { display: inline-flex; }
+#chat-list-widget .d-block { display: block; }
+#chat-list-widget .d-none { display: none; }
 
-.align-items-center { align-items: center; }
-.justify-content-center { justify-content: center; }
-.justify-content-between { justify-content: space-between; }
+#chat-list-widget .align-items-center { align-items: center; }
+#chat-list-widget .justify-content-center { justify-content: center; }
+#chat-list-widget .justify-content-between { justify-content: space-between; }
 
-.m-0 { margin: 0; }
-.mt-1 { margin-top: var(--spacing-xs); }
-.mt-2 { margin-top: var(--spacing-sm); }
-.mt-3 { margin-top: var(--spacing-md); }
-.mb-1 { margin-bottom: var(--spacing-xs); }
-.mb-2 { margin-bottom: var(--spacing-sm); }
-.mb-3 { margin-bottom: var(--spacing-md); }
+#chat-list-widget .m-0 { margin: 0; }
+#chat-list-widget .mt-1 { margin-top: var(--cls-space-1); }
+#chat-list-widget .mt-2 { margin-top: var(--cls-space-2); }
+#chat-list-widget .mt-3 { margin-top: var(--cls-space-3); }
+#chat-list-widget .mb-1 { margin-bottom: var(--cls-space-1); }
+#chat-list-widget .mb-2 { margin-bottom: var(--cls-space-2); }
+#chat-list-widget .mb-3 { margin-bottom: var(--cls-space-3); }
 
-.p-0 { padding: 0; }
-.p-1 { padding: var(--spacing-xs); }
-.p-2 { padding: var(--spacing-sm); }
-.p-3 { padding: var(--spacing-md); }
+#chat-list-widget .p-0 { padding: 0; }
+#chat-list-widget .p-1 { padding: var(--cls-space-1); }
+#chat-list-widget .p-2 { padding: var(--cls-space-2); }
+#chat-list-widget .p-3 { padding: var(--cls-space-3); }
+
+/* ==========================================================================
+   按钮 - 在模态与部件中统一
+   ========================================================================== */
+.cls-btn,
+#chat-list-widget .cls-btn,
+#chat-list-widget .cls-btn-add-script,
+#chat-list-widget .cls-btn-import-script,
+#chat-list-widget .cls-btn-export-script {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cls-space-2) var(--cls-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--cls-radius-md);
+  font-size: var(--cls-text-base);
+  font-weight: var(--cls-font-medium);
+  line-height: 1.5;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--cls-transition-normal);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cls-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.cls-btn-sm { padding: var(--cls-space-1) var(--cls-space-2); font-size: var(--cls-text-sm); }
+.cls-btn-lg { padding: var(--cls-space-3) var(--cls-space-4); font-size: var(--cls-text-lg); }
+
+.cls-btn-primary { background: var(--cls-primary); border-color: var(--cls-primary); color: var(--cls-text-primary); }
+.cls-btn-primary:hover { filter: brightness(0.98); }
+.cls-btn-secondary { background: var(--cls-bg-secondary); color: var(--cls-text-secondary); }
+.cls-btn-secondary:hover { background: var(--cls-bg-tertiary); color: var(--cls-text-primary); }
+.cls-btn-warning { background: var(--cls-warning); border-color: var(--cls-warning); color: var(--cls-text-primary); }
+.cls-btn-outline-primary { background: transparent; border-color: var(--cls-primary); color: var(--cls-primary); }
+.cls-btn-outline-primary:hover { background: var(--cls-primary); color: var(--cls-text-primary); }
+.cls-btn-outline-danger { background: transparent; border-color: var(--cls-danger); color: var(--cls-danger); }
+.cls-btn-outline-danger:hover { background: var(--cls-danger); color: var(--cls-text-primary); }
+.cls-btn-ghost { background: transparent; border-color: transparent; color: var(--cls-text-primary); }
+.cls-btn-ghost:hover { background: var(--cls-bg-secondary); }
+
+/* 底部三个按钮的颜色映射（兼容旧类名） */
+#chat-list-widget .cls-btn-add-script { background: var(--cls-success); border-color: var(--cls-success); color: var(--cls-text-primary); }
+#chat-list-widget .cls-btn-import-script { background: var(--cls-primary); border-color: var(--cls-primary); color: var(--cls-text-primary); }
+#chat-list-widget .cls-btn-export-script { background: var(--cls-warning); border-color: var(--cls-warning); color: var(--cls-text-primary); }
+#chat-list-widget .cls-btn-add-script:hover,
+#chat-list-widget .cls-btn-import-script:hover,
+#chat-list-widget .cls-btn-export-script:hover { transform: translateY(-1px); box-shadow: var(--cls-shadow-md); }
+#chat-list-widget .cls-btn-import-script svg path,
+#chat-list-widget .cls-btn-export-script svg path { stroke: var(--cls-text-primary) !important; }
+
+/* ==========================================================================
+   编辑分组标签样式 - 在模态框中使用
+   ========================================================================== */
+.edit-group-tabs,
+#chat-list-widget .edit-group-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cls-space-1);
+  margin-bottom: var(--cls-space-3);
+  padding: var(--cls-space-2);
+  background: var(--cls-bg-secondary);
+  border-radius: var(--cls-radius-md);
+  border: 1px solid var(--cls-border-primary);
+}
+
+.edit-group-tab,
+#chat-list-widget .edit-group-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--cls-space-2) var(--cls-space-3);
+  background: var(--cls-bg-primary);
+  border: 1px solid var(--cls-border-primary);
+  border-radius: var(--cls-radius-md);
+  cursor: pointer;
+  font-size: var(--cls-text-sm);
+  font-weight: var(--cls-font-medium);
+  color: var(--cls-text-secondary);
+  transition: all var(--cls-transition-normal);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.edit-group-tab:hover,
+#chat-list-widget .edit-group-tab:hover {
+  background: var(--cls-bg-tertiary);
+  color: var(--cls-text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--cls-shadow-sm);
+}
+
+.edit-group-tab.active,
+#chat-list-widget .edit-group-tab.active {
+  background: var(--cls-primary-active);
+  border-color: var(--cls-primary-active);
+  color: var(--cls-text-primary);
+  font-weight: var(--cls-font-semibold);
+  box-shadow: var(--cls-shadow-md);
+}

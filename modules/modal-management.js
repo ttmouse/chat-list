@@ -85,7 +85,7 @@ class ModalManagement {
                 </div>
                 <div class="cls-form-group">
                   <label class="cls-form-label" for="modalScriptNote">备注</label>
-                  <textarea id="modalScriptNote" class="cls-form-control" placeholder="请输入备注信息（可选）" rows="2"></textarea>
+                  <textarea id="modalScriptNote" class="cls-form-control" placeholder="请输入备注信息（可选）" rows="2" style="color: #333333 !important;"></textarea>
                 </div>
                 <div class="cls-form-group">
                   <label class="cls-form-label">所属分组</label>
@@ -94,7 +94,7 @@ class ModalManagement {
                 </div>
                 <div class="cls-form-group">
                   <label class="cls-form-label" for="modalScriptContent">话术内容 *</label>
-                  <textarea id="modalScriptContent" class="cls-form-control textarea" placeholder="请输入话术内容"></textarea>
+                  <textarea id="modalScriptContent" class="cls-form-control textarea" placeholder="请输入话术内容" style="color: #333333 !important;"></textarea>
                 </div>
                 <div class="cls-form-actions">
                   <button type="button" id="cancelAddScript" class="cls-btn cls-btn-secondary">取消</button>
@@ -170,6 +170,44 @@ class ModalManagement {
     
     groupTabs.innerHTML = tabsHTML;
     hiddenInput.value = '';
+    
+    // 绑定点击事件
+    groupTabs.addEventListener('click', (e) => {
+      if (e.target.classList.contains('edit-group-tab')) {
+        // 移除所有active类
+        groupTabs.querySelectorAll('.edit-group-tab').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        
+        // 添加active类到当前点击的标签
+        e.target.classList.add('active');
+        
+        // 更新隐藏输入框的值
+        hiddenInput.value = e.target.dataset.group;
+      }
+    });
+  }
+
+  /**
+   * 填充编辑话术模态框的分组选项（标签页形式）
+   */
+  populateEditGroupOptions(currentGroupId = '') {
+    const groupTabs = document.getElementById('editModalGroupTabs');
+    const hiddenInput = document.getElementById('editScriptGroup');
+    if (!groupTabs || !hiddenInput) return;
+    
+    // 构建分组按钮HTML
+    let tabsHTML = `<div class="edit-group-tab ${!currentGroupId ? 'active' : ''}" data-group="">无分组</div>`;
+    
+    if (this.widget.groups && Array.isArray(this.widget.groups)) {
+      this.widget.groups.forEach(group => {
+        const isActive = group.id === currentGroupId ? 'active' : '';
+        tabsHTML += `<div class="edit-group-tab ${isActive}" data-group="${group.id}" style="border-left: 3px solid ${group.color}">${group.name}</div>`;
+      });
+    }
+    
+    groupTabs.innerHTML = tabsHTML;
+    hiddenInput.value = currentGroupId;
     
     // 绑定点击事件
     groupTabs.addEventListener('click', (e) => {
@@ -305,23 +343,26 @@ class ModalManagement {
             <div class="cls-modal-body">
               <form id="editScriptForm">
                 <input type="hidden" id="editScriptId" value="${script.id}">
-                <div class="form-group">
-                  <label for="editScriptTitle">话术标题</label>
-                  <input type="text" id="editScriptTitle" class="form-control" value="${script.title || ''}">
+                <div class="cls-form-group">
+                  <label class="cls-form-label" for="editScriptTitle">话术标题 *</label>
+                  <input type="text" id="editScriptTitle" class="cls-form-control" value="${script.title || ''}">
                 </div>
-                <div class="form-group">
-                  <label for="editScriptGroup">所属分组</label>
-                  <select id="editScriptGroup" class="form-control">
-                    <option value="">-- 选择分组 --</option>
-                  </select>
+                <div class="cls-form-group">
+                  <label class="cls-form-label" for="editScriptNote">备注</label>
+                  <textarea id="editScriptNote" class="cls-form-control" placeholder="请输入备注信息（可选）" rows="2" style="color: #333333 !important;">${script.note || ''}</textarea>
                 </div>
-                <div class="form-group">
-                  <label for="editScriptContent">话术内容</label>
-                  <textarea id="editScriptContent" class="form-control">${script.content || ''}</textarea>
+                <div class="cls-form-group">
+                  <label class="cls-form-label">所属分组</label>
+                  <div id="editModalGroupTabs" class="edit-group-tabs"></div>
+                  <input type="hidden" id="editScriptGroup" value="${script.groupId || ''}">
                 </div>
-                <div class="form-actions">
-                  <button type="button" id="cancelEditScript">取消</button>
-                  <button type="button" id="saveEditScript">保存</button>
+                <div class="cls-form-group">
+                  <label class="cls-form-label" for="editScriptContent">话术内容 *</label>
+                  <textarea id="editScriptContent" class="cls-form-control textarea" style="color: #333333 !important;">${script.content || ''}</textarea>
+                </div>
+                <div class="cls-form-actions">
+                  <button type="button" id="cancelEditScript" class="cls-btn cls-btn-secondary">取消</button>
+                  <button type="button" id="saveEditScript" class="cls-btn cls-btn-primary">保存话术</button>
                 </div>
               </form>
             </div>
@@ -338,13 +379,13 @@ class ModalManagement {
         modal.style.display = 'flex';
       }
       
-      // 填充分组选项
-      this.populateGroupOptions(document.getElementById('editScriptGroup'));
+      // 填充分组选项（标签页形式）
+      this.populateEditGroupOptions(script.groupId);
       
-      // 选中当前分组
-      const groupSelect = document.getElementById('editScriptGroup');
-      if (groupSelect && script.groupId) {
-        groupSelect.value = script.groupId;
+      // 填充备注字段
+      const noteTextarea = document.getElementById('editScriptNote');
+      if (noteTextarea && script.note) {
+        noteTextarea.value = script.note;
       }
       
       // 绑定关闭按钮事件
@@ -387,6 +428,7 @@ class ModalManagement {
       // 获取表单数据
       const id = document.getElementById('editScriptId')?.value;
       const title = document.getElementById('editScriptTitle')?.value?.trim();
+      const note = document.getElementById('editScriptNote')?.value?.trim();
       const groupId = document.getElementById('editScriptGroup')?.value;
       const content = document.getElementById('editScriptContent')?.value?.trim();
       
@@ -414,6 +456,7 @@ class ModalManagement {
           this.widget.scripts[scriptIndex] = {
             ...this.widget.scripts[scriptIndex],
             title,
+            note,
             content,
             groupId,
             updateTime: new Date().toISOString()

@@ -13,6 +13,13 @@ class UIRenderer {
    * 创建主界面HTML结构
    */
   createWidget() {
+    // 检查是否已经存在，防止重复创建
+    const existingWidget = document.getElementById('chat-list-widget');
+    if (existingWidget) {
+      console.log('发现已存在的话术助手界面，移除旧版本');
+      existingWidget.remove();
+    }
+    
     // 创建主容器
     const widgetElement = document.createElement('div');
     widgetElement.id = 'chat-list-widget';
@@ -83,6 +90,13 @@ class UIRenderer {
    * 创建侧边触发器
    */
   createTrigger() {
+    // 检查是否已经存在触发器，防止重复创建
+    const existingTrigger = document.getElementById('chat-widget-trigger');
+    if (existingTrigger) {
+      console.log('发现已存在的话术助手触发器，移除旧版本');
+      existingTrigger.remove();
+    }
+    
     // 创建右侧触发器
     const trigger = document.createElement('div');
     trigger.id = 'chat-widget-trigger';

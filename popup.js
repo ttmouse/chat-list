@@ -6,18 +6,15 @@ class PopupManager {
       allowDrag: true,
       rememberPosition: true
     };
-    this.whitelist = [];
     this.init();
   }
 
   async init() {
     await this.loadSettings();
     await this.loadStats();
-    await this.loadWhitelist();
     await this.loadVersion();
     this.bindEvents();
     this.updateUI();
-    this.renderWhitelist();
   }
 
   async loadSettings() {
@@ -46,28 +43,7 @@ class PopupManager {
     }
   }
 
-  async loadWhitelist() {
-    try {
-      console.log('正在加载白名单...');
-      const result = await chrome.storage.local.get(['siteWhitelist']);
-      console.log('从存储加载的数据:', result);
-      
-      this.whitelist = result.siteWhitelist || [
-        'https://www.larksuite.com/hc/zh-CN/chat',
-        'https://oa.zalo.me/chat'
-      ];
-      
-      console.log('最终白名单:', this.whitelist);
-    } catch (error) {
-      console.error('加载白名单失败:', error);
-      // 使用默认白名单
-      this.whitelist = [
-        'https://www.larksuite.com/hc/zh-CN/chat',
-        'https://oa.zalo.me/chat'
-      ];
-      console.log('使用默认白名单:', this.whitelist);
-    }
-  }
+  // 白名单加载逻辑已移除
 
   async loadVersion() {
     try {
@@ -100,6 +76,7 @@ class PopupManager {
     document.getElementById('auto-show').checked = this.settings.autoShow;
     document.getElementById('allow-drag').checked = this.settings.allowDrag;
     document.getElementById('remember-position').checked = this.settings.rememberPosition;
+    // 白名单设置已移除
   }
 
   bindEvents() {
@@ -136,33 +113,19 @@ class PopupManager {
       this.openManagePage();
     });
 
-    // 白名单管理
-    document.getElementById('add-whitelist').addEventListener('click', (e) => {
-      e.preventDefault();
-      this.addWhitelistUrl();
-    });
-
-    document.getElementById('new-whitelist-url').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        this.addWhitelistUrl();
-      }
-    });
   }
 
   async saveSettings() {
     try {
       await chrome.storage.local.set({ chatSettings: this.settings });
-      // 通知内容脚本设置已更新
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab) {
+      // 仍保留通知，但不再涉及白名单逻辑
+      const tabs = await chrome.tabs.query({});
+      tabs.forEach(tab => {
         chrome.tabs.sendMessage(tab.id, {
           type: 'SETTINGS_UPDATED',
           settings: this.settings
-        }).catch(() => {
-          // 忽略错误，可能页面还没有加载内容脚本
-        });
-      }
+        }).catch(() => {});
+      });
     } catch (error) {
       console.error('保存设置失败:', error);
     }
@@ -259,103 +222,6 @@ class PopupManager {
     }
   }
 
-  renderWhitelist() {
-    const container = document.getElementById('whitelist-items');
-    container.innerHTML = '';
-
-    if (this.whitelist.length === 0) {
-      container.innerHTML = '<div style="color: #999; font-size: 12px; text-align: center; padding: 20px;">暂无白名单网站</div>';
-      return;
-    }
-
-    this.whitelist.forEach((url, index) => {
-      const item = document.createElement('div');
-      item.className = 'whitelist-item';
-      item.innerHTML = `
-        <div class="whitelist-url">${url}</div>
-        <a href="#" class="whitelist-remove" data-index="${index}">删除</a>
-      `;
-      
-      // 绑定删除事件
-      item.querySelector('.whitelist-remove').addEventListener('click', (e) => {
-        e.preventDefault();
-        this.removeWhitelistUrl(index);
-      });
-      
-      container.appendChild(item);
-    });
-  }
-
-  async addWhitelistUrl() {
-    const input = document.getElementById('new-whitelist-url');
-    const url = input.value.trim();
-    
-    console.log('尝试添加URL到白名单:', url);
-    
-    if (!url) {
-      alert('请输入有效的URL');
-      return;
-    }
-    
-    // 简单的URL验证
-    try {
-      new URL(url);
-    } catch (error) {
-      alert('请输入有效的URL格式，如：https://example.com/chat');
-      return;
-    }
-    
-    // 检查是否已存在
-    if (this.whitelist.includes(url)) {
-      alert('该网站已在白名单中');
-      return;
-    }
-    
-    console.log('添加前的白名单:', [...this.whitelist]);
-    // 添加到白名单
-    this.whitelist.push(url);
-    console.log('添加后的白名单:', [...this.whitelist]);
-    await this.saveWhitelist();
-    
-    // 清空输入框并重新渲染
-    input.value = '';
-    this.renderWhitelist();
-  }
-
-  async removeWhitelistUrl(index) {
-    if (confirm('确定要从白名单中删除这个网站吗？')) {
-      this.whitelist.splice(index, 1);
-      await this.saveWhitelist();
-      this.renderWhitelist();
-    }
-  }
-
-  async saveWhitelist() {
-    try {
-      console.log('正在保存白名单:', this.whitelist);
-      await chrome.storage.local.set({ siteWhitelist: this.whitelist });
-      console.log('白名单保存成功');
-      
-      // 验证保存是否成功
-      const verification = await chrome.storage.local.get(['siteWhitelist']);
-      console.log('验证保存结果:', verification.siteWhitelist);
-      
-      // 通知所有标签页白名单已更新
-      const tabs = await chrome.tabs.query({});
-      console.log(`通知 ${tabs.length} 个标签页白名单已更新`);
-      tabs.forEach(tab => {
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'WHITELIST_UPDATED',
-          whitelist: this.whitelist
-        }).catch(() => {
-          // 忽略错误，可能页面还没有加载内容脚本
-        });
-      });
-    } catch (error) {
-      console.error('保存白名单失败:', error);
-      alert('保存白名单失败，请重试');
-    }
-  }
 }
 
 // 初始化弹出页面

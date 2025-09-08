@@ -20,15 +20,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 样式系统
 采用统一的CSS设计系统：
-- **基础样式**: `styles/unified-styles.css` - CSS变量定义和通用样式
-- **组件样式**: `styles/components/` - 按钮、表单、模态框等组件样式
-- **主样式**: `content.css` - 主要界面样式
+- 基础与组件样式: `styles/unified-styles.css`（包含变量、按钮/表单/分组/模态等通用样式）
+- 主样式: `content.css`（仅保留小部件布局与个性化覆盖）
 
 ### 数据存储
 使用 Chrome Storage API 进行本地数据存储：
 - 话术数据 (`scripts`)
 - 分组数据 (`groups`) 
-- 白名单配置 (`whitelist`)
+（白名单功能已移除）
 - 使用统计 (`usageCount`)
 
 ## 开发命令
@@ -71,7 +70,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 样式组织
 - 使用CSS变量统一颜色和尺寸定义
-- 组件样式按功能分离到 `styles/components/` 目录
+- 通用组件样式统一放在 `styles/unified-styles.css` 中，避免重复
 - 避免内联样式，所有样式定义在CSS文件中
 
 ## 关键技术特性
@@ -113,4 +112,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 调试输入框识别问题
 - 使用 `InputDetector.getElementInfo()` 获取元素详细信息
 - 检查 `focusHistory` 数组中的元素有效性
-- 验证网站是否在白名单中
+（白名单功能已移除）

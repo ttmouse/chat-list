@@ -5,7 +5,7 @@
   right: var(--cls-space-4);
   width: clamp(300px, 25vw, 380px);
   min-height: 200px;
-  max-height: min(80vh, 600px);
+  height: min(80vh, 600px); /* 明确高度，确保内部flex高度链闭合，列表可滚动 */
   background: var(--cls-bg-primary);
   border: 1px solid var(--cls-border-primary);
   border-radius: var(--cls-radius-xl);
@@ -26,6 +26,9 @@
   position: relative;
   width: 100%;
   height: 100%;
+  display: flex;           /* 使头部与内容区形成上下布局 */
+  flex-direction: column;  /* 纵向排列，便于内容区自适应剩余高度 */
+  min-height: 0;           /* 允许子元素在容器内收缩，确保内部滚动生效 */
 }
 
 #chat-list-widget:hover {
@@ -38,21 +41,21 @@
   top: 20%;
   right: 0;
   transform: translateY(-50%);
-  width: var(--cls-space-2);
+  width: var(--cls-space-2, 8px);
   height: 40px;
-  background: var(--cls-primary);
-  border-radius: var(--cls-radius-sm) 0 0 var(--cls-radius-sm);
-  box-shadow: var(--cls-shadow-sm);
+  background: var(--cls-primary, #293267);
+  border-radius: var(--cls-radius-sm, 4px) 0 0 var(--cls-radius-sm, 4px);
+  box-shadow: var(--cls-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
   z-index: 9999;
   cursor: pointer;
-  transition: var(--cls-transition-normal);
+  transition: var(--cls-transition-normal, 200ms ease);
   user-select: none;
 }
 
 #chat-widget-trigger:hover {
   width: 12px;
-  background: var(--cls-primary-hover);
-  box-shadow: var(--cls-shadow-md);
+  background: var(--cls-primary-hover, #e8e8e8);
+  box-shadow: var(--cls-shadow-md, 0 1px 3px rgba(0, 0, 0, 0.1));
   transform: translateY(-50%) translateX(-2px);
 }
 
@@ -73,19 +76,19 @@
   border-bottom: 1px solid var(--cls-border-primary);
 }
 
-.widget-title {
+#chat-list-widget .widget-title {
   font-weight: var(--cls-font-semibold);
   font-size: var(--cls-text-lg);
 }
 
-.widget-title .version {
+#chat-list-widget .widget-title .version {
   font-weight: var(--cls-font-normal);
   font-size: var(--cls-text-xs);
   opacity: 0.8;
   margin-left: var(--cls-space-2);
 }
 
-.widget-controls {
+#chat-list-widget .widget-controls {
   display: flex;
   gap: var(--cls-space-2);
 }
@@ -111,29 +114,29 @@
   color: var(--cls-text-primary);
 }
 
-.widget-controls .cls-btn-close {
+#chat-list-widget .widget-controls .cls-btn-close {
   font-size: var(--cls-text-lg);
   font-weight: var(--cls-font-semibold);
 }
 
-.widget-controls .cls-btn-close:hover {
+#chat-list-widget .widget-controls .cls-btn-close:hover {
   background: var(--cls-danger-light);
   color: var(--cls-danger);
 }
 
-.widget-controls .cls-btn-close:hover svg path {
+#chat-list-widget .widget-controls .cls-btn-close:hover svg path {
   stroke: var(--cls-danger);
 }
 
 /* 内容区域 - 浅色主题 */
 #chat-list-widget .widget-content {
   /* 作为内部滚动容器的父级，限制子项不溢出 */
-  max-height: calc(min(80vh, 600px) - 64px); /* 减去头部约高度，防越界 */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 0; /* 允许子 flex 项在父容器内收缩 */
-  padding-bottom: 72px; /* 底部留出空间给悬浮按钮（FAB） */
+  flex: 1 1 auto;  /* 占据除头部外的剩余空间 */
+  min-height: 0;   /* 允许子 flex 项在父容器内收缩 */
+  padding-bottom: 2px; /* 基础内边距，具体列表间距由 .script-list 负责 */
   background: var(--cls-bg-primary);
   color: var(--cls-text-primary);
 }
@@ -141,7 +144,7 @@
 /* 分组标签样式统一交由 styles/unified-styles.css 管理 */
 
 /* 搜索框 */
-.search-container {
+#chat-list-widget .search-container {
   position: relative;
   margin: var(--cls-space-2);
   margin-bottom: var(--cls-space-1);
@@ -203,22 +206,22 @@
   color: var(--cls-text-secondary);
 }
 
-.cls-btn-clear-search:hover svg path {
+#chat-list-widget .cls-btn-clear-search:hover svg path {
   stroke: var(--cls-text-secondary);
 }
 
-.cls-btn-clear-search:not(.visible) {
+#chat-list-widget .cls-btn-clear-search:not(.visible) {
   display: none;
 }
 
 /* 空状态提示 */
-.empty-state {
+#chat-list-widget .empty-state {
   text-align: center;
   padding: 40px 20px;
   color: var(--cls-text-secondary);
 }
 
-.empty-state p {
+#chat-list-widget .empty-state p {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
@@ -227,26 +230,30 @@
 /* 搜索高亮 - 限定在插件内 */
 #chat-list-widget mark {
   background: var(--cls-warning-light);
-  color: var(--cls-warning);
+  color: #f49200;
   padding: 1px 2px;
   border-radius: 2px;
   font-weight: 500;
 }
 
 /* 话术列表 */
-.script-list {
+#chat-list-widget .script-list {
   display: flex;
+  height: 100%;
   margin: 0;
   flex-direction: column;
   gap: 0;
   margin-bottom: 8px;
   overflow-y: auto; /* 只有列表部分滚动 */
   overflow-x: hidden; /* 防止水平溢出 */
-  flex: 1; /* 占据剩余空间 */
-  min-height: 0; /* 允许flex收缩 */
+  flex: 1 1 auto; /* 占据剩余空间并允许收缩 */
+  min-height: 0; /* 允许flex子项正确收缩 */
+  padding-bottom: 72px; /* 给悬浮按钮留出空间 */
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch; /* 提升触控滚动体验 */
 }
 
-.script-item {
+#chat-list-widget .script-item {
   background: none;
   border: none;
   border-bottom: 1px solid var(--cls-border-primary);
@@ -258,36 +265,36 @@
   overflow: visible; /* 确保预览浮层可以显示在外部 */
 }
 
-.script-item:last-child {
+#chat-list-widget .script-item:last-child {
   border-bottom: none;
 }
 
-.script-item:hover {
+#chat-list-widget .script-item:hover {
   background: var(--cls-bg-secondary);
 }
 
-.script-item.keyboard-selected {
+#chat-list-widget .script-item.keyboard-selected {
   background: var(--cls-primary-light);
   border-left: 3px solid var(--cls-primary);
 }
 
-.script-item.keyboard-selected:hover {
+#chat-list-widget .script-item.keyboard-selected:hover {
   background: var(--cls-primary-light);
 }
 
-.script-header {
+#chat-list-widget .script-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.script-title {
+#chat-list-widget .script-title {
   font-weight: 600;
   color: var(--cls-text-primary);
   font-size: 13px;
 }
 
-.script-note {
+#chat-list-widget .script-note {
   font-size: 12px;
   color: var(--cls-text-secondary);
   margin-top: 2px;
@@ -296,18 +303,18 @@
   word-break: break-word;
 }
 
-.script-actions {
+#chat-list-widget .script-actions {
   display: flex;
   gap: 4px;
   opacity: 0;
   transition: opacity 0.2s;
 }
 
-.script-item:hover .script-actions {
+#chat-list-widget .script-item:hover .script-actions {
   opacity: 1;
 }
 
-.script-actions button {
+#chat-list-widget .script-actions button {
   background: none;
   border: none;
   padding: 4px;
@@ -317,25 +324,25 @@
   font-size: 12px;
 }
 
-.script-actions button:hover {
+#chat-list-widget .script-actions button:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
-.script-content {
+#chat-list-widget .script-content {
   display: none; /* 隐藏内容，只在悬停预览中显示 */
 }
 
 /* 原有的内嵌预览样式已移除，现在使用独立的预览浮层 */
 /* 保留此注释以说明变更 */
 
-.script-group {
+#chat-list-widget .script-group {
   font-size: 11px;
   font-weight: 500;
   opacity: 0.8;
 }
 
 /* 操作按钮 */
-.widget-actions {
+#chat-list-widget .widget-actions {
   position: absolute;
   bottom: 12px;
   right: 12px;
@@ -350,7 +357,7 @@
 }
 
 /* 悬浮添加按钮（FAB）样式 */
-.widget-actions .cls-btn-add-script {
+#chat-list-widget .widget-actions .cls-btn-add-script {
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -360,11 +367,11 @@
   text-align: center;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
-.widget-actions .cls-btn-add-script:hover { transform: scale(0.98); }
-.widget-actions .cls-btn-add-script:active { transform: scale(0.96); }
+#chat-list-widget .widget-actions .cls-btn-add-script:hover { transform: scale(0.98); }
+#chat-list-widget .widget-actions .cls-btn-add-script:active { transform: scale(0.96); }
 
 /* 管理面板 */
-.manage-panel {
+#chat-list-widget .manage-panel {
   position: absolute;
   top: 0;
   left: 0;
@@ -378,7 +385,7 @@
   flex-direction: column;
 }
 
-.manage-header {
+#chat-list-widget .manage-header {
   background: var(--cls-danger);
   color: white;
   padding: 12px 16px;
@@ -390,7 +397,7 @@
 
 /* 关闭按钮使用统一的 ghost 样式，无需额外定义 */
 
-.manage-content {
+#chat-list-widget .manage-content {
   padding: 12px;
   flex: 1;
   overflow-y: auto;
@@ -399,7 +406,7 @@
   position: relative;
 }
 
-.manage-content h4 {
+#chat-list-widget .manage-content h4 {
   margin: 0 0 12px 0;
   color: var(--cls-text-primary);
   font-size: 14px;
@@ -407,20 +414,20 @@
 }
 
 /* 分组管理 */
-.group-management {
+#chat-list-widget .group-management {
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--cls-border-primary);
 }
 
-.group-list {
+#chat-list-widget .group-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-bottom: 8px;
 }
 
-.group-item {
+#chat-list-widget .group-item {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -429,23 +436,23 @@
   border-radius: 4px;
 }
 
-.group-color {
+#chat-list-widget .group-color {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.group-name {
+#chat-list-widget .group-name {
   flex: 1;
   font-size: 13px;
 }
 
 /* 分组按钮采用统一样式，仅保留必要布局 */
-.group-actions .cls-btn { flex: 1; }
+#chat-list-widget .group-actions .cls-btn { flex: 1; }
 
 /* 话术表单 */
-.script-form {
+#chat-list-widget .script-form {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -453,9 +460,9 @@
   z-index: 200;
 }
 
-.script-form input,
-.script-form select,
-.script-form textarea {
+#chat-list-widget .script-form input,
+#chat-list-widget .script-form select,
+#chat-list-widget .script-form textarea {
   padding: 8px;
   border: 1px solid var(--cls-border-primary);
   border-radius: 4px;
@@ -467,9 +474,9 @@
   z-index: 201;
 }
 
-.script-form input:focus,
-.script-form select:focus,
-.script-form textarea:focus {
+#chat-list-widget .script-form input:focus,
+#chat-list-widget .script-form select:focus,
+#chat-list-widget .script-form textarea:focus {
   outline: none;
   border-color: var(--cls-primary);
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
@@ -483,7 +490,7 @@
   color: var(--cls-text-primary);
 }
 
-.script-form #script-note {
+#chat-list-widget .script-form #script-note {
   min-height: 40px;
   max-height: 80px;
   resize: vertical;
@@ -491,31 +498,31 @@
 
 
 
-.form-actions .cls-btn { flex: 1; }
+#chat-list-widget .form-actions .cls-btn { flex: 1; }
 
 /* 滚动条样式 */
-.widget-content::-webkit-scrollbar,
-.manage-content::-webkit-scrollbar,
+#chat-list-widget .widget-content::-webkit-scrollbar,
+#chat-list-widget .manage-content::-webkit-scrollbar,
 #script-preview-layer .preview-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.widget-content::-webkit-scrollbar-track,
-.manage-content::-webkit-scrollbar-track,
+#chat-list-widget .widget-content::-webkit-scrollbar-track,
+#chat-list-widget .manage-content::-webkit-scrollbar-track,
 #script-preview-layer .preview-content::-webkit-scrollbar-track {
   background: var(--cls-bg-secondary);
   border-radius: 3px;
 }
 
-.widget-content::-webkit-scrollbar-thumb,
-.manage-content::-webkit-scrollbar-thumb,
+#chat-list-widget .widget-content::-webkit-scrollbar-thumb,
+#chat-list-widget .manage-content::-webkit-scrollbar-thumb,
 #script-preview-layer .preview-content::-webkit-scrollbar-thumb {
   background: var(--cls-text-tertiary);
   border-radius: 3px;
 }
 
-.widget-content::-webkit-scrollbar-thumb:hover,
-.manage-content::-webkit-scrollbar-thumb:hover,
+#chat-list-widget .widget-content::-webkit-scrollbar-thumb:hover,
+#chat-list-widget .manage-content::-webkit-scrollbar-thumb:hover,
 #script-preview-layer .preview-content::-webkit-scrollbar-thumb:hover {
   background: var(--cls-text-secondary);
 }
@@ -529,7 +536,7 @@
 }
 
 /* 空状态 */
-.script-list:empty::after {
+#chat-list-widget .script-list:empty::after {
   content: '暂无话术，点击下方按钮添加';
   display: block;
   text-align: center;
@@ -723,7 +730,7 @@
     transition: height 0.2s ease;
 }
 
-.script-form .cls-form-actions {
+#chat-list-widget .script-form .cls-form-actions {
     gap: 8px;
     margin-top: 0;
     padding-top: 0;
@@ -849,8 +856,8 @@
 
 
 /* 模态框分组按钮样式 */
-.edit-group-tabs,
-.add-group-tabs {
+.cls-modal-content .edit-group-tabs,
+.cls-modal-content .add-group-tabs {
   /* 直接使用与主界面相同的group-tabs样式 */
   display: flex;
   flex-wrap: wrap;
@@ -864,8 +871,8 @@
   line-height: 1.2;
 }
 
-.edit-group-tab,
-.add-group-tab {
+.cls-modal-content .edit-group-tab,
+.cls-modal-content .add-group-tab {
   /* 直接使用与主界面相同的group-tab样式 */
   padding: 4px 10px;
   background: var(--cls-bg-secondary);
@@ -882,14 +889,14 @@
   align-items: center;
 }
 
-.edit-group-tab:hover,
-.add-group-tab:hover {
+.cls-modal-content .edit-group-tab:hover,
+.cls-modal-content .add-group-tab:hover {
   background: var(--cls-bg-tertiary);
   color: var(--cls-text-primary);
 }
 
-.edit-group-tab.active,
-.add-group-tab.active {
+.cls-modal-content .edit-group-tab.active,
+.cls-modal-content .add-group-tab.active {
   background: var(--cls-primary);
   color: white;
   border-color: var(--cls-primary);
@@ -908,13 +915,13 @@
 }
 
 /* 分组操作按钮样式 */
-.group-actions {
+.cls-modal-content .group-actions {
   display: flex;
   gap: 8px;
   margin-top: 12px;
 }
 
-.group-actions .cls-btn { flex: 1; }
+.cls-modal-content .group-actions .cls-btn { flex: 1; }
 
 /* 导入对话框样式 */
 .import-dialog-overlay {
@@ -984,17 +991,17 @@
   padding: 24px;
 }
 
-.import-info {
+.import-dialog-content .import-info {
   margin-bottom: 24px;
 }
 
-.import-info p {
+.import-dialog-content .import-info p {
   margin: 0 0 12px;
   color: var(--cls-text-secondary);
   line-height: 1.5;
 }
 
-.import-info .warning {
+.import-dialog-content .import-info .warning {
   color: var(--cls-warning);
   font-weight: 500;
   background: var(--cls-warning-light);
@@ -1003,7 +1010,7 @@
   border-left: 3px solid var(--cls-warning);
 }
 
-.import-info .info {
+.import-dialog-content .import-info .info {
   color: var(--primary);
   font-weight: 500;
   background: var(--cls-primary-light);
@@ -1012,7 +1019,7 @@
   border-left: 3px solid var(--cls-primary);
 }
 
-.import-actions {
+.import-dialog-content .import-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
@@ -1091,7 +1098,7 @@
   min-width: 80px; /* 保留对话框特有的最小宽度要求 */
 }
 
-.form-actions {
+.cls-modal-content .form-actions {
   display: flex;
   gap: 8px;
   margin-top: 10px;
@@ -1100,18 +1107,18 @@
 }
 
 /* 管理面板相关样式 */
-.manage-modal-content {
+#managePanelModal .manage-modal-content {
   width: 700px;
   max-width: 90vw;
   max-height: 90vh;
   overflow: auto;
 }
 
-.manage-modal-content .cls-modal-body {
+#managePanelModal .manage-modal-content .cls-modal-body {
   padding: 0;
 }
 
-.manage-modal-content .manage-content {
+#managePanelModal .manage-modal-content .manage-content {
   padding: 20px;
   min-height: 400px;
   display: flex;
@@ -1119,20 +1126,20 @@
 }
 
 /* 分组管理区域 */
-.group-management {
+#managePanelModal .group-management {
   flex: 1;
   border-right: 1px solid var(--cls-border-primary);
   padding-right: 20px;
 }
 
-.group-management h4 {
+#managePanelModal .group-management h4 {
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 16px;
   color: var(--cls-text-primary);
 }
 
-.group-list {
+#managePanelModal .group-list {
   max-height: 300px;
   overflow-y: auto;
   margin-bottom: 16px;
@@ -1141,7 +1148,7 @@
   padding: 8px;
 }
 
-.group-item {
+#managePanelModal .group-item {
   display: flex;
   align-items: center;
   padding: 8px;
@@ -1151,11 +1158,11 @@
   position: relative;
 }
 
-.group-item:last-child {
+#managePanelModal .group-item:last-child {
   margin-bottom: 0;
 }
 
-.group-color {
+#managePanelModal .group-color {
   width: 16px;
   height: 16px;
   border-radius: 3px;
@@ -1163,42 +1170,42 @@
   flex-shrink: 0;
 }
 
-.group-name {
+#managePanelModal .group-name {
   flex-grow: 1;
   font-size: 14px;
 }
 
-.group-count {
+#managePanelModal .group-count {
   color: var(--cls-text-tertiary);
   font-size: 12px;
   margin-right: 8px;
 }
 
 /* 分组列表内操作显隐 */
-.group-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
-.group-item:hover .group-actions { opacity: 1; }
+#managePanelModal .group-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+#managePanelModal .group-item:hover .group-actions { opacity: 1; }
 
 /* 话术编辑区域 */
-.script-management {
+#managePanelModal .script-management {
   flex: 1.5;
 }
 
-.script-management h4 {
+#managePanelModal .script-management h4 {
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 16px;
   color: var(--cls-text-primary);
 }
 
-.script-form {
+#managePanelModal .script-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.script-form input,
-.script-form textarea,
-.script-form select {
+#managePanelModal .script-form input,
+#managePanelModal .script-form textarea,
+#managePanelModal .script-form select {
   width: 100%;
   padding: 10px;
   border: 1px solid var(--cls-border-primary);
@@ -1208,30 +1215,30 @@
   box-sizing: border-box;
 }
 
-.script-form input:focus,
-.script-form textarea:focus,
-.script-form select:focus {
+#managePanelModal .script-form input:focus,
+#managePanelModal .script-form textarea:focus,
+#managePanelModal .script-form select:focus {
   outline: none;
   border-color: var(--cls-primary);
   box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.25);
 }
 
-#chat-list-widget .script-form textarea {
+#managePanelModal .script-form textarea {
   min-height: 100px;
   resize: vertical;
   color: var(--cls-text-primary);
 }
 
-.script-form #script-note {
+#managePanelModal .script-form #script-note {
   min-height: 60px;
 }
 
-.script-form #script-content {
+#managePanelModal .script-form #script-content {
   min-height: 150px;
 }
 
 /* 表单操作按钮容器 */
-.form-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+#managePanelModal .form-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
 
 /* ==========================================================================
    响应式设计 - 统一断点系统

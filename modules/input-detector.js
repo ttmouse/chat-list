@@ -8,6 +8,35 @@ class InputDetector {
   }
 
   /**
+   * 规范化文本，移除重音并转换为小写
+   * @param {string} value 原始文本
+   * @returns {string} 规范化后的文本
+   */
+  normalizeText(value) {
+    if (!value) return '';
+    return String(value)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  /**
+   * 判断值数组中是否包含任意关键词
+   * @param {Array<string>} values 待匹配的值
+   * @param {Array<string>} keywords 目标关键词
+   * @returns {boolean}
+   */
+  includesKeyword(values, keywords) {
+    if (!values || !keywords) return false;
+    const normalizedValues = values.map(value => this.normalizeText(value));
+    return keywords.some(keyword => {
+      const normalizedKeyword = this.normalizeText(keyword);
+      if (!normalizedKeyword) return false;
+      return normalizedValues.some(value => value.includes(normalizedKeyword));
+    });
+  }
+
+  /**
    * 查找页面中所有输入框
    * @returns {Array} 输入框元素数组
    */
@@ -59,12 +88,8 @@ class InputDetector {
       return false;
     }
     
-    // 检查是否为消息输入框（排除搜索框等）
-    if (!this.isMessageInput(element)) {
-      return false;
-    }
-    
-    return true;
+    // 检查是否为消息输入框（排除搜索框等），必须满足至少一个消息判定条件
+    return this.isMessageInput(element);
   }
 
   /**
@@ -120,27 +145,41 @@ class InputDetector {
   isMessageInput(element) {
     if (!element) return false;
     
+    const placeholderRaw = element.getAttribute('placeholder') || element.placeholder || '';
+    const ariaLabelRaw = element.getAttribute('aria-label') || '';
+    const classNameRaw = element.className || '';
+    const idRaw = element.id || '';
+    const nameRaw = element.getAttribute('name') || '';
+    const dataE2eRaw = element.getAttribute('data-e2e') || '';
+    const dataTestIdRaw = element.getAttribute('data-testid') || '';
+    const ariaDescribedByRaw = element.getAttribute('aria-describedby') || '';
+
+    const attributeValues = [
+      placeholderRaw,
+      ariaLabelRaw,
+      classNameRaw,
+      idRaw,
+      nameRaw,
+      dataE2eRaw,
+      dataTestIdRaw,
+      ariaDescribedByRaw
+    ];
+
+    const classNameLower = this.normalizeText(classNameRaw);
+    const isDraftEditor = classNameLower.includes('public-drafteditor-content') ||
+      classNameLower.includes('drafteditor');
+
+    const contentEditableAttr = this.normalizeText(element.getAttribute('contenteditable') || '');
+    const isContentEditable = element.contentEditable === 'true' || contentEditableAttr === 'true' || element.isContentEditable;
+    const role = this.normalizeText(element.getAttribute('role') || '');
+    const behavesLikeEditor = isContentEditable || role === 'textbox';
+
     // 检查是否为明显的搜索相关输入框 - 只排除明确的搜索框
-    const searchKeywords = ['search', '搜索', 'find', '查找'];
-    
-    // 检查placeholder - 只检查明确的搜索关键词
-    const placeholder = element.placeholder || '';
-    if (searchKeywords.some(keyword => placeholder.toLowerCase().includes(keyword.toLowerCase()))) {
+    const searchKeywords = ['search', '搜索', 'find', '查找', 'search box', 'tìm kiếm', 'tim kiem'];
+    if (this.includesKeyword(attributeValues, searchKeywords)) {
       return false;
     }
-    
-    // 检查aria-label - 只检查明确的搜索关键词
-    const ariaLabel = element.getAttribute('aria-label') || '';
-    if (searchKeywords.some(keyword => ariaLabel.toLowerCase().includes(keyword.toLowerCase()))) {
-      return false;
-    }
-    
-    // 检查class名称 - 只检查明确的搜索关键词
-    const className = element.className || '';
-    if (searchKeywords.some(keyword => className.toLowerCase().includes(keyword.toLowerCase()))) {
-      return false;
-    }
-    
+
     // 排除明显的导航栏、头部区域的输入框
     const excludeSelectors = [
       'nav', 'header', '.navbar', '.header', '.top-bar', '.search-bar',
@@ -153,37 +192,86 @@ class InputDetector {
       }
     }
     
+    if (!behavesLikeEditor && !isDraftEditor) {
+      // 排除联系方式、电话等非聊天输入
+      const contactKeywords = [
+        'phone', 'mobile', '电话', '手机号', 'liên hệ', 'liên lạc',
+        'so dien thoai', 'số điện thoại', 'dien thoai', 'điện thoại', 'sdt',
+        'contact', 'email', 'mail', 'gmail', '号码', '號碼', 'tel'
+      ];
+      if (this.includesKeyword(attributeValues, contactKeywords)) {
+        return false;
+      }
+
+      const contactSelectors = ['.phone-component', '.contact-input', '.contact-field'];
+      if (typeof ChatListUtils !== 'undefined' && ChatListUtils.closest) {
+        for (let selector of contactSelectors) {
+          if (ChatListUtils.closest(element, selector)) {
+            return false;
+          }
+        }
+      }
+
+      const inputType = this.normalizeText(element.getAttribute('type') || '');
+      if (inputType === 'tel' || inputType === 'phone') {
+        return false;
+      }
+
+      const inputMode = this.normalizeText(element.getAttribute('inputmode') || '');
+      if (inputMode === 'tel' || inputMode === 'numeric') {
+        return false;
+      }
+    }
+
     // 检查是否为Zalo页面的聊天输入框
     if (ChatListUtils.closest(element, '#chat-input-container-id')) {
       return true;
     }
-    
-    // 如果输入框有明确的消息相关属性，直接通过
-    const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'input', 'text'];
-    if (messageKeywords.some(keyword => 
-      placeholder.toLowerCase().includes(keyword.toLowerCase()) ||
-      ariaLabel.toLowerCase().includes(keyword.toLowerCase()) ||
-      className.toLowerCase().includes(keyword.toLowerCase())
-    )) {
-      return true;
-    }
-    
+
+    const messageKeywords = [
+      'message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复',
+      'tin nhan', 'nhan tin', 'soan', 'gui tin nhan', 'tra loi', 'tro chuyen',
+      'compose', 'answer', 'respond', 'inbox', 'dm', 'direct message'
+    ];
+    const hasMessageKeyword = this.includesKeyword(attributeValues, messageKeywords);
+
     // 检查是否在聊天或消息相关的容器中
     const chatContainers = [
+      '[data-e2e="message-input-area"]',
+      '.css-6fmtan-5e6d46e3--DivMessageInputAndSendButton',
+      '.css-m2yd4j-5e6d46e3--DivInputAreaContainer',
+      '.css-y13y08-5e6d46e3--DivEditorContainer',
+      '.css-s6hdfk-5e6d46e3--DivInputAreaContainer',
+      '[data-e2e*="message"]',
+      '[data-e2e*="chat"]',
+      '[data-testid*="message"]',
+      '[data-testid*="composer"]',
+      '[data-testid*="reply"]',
+      '.DraftEditor-root',
+      '.DraftEditor-editorContainer',
+      '.chat-input', '.chatbox', '.chat-box', '.chat-footer',
       '[id*="chat"]', '[class*="chat"]',
       '[id*="message"]', '[class*="message"]',
-      '[id*="input"]', '[class*="input"]',
-      '[id*="compose"]', '[class*="compose"]'
+      '[id*="compose"]', '[class*="compose"]',
+      '[aria-label*="tin nhan"]', '[aria-label*="tin nhắn"]', '[aria-label*="消息"]', '[aria-label*="留言"]'
     ];
-    
-    for (let selector of chatContainers) {
-      if (ChatListUtils.closest(element, selector)) {
-        return true;
+
+    let inChatContainer = false;
+    if (typeof ChatListUtils !== 'undefined' && ChatListUtils.closest) {
+      for (let selector of chatContainers) {
+        if (ChatListUtils.closest(element, selector)) {
+          inChatContainer = true;
+          break;
+        }
       }
     }
-    
-    // 默认允许通过，除非明确是搜索框
-    return true;
+
+    // 只有在存在明确消息信号时才认为是真正的聊天输入框
+    return (
+      hasMessageKeyword ||
+      isDraftEditor ||
+      (behavesLikeEditor && inChatContainer)
+    );
   }
 
   /**

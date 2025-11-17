@@ -110,14 +110,33 @@ class InputSelector {
       const placeholder = (input.placeholder || '').toLowerCase();
       const ariaLabel = (input.getAttribute('aria-label') || '').toLowerCase();
       const className = String(input.className || '').toLowerCase();
-      const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'input', '输入'];
-      
+      const messageKeywords = ['message', '消息', 'comment', '评论', 'chat', '聊天', 'reply', '回复', 'tin nhắn', 'soạn', '输入'];
+
       if (messageKeywords.some(keyword => 
         placeholder.includes(keyword) || 
         ariaLabel.includes(keyword) || 
         className.includes(keyword)
       )) {
         score += 80;
+      }
+
+      const contactKeywords = ['phone', 'mobile', '电话', '手机号', 'liên hệ', 'số điện thoại', 'điện thoại', 'tel'];
+      if (contactKeywords.some(keyword => 
+        placeholder.includes(keyword) ||
+        ariaLabel.includes(keyword) ||
+        className.includes(keyword)
+      )) {
+        score -= 200;
+      }
+
+      const contactSelectors = ['.phone-component', '.contact-input', '.contact-field'];
+      if (typeof ChatListUtils !== 'undefined' && ChatListUtils.closest) {
+        for (let selector of contactSelectors) {
+          if (ChatListUtils.closest(input, selector)) {
+            score -= 200;
+            break;
+          }
+        }
       }
       
       // 6. 位置加分（页面下半部分，但权重降低）

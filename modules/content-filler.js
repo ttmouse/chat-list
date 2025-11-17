@@ -41,8 +41,10 @@ class ContentFiller {
     
     if (isContentEditable || hasRole) {
       // 处理可编辑元素和role="textbox"元素
-      // 检查是否是 Zalo 类型的复杂输入框结构
-      if (element.classList.contains('rich-input') || element.id === 'richInput') {
+      if (this.isDraftJsEditor(element)) {
+        this.setDraftJsContent(element, content);
+      } else if (element.classList.contains('rich-input') || element.id === 'richInput') {
+        // TikTok/Zalo类型的复杂输入框结构
         this.setZaloContent(element, content);
       } else {
         // 其他 contentEditable 元素使用简单的 innerText
@@ -92,6 +94,74 @@ class ContentFiller {
       
       element.appendChild(lineDiv);
     });
+  }
+
+  /**
+   * 判断元素是否为 Draft.js 编辑器
+   * @param {Element} element 目标元素
+   * @returns {boolean}
+   */
+  isDraftJsEditor(element) {
+    if (!element) return false;
+
+    const className = element.className || '';
+    if (className.includes('public-DraftEditor-content')) {
+      return true;
+    }
+
+    const root = element.closest('.DraftEditor-root');
+    return Boolean(root);
+  }
+
+  /**
+   * 为 Draft.js 编辑器设置内容
+   * @param {Element} element 目标元素
+   * @param {string} content 要设置的内容
+   */
+  setDraftJsContent(element, content) {
+    element.focus();
+
+    // 选中现有内容
+    const selection = window.getSelection();
+    if (selection) {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    // 优先使用 execCommand 触发 Draft.js 内部的输入事件
+    let commandSucceeded = false;
+    try {
+      commandSucceeded = document.execCommand('insertText', false, content);
+    } catch (error) {
+      if (this.debugMode) {
+        console.warn('execCommand 插入 Draft.js 内容失败:', error);
+      }
+    }
+
+    if (!commandSucceeded) {
+      // 退化方案：先清空再设置文本内容
+      element.innerText = content;
+    }
+
+    // 手动触发关键输入事件，确保React/ Draft.js 同步状态
+    if (typeof InputEvent === 'function') {
+      try {
+        const beforeInputEvent = new InputEvent('beforeinput', {
+          inputType: 'insertFromPaste',
+          data: content,
+          bubbles: true,
+          cancelable: true,
+          composed: true
+        });
+        element.dispatchEvent(beforeInputEvent);
+      } catch (error) {
+        if (this.debugMode) {
+          console.warn('触发 Draft.js beforeinput 事件失败:', error);
+        }
+      }
+    }
   }
 
   /**

@@ -219,18 +219,30 @@ class UIRenderer {
     scriptList.innerHTML = filteredScripts.map(script => {
       const group = this.widget.groups.find(g => g.id === script.groupId);
       
-      // 高亮搜索关键词
+      // 高亮搜索关键词（支持空格分隔的多关键词）
       let highlightedTitle = script.title;
       let highlightedNote = script.note || '';
       let highlightedContent = script.content;
       
       if (this.widget.searchKeyword) {
-        const regex = new RegExp(`(${this.widget.searchKeyword})`, 'gi');
-        highlightedTitle = script.title.replace(regex, '<mark>$1</mark>');
-        if (script.note) {
-          highlightedNote = script.note.replace(regex, '<mark>$1</mark>');
+        // 分词并去空，构造 OR 高亮（即便是 AND 筛选，展示时应全部关键词高亮）
+        const tokens = this.widget.searchKeyword
+          .split(/[\s\u3000]+/)
+          .map(t => t.trim())
+          .filter(Boolean);
+
+        if (tokens.length > 0) {
+          // 转义正则特殊字符
+          const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const pattern = tokens.map(escapeRegExp).join('|');
+          const regex = new RegExp(`(${pattern})`, 'gi');
+
+          highlightedTitle = script.title.replace(regex, '<mark>$1</mark>');
+          if (script.note) {
+            highlightedNote = script.note.replace(regex, '<mark>$1</mark>');
+          }
+          highlightedContent = script.content.replace(regex, '<mark>$1</mark>');
         }
-        highlightedContent = script.content.replace(regex, '<mark>$1</mark>');
       }
       
       return `

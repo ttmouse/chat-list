@@ -473,15 +473,79 @@ class ChatListWidget {
       }
     });
 
-    // 防止浮层点击时失去焦点，但允许输入框获得焦点
+    // 防止浮层点击时失去页面输入框焦点，但保留列表/可滚区域的原生滚动
     this.widget.addEventListener('mousedown', (e) => {
-      // 如果点击的是输入框或搜索相关元素，允许默认行为
-      if (ChatListUtils.matches(e.target, '.search-input, .cls-btn-clear-search') || 
-          ChatListUtils.closest(e.target, '.search-container')) {
+      // 允许搜索区域的默认交互
+      if (
+        ChatListUtils.matches(e.target, '.search-input, .cls-btn-clear-search') ||
+        ChatListUtils.closest(e.target, '.search-container')
+      ) {
         return;
       }
-      e.preventDefault(); // 防止默认的焦点转移
+
+      // 允许在以下可滚动/互动区域的默认行为：
+      // - 话术列表（包括滚动条拖动）
+      // - 管理面板内容区
+      // - 模态框内容区
+      // - 分组标签区域
+      // - 更多菜单和各类按钮
+      if (
+        ChatListUtils.closest(e.target, '.script-list') ||
+        ChatListUtils.closest(e.target, '.manage-content') ||
+        ChatListUtils.closest(e.target, '.cls-modal-content') ||
+        ChatListUtils.closest(e.target, '.group-tabs') ||
+        ChatListUtils.closest(e.target, '.cls-more-menu') ||
+        ChatListUtils.closest(e.target, '.cls-btn')
+      ) {
+        return; // 保留原生交互，避免阻断滚动条拖动
+      }
+
+      // 其他区域不改变页面输入框焦点
+      e.preventDefault();
     });
+
+    // 让话术列表在保持页面输入框焦点时也能滚动
+    const scriptListEl = this.widget.querySelector('.script-list');
+    if (scriptListEl) {
+      // 鼠标滚轮/触控板
+      const DOM_DELTA_LINE = 1;
+      const DOM_DELTA_PAGE = 2;
+      const APPROX_LINE_HEIGHT = 16;
+
+      scriptListEl.addEventListener('wheel', (e) => {
+        let deltaY = e.deltaY;
+
+        if (e.deltaMode === DOM_DELTA_LINE) {
+          deltaY *= APPROX_LINE_HEIGHT;
+        } else if (e.deltaMode === DOM_DELTA_PAGE) {
+          deltaY *= scriptListEl.clientHeight;
+        }
+
+        const scrollBefore = scriptListEl.scrollTop;
+        scriptListEl.scrollTop += deltaY;
+
+        if (scriptListEl.scrollTop !== scrollBefore) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      // 触摸滚动（移动端）
+      let touchStartY = 0;
+      scriptListEl.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length > 0) {
+          touchStartY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+      scriptListEl.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 0) {
+          const currentY = e.touches[0].clientY;
+          const deltaY = touchStartY - currentY;
+          scriptListEl.scrollTop += deltaY;
+          touchStartY = currentY;
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
 
     // 全局快捷键监听 - ⌘+g 启动搜索, ESC 分层关闭
     document.addEventListener('keydown', (e) => {
@@ -993,14 +1057,28 @@ class ChatListWidget {
       filteredScripts = this.scripts.filter(script => script.groupId === this.currentGroup);
     }
     
-    // 按搜索关键词筛选
+    // 按搜索关键词筛选（支持空格分隔的多关键词 AND 匹配）
     if (this.searchKeyword) {
-      const keyword = this.searchKeyword.toLowerCase();
-      filteredScripts = filteredScripts.filter(script => 
-        script.title.toLowerCase().includes(keyword) || 
-        script.content.toLowerCase().includes(keyword) ||
-        (script.note && script.note.toLowerCase().includes(keyword))
-      );
+      // 支持普通空格和全角空格分词
+      const keywords = this.searchKeyword
+        .split(/[\s\u3000]+/)
+        .map(k => k.trim().toLowerCase())
+        .filter(Boolean);
+
+      if (keywords.length > 0) {
+        filteredScripts = filteredScripts.filter(script => {
+          const title = (script.title || '').toLowerCase();
+          const content = (script.content || '').toLowerCase();
+          const note = (script.note || '').toLowerCase();
+
+          // 每个关键词都需要在任一字段中命中（AND 语义）
+          return keywords.every(kw =>
+            title.includes(kw) ||
+            content.includes(kw) ||
+            note.includes(kw)
+          );
+        });
+      }
     }
     
     // 排序

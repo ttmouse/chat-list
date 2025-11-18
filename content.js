@@ -125,6 +125,11 @@ class ChatListWidget {
       // this.createFocusDebugPanel();
       this.bindEvents();
       console.log('事件绑定完成');
+
+      // 处理启动时的同步任务
+      this.storageService.processSyncQueue();
+      // 设置周期性同步 (10分钟)
+      setInterval(() => this.handleSync(), 10 * 60 * 1000);
       
       this.initialized = true; // 标记为已初始化
       console.log('话术扩展初始化成功');
@@ -135,6 +140,25 @@ class ChatListWidget {
       
       // 显示错误提示
       this.showInitErrorNotice(error);
+    }
+  }
+
+  async handleSync() {
+    try {
+      const data = await this.storageService.syncPull();
+      this.scripts = this.validateScripts(data.scripts) || this.getDefaultScripts();
+      this.groups = this.validateGroups(data.groups) || this.getDefaultGroups();
+      
+      if (this.uiRenderer) {
+        this.uiRenderer.refreshUI();
+      } else {
+        this.renderGroups();
+        this.renderScripts();
+      }
+      
+      this.storageService.processSyncQueue();
+    } catch (error) {
+      console.error('Sync failed', error);
     }
   }
 
@@ -317,16 +341,8 @@ class ChatListWidget {
       // 重置选中状态
       this.selectedScriptIndex = -1;
       
-      // 重新加载数据
-      await this.loadData();
-      
-      // 重新渲染界面
-      if (this.uiRenderer) {
-        this.uiRenderer.refreshUI();
-      } else {
-        this.renderGroups();
-        this.renderScripts();
-      }
+      // 执行同步
+      await this.handleSync();
       
       // 确保清除选中状态和预览
       this.updateScriptSelection();
@@ -814,6 +830,15 @@ class ChatListWidget {
         moreMenu.style.display = 'none';
         this.exportData();
       });
+      moreMenu.querySelector('.cls-menu-admin')?.addEventListener('click', () => {
+        moreMenu.style.display = 'none';
+        if (chrome.runtime.openOptionsPage) {
+          chrome.runtime.openOptionsPage();
+        } else {
+          const url = chrome.runtime.getURL('admin.html');
+          window.open(url, '_blank');
+        }
+      });
       moreMenu.querySelector('.cls-menu-token')?.addEventListener('click', async () => {
         moreMenu.style.display = 'none';
         const token = prompt('请输入发布令牌');
@@ -900,6 +925,7 @@ class ChatListWidget {
   }
 
   showWidget() {
+    this.handleSync(); // 同步数据
     if (this.modalManagement) {
       this.modalManagement.showWidget();
     } else {
@@ -1051,7 +1077,6 @@ class ChatListWidget {
           this.renderScripts();
         }
       }).catch(() => {});
-      this.storageService.updateUsage(scriptId, script.usageCount);
     }
   }
 

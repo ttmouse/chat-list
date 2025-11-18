@@ -14,6 +14,8 @@
         "utils.js", 
         "modules/common-utils.js",
         "modules/module-loader.js",
+        "modules/supabase-client.js",
+        "modules/storage-service.js",
         "modules/textarea-utils.js", 
         "modules/data-import-export.js", 
         "modules/script-management.js", 

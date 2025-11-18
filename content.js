@@ -17,11 +17,25 @@ class ChatListWidget {
     this.initialized = false; // 初始化状态标记
     this.currentSortBy = 'usage'; // 当前排序方式：'default', 'usage'
     this.openedByShortcut = false; // 标记面板是否通过快捷键打开
+    this.storageService = new StorageService();
+    this.currentSourceFilter = 'all';
     
     // 初始化新的输入框管理器
     this.inputManager = new InputManager();
     
     this.init();
+  }
+
+  async submitScriptToPublic(scriptId) {
+    const s = this.scripts.find(x => x.id === scriptId);
+    if (!s) return;
+    const payload = { id: ChatListUtils.generateId(), source_script_id: s.id, payload: { id: s.id, group_id: s.groupId, title: s.title, note: s.note || '', content: s.content, tags: [], lang: '' } };
+    const res = await this.storageService.submitToPublic(payload);
+    if (res && !res.error) {
+      this.showSuccessMessage('已提交到公共库待审核');
+    } else {
+      this.showSuccessMessage('请登录后再试');
+    }
   }
 
   showSuccessMessage(message) {
@@ -143,35 +157,12 @@ class ChatListWidget {
 
   async loadData() {
     try {
-      // 检查扩展上下文是否有效
-      if (!this.isExtensionContextValid()) {
-        console.warn('扩展上下文已失效，使用默认数据');
-        this.resetToDefaultData();
-        return;
-      }
-      
-      const result = await chrome.storage.local.get(['chatScripts', 'chatGroups']);
-      
-      // 数据验证和修复
-      this.scripts = this.validateScripts(result.chatScripts) || this.getDefaultScripts();
-      this.groups = this.validateGroups(result.chatGroups) || this.getDefaultGroups();
-      
-      console.log('加载的原始数据:', {
-        chatScripts: result.chatScripts,
-        chatGroups: result.chatGroups
-      });
-      
-      // 数据迁移：为现有话术添加使用次数字段
+      const d = await this.storageService.load();
+      this.scripts = this.validateScripts(d.scripts) || this.getDefaultScripts();
+      this.groups = this.validateGroups(d.groups) || this.getDefaultGroups();
       this.migrateScriptData();
-      
     } catch (error) {
-      console.error('加载数据失败:', error);
       this.resetToDefaultData();
-      
-      // 如果是扩展上下文失效错误，提示用户刷新页面
-      if (error.message && error.message.includes('Extension context invalidated')) {
-        this.showContextInvalidatedNotice();
-      }
     }
   }
   
@@ -232,23 +223,10 @@ class ChatListWidget {
     // 创建错误提示元素
     const notice = document.createElement('div');
     notice.id = 'chat-list-init-error-notice';
-    notice.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #ff4444;
-      color: white;
-      padding: 12px 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      z-index: 10000;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      cursor: pointer;
-    `;
+    notice.className = 'chatlist-error-notice';
     notice.innerHTML = `
-      <div style="margin-bottom: 8px;"><strong>话术助手初始化失败</strong></div>
-      <div style="font-size: 12px; opacity: 0.9;">点击此处尝试重新加载</div>
+      <div class="title">话术助手初始化失败</div>
+      <div class="desc">点击此处尝试重新加载</div>
     `;
     
     // 点击重新加载
@@ -752,16 +730,18 @@ class ChatListWidget {
 
     // 编辑和删除按钮
     this.widget.querySelector('.script-list').addEventListener('click', (e) => {
-      // 查找最近的按钮元素（处理SVG内部元素点击）
       const editBtn = ChatListUtils.closest(e.target, '.cls-btn-edit');
-    const deleteBtn = ChatListUtils.closest(e.target, '.cls-btn-delete');
-      
+      const deleteBtn = ChatListUtils.closest(e.target, '.cls-btn-delete');
+      const submitBtn = ChatListUtils.closest(e.target, '.cls-btn-submit');
       if (editBtn) {
         const scriptId = editBtn.dataset.id;
         this.editScript(scriptId);
       } else if (deleteBtn) {
         const scriptId = deleteBtn.dataset.id;
         this.deleteScript(scriptId);
+      } else if (submitBtn) {
+        const scriptId = submitBtn.dataset.id;
+        this.submitScriptToPublic(scriptId);
       }
     });
 
@@ -833,6 +813,34 @@ class ChatListWidget {
       moreMenu.querySelector('.cls-menu-export')?.addEventListener('click', () => {
         moreMenu.style.display = 'none';
         this.exportData();
+      });
+      moreMenu.querySelector('.cls-menu-token')?.addEventListener('click', async () => {
+        moreMenu.style.display = 'none';
+        const token = prompt('请输入发布令牌');
+        if (token && token.trim()) {
+          await chrome.storage.local.set({ publishToken: token.trim() });
+          this.showSuccessMessage('发布令牌已保存');
+        }
+      });
+      moreMenu.querySelector('.cls-menu-sync')?.addEventListener('click', async () => {
+        moreMenu.style.display = 'none';
+        await this.saveData();
+        this.showSuccessMessage('已触发同步');
+      });
+      moreMenu.querySelector('.cls-menu-filter-all')?.addEventListener('click', () => {
+        moreMenu.style.display = 'none';
+        this.currentSourceFilter = 'all';
+        this.renderScripts();
+      });
+      moreMenu.querySelector('.cls-menu-filter-public')?.addEventListener('click', () => {
+        moreMenu.style.display = 'none';
+        this.currentSourceFilter = 'public';
+        this.renderScripts();
+      });
+      moreMenu.querySelector('.cls-menu-filter-private')?.addEventListener('click', () => {
+        moreMenu.style.display = 'none';
+        this.currentSourceFilter = 'private';
+        this.renderScripts();
       });
     }
 
@@ -1042,9 +1050,8 @@ class ChatListWidget {
         if (this.currentSortBy === 'usage') {
           this.renderScripts();
         }
-      }).catch(error => {
-        console.error('保存使用次数失败:', error);
-      });
+      }).catch(() => {});
+      this.storageService.updateUsage(scriptId, script.usageCount);
     }
   }
 
@@ -1057,6 +1064,11 @@ class ChatListWidget {
       filteredScripts = this.scripts.filter(script => script.groupId === this.currentGroup);
     }
     
+    if (this.currentSourceFilter === 'public') {
+      filteredScripts = filteredScripts.filter(s => s.__source === 'public');
+    } else if (this.currentSourceFilter === 'private') {
+      filteredScripts = filteredScripts.filter(s => s.__source === 'private');
+    }
     // 按搜索关键词筛选（支持空格分隔的多关键词 AND 匹配）
     if (this.searchKeyword) {
       // 支持普通空格和全角空格分词
@@ -1299,24 +1311,7 @@ class ChatListWidget {
   }
 
   async saveData() {
-    try {
-      // 检查扩展上下文是否有效
-      if (!this.isExtensionContextValid()) {
-        console.warn('扩展上下文已失效，跳过数据保存');
-        return;
-      }
-      
-      await chrome.storage.local.set({
-        chatScripts: this.scripts,
-        chatGroups: this.groups
-      });
-    } catch (error) {
-      console.error('保存数据失败:', error);
-      // 如果是扩展上下文失效错误，提示用户刷新页面
-      if (error.message && error.message.includes('Extension context invalidated')) {
-        this.showContextInvalidatedNotice();
-      }
-    }
+    await this.storageService.save(this.scripts, this.groups);
   }
 
   // 复制内容到剪贴板

@@ -95,15 +95,15 @@ class Utils {
 
     // 创建对话框HTML
     const dialogHTML = `
-      <div class="confirm-dialog-overlay" id="custom-confirm-dialog">
-        <div class="confirm-dialog-content">
-          <div class="confirm-dialog-header">
+      <div class="chatlist-confirm-overlay" id="custom-confirm-dialog">
+        <div class="chatlist-confirm-content">
+          <div class="chatlist-confirm-header">
             <h3>${title}</h3>
           </div>
-          <div class="confirm-dialog-body">
+          <div class="chatlist-confirm-body">
             <p>${message.replace(/\n/g, '<br>')}</p>
           </div>
-          <div class="confirm-dialog-footer">
+          <div class="chatlist-confirm-footer">
             <button class="cls-btn cls-btn-secondary" id="confirm-cancel-btn">取消</button>
             <button class="cls-btn cls-btn-danger" id="confirm-ok-btn">确定</button>
           </div>
@@ -180,23 +180,10 @@ class Utils {
     this.contextNoticeShown = true;
     
     const notice = document.createElement('div');
-    notice.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #ff6b6b;
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 10000;
-      font-size: 14px;
-      max-width: 300px;
-      cursor: pointer;
-    `;
+    notice.className = 'chatlist-notice';
     notice.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 4px;">扩展已更新</div>
-      <div style="font-size: 12px; opacity: 0.9;">请刷新页面以继续使用话术助手</div>
+      <div class="title">扩展已更新</div>
+      <div class="desc">请刷新页面以继续使用话术助手</div>
     `;
     
     // 点击关闭提示
@@ -227,34 +214,19 @@ class Utils {
 
     const messageEl = document.createElement('div');
     messageEl.id = 'success-message';
-    messageEl.style.cssText = `
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #4CAF50;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 10000;
-      font-size: 14px;
-      font-weight: 500;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    `;
+    messageEl.className = 'chatlist-toast';
     messageEl.textContent = message;
 
     document.body.appendChild(messageEl);
 
     // 显示动画
     setTimeout(() => {
-      messageEl.style.opacity = '1';
+      messageEl.classList.add('show');
     }, 10);
 
     // 3秒后自动隐藏
     setTimeout(() => {
-      messageEl.style.opacity = '0';
+      messageEl.classList.remove('show');
       setTimeout(() => {
         if (messageEl.parentNode) {
           messageEl.remove();

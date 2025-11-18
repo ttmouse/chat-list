@@ -1028,7 +1028,7 @@
 /* 导入对话框按钮样式使用统一按钮系统 */
 
 /* 自定义确认对话框样式 */
-.confirm-dialog-overlay {
+.chatlist-confirm-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -1051,7 +1051,7 @@
   }
 }
 
-.confirm-dialog-content {
+.chatlist-confirm-content {
   background: var(--cls-bg-primary);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -1063,30 +1063,30 @@
 
 
 
-.confirm-dialog-header {
+.chatlist-confirm-header {
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--cls-border-primary);
 }
 
-.confirm-dialog-header h3 {
+.chatlist-confirm-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: var(--cls-text-primary);
 }
 
-.confirm-dialog-body {
+.chatlist-confirm-body {
   padding: 24px;
 }
 
-.confirm-dialog-body p {
+.chatlist-confirm-body p {
   margin: 0;
   color: var(--cls-text-secondary);
   line-height: 1.5;
   font-size: 14px;
 }
 
-.confirm-dialog-footer {
+.chatlist-confirm-footer {
   padding: 16px 24px 24px;
   display: flex;
   gap: 12px;
@@ -1094,7 +1094,7 @@
 }
 
 /* 确认对话框按钮样式使用统一按钮系统 */
-.confirm-dialog-footer .cls-btn {
+.chatlist-confirm-footer .cls-btn {
   min-width: 80px; /* 保留对话框特有的最小宽度要求 */
 }
 
@@ -1107,18 +1107,18 @@
 }
 
 /* 管理面板相关样式 */
-#managePanelModal .manage-modal-content {
+#managePanelModal .cls-modal-content {
   width: 700px;
   max-width: 90vw;
   max-height: 90vh;
   overflow: auto;
 }
 
-#managePanelModal .manage-modal-content .cls-modal-body {
+#managePanelModal .cls-modal-content .cls-modal-body {
   padding: 0;
 }
 
-#managePanelModal .manage-modal-content .manage-content {
+#managePanelModal .cls-modal-content .manage-content {
   padding: 20px;
   min-height: 400px;
   display: flex;
@@ -1239,6 +1239,27 @@
 
 /* 表单操作按钮容器 */
 #managePanelModal .form-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+#managePanelModal .group-management { display: flex; flex-direction: column; gap: 16px; }
+#managePanelModal .group-management-header { display: flex; align-items: center; justify-content: space-between; }
+#managePanelModal .batch-actions { display: flex; gap: 8px; }
+
+#managePanelModal .group-list { margin-top: 8px; }
+#managePanelModal .group-table { width: 100%; border-collapse: collapse; background: var(--cls-bg-primary); }
+#managePanelModal .group-table thead th { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--cls-border-primary); color: var(--cls-text-secondary); font-weight: 500; }
+#managePanelModal .group-table tbody td { padding: 10px 12px; border-bottom: 1px solid var(--cls-border-primary); }
+#managePanelModal .group-table .name-col { width: 40%; }
+#managePanelModal .group-table .count-col { width: 20%; }
+#managePanelModal .group-table .actions-col { width: 40%; }
+
+#managePanelModal .group-name-cell { display: flex; align-items: center; gap: 8px; }
+#managePanelModal .group-color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 1px solid var(--cls-border-primary); }
+
+#managePanelModal .group-actions { display: flex; justify-content: flex-end; }
+#managePanelModal .group-actions-cell { display: inline-flex; gap: 8px; }
+#managePanelModal .group-actions-cell .cls-btn { padding: 6px 10px; font-size: var(--cls-text-sm); }
+
+#managePanelModal .empty-group-message { padding: 12px; color: var(--cls-text-secondary); text-align: center; }
 
 /* ==========================================================================
    响应式设计 - 统一断点系统

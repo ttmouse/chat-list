@@ -31,14 +31,14 @@ class GroupPanelManagement {
                 <div class="group-management-header">
                   <h4>分组列表</h4>
                   <div class="batch-actions">
-                    <button id="importDataBtn">导入JSON</button>
-                    <button id="exportDataBtn">导出JSON</button>
-                    <button id="batchEditBtn">批量编辑</button>
+                    <button id="importDataBtn" class="cls-btn cls-btn-outline">导入JSON</button>
+                    <button id="exportDataBtn" class="cls-btn cls-btn-outline">导出JSON</button>
+                    <button id="batchEditBtn" class="cls-btn cls-btn-primary">批量编辑</button>
                   </div>
                 </div>
                 <div id="groupListContainer" class="group-list"></div>
                 <div class="group-actions">
-                  <button id="addGroupBtn" class="cls-btn-add-group">+ 添加分组</button>
+                  <button id="addGroupBtn" class="cls-btn cls-btn-primary">+ 添加分组</button>
                 </div>
               </div>
             </div>
@@ -113,9 +113,9 @@ class GroupPanelManagement {
       <table class="group-table">
         <thead>
           <tr>
-            <th style="width: 40%">分组名称</th>
-            <th style="width: 20%" class="text-center">话术数量</th>
-            <th style="width: 40%" class="text-center">操作</th>
+            <th class="name-col">分组名称</th>
+            <th class="count-col text-center">话术数量</th>
+            <th class="actions-col text-center">操作</th>
           </tr>
         </thead>
         <tbody>
@@ -134,8 +134,8 @@ class GroupPanelManagement {
                 <td class="text-center">${scriptCount}</td>
                 <td class="text-center">
                   <div class="group-actions-cell">
-                    <button class="edit-group-btn" data-group-id="${group.id}">编辑</button>
-                    <button class="delete-group-btn" data-group-id="${group.id}">删除</button>
+                    <button class="cls-btn cls-btn-outline edit-group-btn" data-group-id="${group.id}">编辑</button>
+                    <button class="cls-btn cls-btn-outline-danger delete-group-btn" data-group-id="${group.id}">删除</button>
                   </div>
                 </td>
               </tr>
@@ -187,13 +187,13 @@ class GroupPanelManagement {
               <button id="closeBatchEdit" class="cls-btn-close-modal">×</button>
             </div>
             <div class="cls-modal-body">
-              <div class="form-group">
+              <div class="cls-form-group">
                 <p>在下方文本框中编辑分组数据，每行一个分组，格式为：分组ID|分组名称|分组颜色</p>
-                <textarea id="batchEditText" class="form-control"></textarea>
+                <textarea id="batchEditText" class="cls-form-control textarea"></textarea>
               </div>
-              <div class="form-actions">
-                <button id="cancelBatchEdit">取消</button>
-                <button id="saveBatchEdit">保存</button>
+              <div class="cls-form-actions">
+                <button id="cancelBatchEdit" class="cls-btn cls-btn-ghost">取消</button>
+                <button id="saveBatchEdit" class="cls-btn cls-btn-primary">保存</button>
               </div>
             </div>
           </div>

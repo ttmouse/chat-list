@@ -507,6 +507,58 @@
   border-radius: var(--cls-radius-md) var(--cls-radius-md) 0 0;
 }
 
+.chatlist-notice {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #ff6b6b;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 20003;
+  font-size: 14px;
+  max-width: 300px;
+  cursor: pointer;
+}
+
+.chatlist-notice .title { font-weight: 600; margin-bottom: 4px; }
+.chatlist-notice .desc { font-size: 12px; opacity: 0.9; }
+
+.chatlist-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4CAF50;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 20003;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chatlist-toast.show { opacity: 1; }
+
+.chatlist-error-notice {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #ff4444;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  z-index: 20003;
+  max-width: 300px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
 #chat-list-widget .manage-header span {
   font-size: var(--cls-text-lg);
   font-weight: var(--cls-font-semibold);

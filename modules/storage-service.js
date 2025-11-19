@@ -114,6 +114,13 @@ class SupabaseAdapter {
   }
 
   async getPublicData() {
+    // Try to get client, retry a few times if missing
+    for (let i = 0; i < 5; i++) {
+      this.client = window.supabaseClient || window.supabase || this.client;
+      if (this.client) break;
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
     if (!this.client) return { scripts: [], groups: [] };
     try {
       const gr = await this.client.from('chat_groups_public').select('*').order('order_index', { ascending: true });

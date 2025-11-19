@@ -42,6 +42,7 @@ class UIRenderer {
                 ${this.widget.remoteEnabled ? '<button class="cls-more-item cls-menu-publish-all">批量上传公共库</button>' : ''}
                 ${this.widget.remoteEnabled ? '<button class="cls-more-item cls-menu-login">登录共享账户</button>' : ''}
                 ${this.widget.remoteEnabled ? '<button class="cls-more-item cls-menu-filter-public">仅公共</button>' : ''}
+                ${this.widget.remoteEnabled ? '<button class="cls-more-item cls-menu-refresh-public">刷新公共库</button>' : ''}
                 ${this.widget.remoteEnabled ? '<button class="cls-more-item cls-menu-admin">打开管理后台</button>' : ''}
               </div>
             </div>

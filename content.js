@@ -1019,6 +1019,17 @@ class ChatListWidget {
         this.exportData();
       });
       if (this.remoteEnabled) {
+        moreMenu.querySelector('.cls-menu-refresh-public')?.addEventListener('click', async () => {
+          moreMenu.style.display = 'none';
+          this.showSuccessMessage('正在刷新公共库...');
+          try {
+            await this.loadData(); // 重新加载并渲染
+            this.showSuccessMessage('刷新成功');
+          } catch (error) {
+            console.error(error);
+            this.showSuccessMessage('刷新失败');
+          }
+        });
         moreMenu.querySelector('.cls-menu-admin')?.addEventListener('click', () => {
           moreMenu.style.display = 'none';
           if (chrome.runtime.openOptionsPage) {

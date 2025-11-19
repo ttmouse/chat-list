@@ -23,20 +23,13 @@ th,td{padding:10px 12px;border-bottom:1px solid #e8e8e8;text-align:left}
   <div class="row">
     <input id="inp-url" class="input" placeholder="Supabase URL">
     <input id="inp-key" class="input" placeholder="Supabase Anon Key">
-    <input id="inp-token" class="input" placeholder="发布令牌(可选)">
-    <button id="btn-save" class="btn">保存配置</button>
   </div>
   <div class="row">
-    <button id="btn-load-public" class="btn">加载公共库</button>
-    <button id="btn-load-requests" class="btn btn-outline">加载发布申请</button>
+    <span id="conn-status" class="badge">未连接</span>
   </div>
   <div class="grid">
     <h3>公共库</h3>
-    <table id="tbl-public"><thead><tr><th>分组</th><th>标题</th><th>备注</th><th>操作</th></tr></thead><tbody></tbody></table>
-  </div>
-  <div class="grid">
-    <h3>发布申请</h3>
-    <table id="tbl-requests"><thead><tr><th>状态</th><th>标题</th><th>内容</th><th>操作</th></tr></thead><tbody></tbody></table>
+    <table id="tbl-public"><thead><tr><th>分组</th><th>标题</th><th>备注</th></tr></thead><tbody></tbody></table>
   </div>
 </div>
 <script type="module" src="admin.js"></script>

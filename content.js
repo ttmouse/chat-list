@@ -18,23 +18,186 @@ class ChatListWidget {
     this.currentSortBy = 'usage'; // 当前排序方式：'default', 'usage'
     this.openedByShortcut = false; // 标记面板是否通过快捷键打开
     this.storageService = new StorageService();
+    this.remoteEnabled = !!this.storageService.enableRemote;
     this.currentSourceFilter = 'all';
-    
+
     // 初始化新的输入框管理器
     this.inputManager = new InputManager();
-    
+
     this.init();
+
+    window.addEventListener('message', async (e) => {
+      const d = e && e.data;
+      if (d && d.type === 'SUPABASE_CONFIG') {
+        const url = (d.SUPABASE_URL || '').trim();
+        const key = (d.SUPABASE_ANON_KEY || '').trim();
+        if (url && key) {
+          try {
+            await chrome.storage.local.set({ SUPABASE_URL: url, SUPABASE_ANON_KEY: key });
+            if (window.ensureSupabase) await window.ensureSupabase();
+            const r = await this.storageService.testConnection();
+            if (r && r.ok) this.showSuccessMessage('Supabase配置已接收并连接成功');
+          } catch (_) { }
+        }
+      }
+    });
   }
 
   async submitScriptToPublic(scriptId) {
+    if (!this.remoteEnabled) {
+      this.showSuccessMessage('未启用远端功能');
+      return;
+    }
     const s = this.scripts.find(x => x.id === scriptId);
     if (!s) return;
-    const payload = { id: ChatListUtils.generateId(), source_script_id: s.id, payload: { id: s.id, group_id: s.groupId, title: s.title, note: s.note || '', content: s.content, tags: [], lang: '' } };
-    const res = await this.storageService.submitToPublic(payload);
-    if (res && !res.error) {
-      this.showSuccessMessage('已提交到公共库待审核');
+    const token = prompt('请输入发布令牌', '123456');
+    if (!token) return;
+    const group = this.groups.find(g => g.id === s.groupId) || null;
+    const scripts = [{ id: s.id, groupId: s.groupId || null, title: s.title || '', note: s.note || '', content: s.content || '', order_index: 0 }];
+    const groups = group ? [{ id: group.id, name: group.name, color: group.color, order_index: group.order_index || 0 }] : [];
+    const r = await this.storageService.publishAllToPublic(scripts, groups, token);
+    if (r && r.success) {
+      this.showSuccessMessage('已保存到公共库');
     } else {
-      this.showSuccessMessage('请登录后再试');
+      this.showSuccessMessage('保存失败');
+    }
+  }
+
+  async publishSelectedToPublic() {
+    if (!this.remoteEnabled) {
+      this.showSuccessMessage('未启用远端功能');
+      return;
+    }
+    const sel = this.uiRenderer?.getSelectedScript();
+    if (!sel) {
+      this.showSuccessMessage('请先选择话术');
+      return;
+    }
+    const token = await this.getPublishToken();
+    if (!token) return;
+    const group = this.groups.find(g => g.id === sel.groupId) || null;
+    const scripts = [{ id: sel.id, groupId: sel.groupId || null, title: sel.title || '', note: sel.note || '', content: sel.content || '', order_index: 0 }];
+    const groups = group ? [{ id: group.id, name: group.name, color: group.color, order_index: group.order_index || 0 }] : [];
+    const r = await this.publishViaFunction(token, scripts, groups);
+    if (r && r.success) {
+      this.showSuccessMessage('已保存到公共库');
+    } else {
+      this.showSuccessMessage('保存失败');
+    }
+  }
+
+  async loginSharedAccount() {
+    const email = prompt('请输入共享账户邮箱');
+    const password = prompt('请输入共享账户密码');
+    if (!email || !password) return;
+    const ok = await (window.ensureSupabase ? window.ensureSupabase() : Promise.resolve(false));
+    if (!ok || !window.supabaseClient?.auth) {
+      this.showSuccessMessage('客户端未初始化');
+      return;
+    }
+    try {
+      const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        this.showSuccessMessage('登录失败');
+      } else {
+        this.showSuccessMessage('登录成功');
+      }
+    } catch (_) {
+      this.showSuccessMessage('登录异常');
+    }
+  }
+
+  async publishAllToPublicFromLocal() {
+    if (!this.remoteEnabled) {
+      this.showSuccessMessage('未启用远端功能');
+      return;
+    }
+
+    const privateScripts = (this.scripts || []).filter(s => s.__source !== 'public').map(s => ({
+      id: s.id,
+      group_id: s.groupId || null,
+      title: s.title || '',
+      note: s.note || '',
+      content: s.content || '',
+      order_index: s.order_index || 0,
+      is_active: true
+    }));
+
+    const privateGroups = (this.groups || []).filter(g => g.__source !== 'public').map(g => ({
+      id: g.id,
+      name: g.name,
+      color: g.color,
+      order_index: g.order_index || 0
+    }));
+
+    try {
+      const response = await fetch('http://localhost:3001/api/upload-public', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          scripts: privateScripts,
+          groups: privateGroups
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`上传失败: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.showSuccessMessage(`批量上传成功！话术: ${privateScripts.length} 条，分组: ${privateGroups.length} 个`);
+      } else {
+        this.showSuccessMessage('批量上传失败');
+      }
+    } catch (error) {
+      console.error('上传失败:', error);
+      this.showSuccessMessage('上传失败: ' + error.message);
+    }
+  }
+
+  async getPublishToken() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        const r = await chrome.storage.local.get(['publishToken']);
+        const t = (r.publishToken || '').trim();
+        if (t) return t;
+      } else {
+        const t = (localStorage.getItem('publishToken') || '').trim();
+        if (t) return t;
+      }
+    } catch (_) { }
+    const t = prompt('请输入发布令牌', '123456');
+    if ((t || '').trim()) {
+      try {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          await chrome.storage.local.set({ publishToken: t.trim() });
+        } else {
+          localStorage.setItem('publishToken', t.trim());
+        }
+      } catch (_) { }
+      return t.trim();
+    }
+    return null;
+  }
+
+  async publishViaFunction(token, scripts, groups) {
+    const ok = await (window.ensureSupabase ? window.ensureSupabase() : Promise.resolve(false));
+    if (!ok || !window.supabaseClient) return { success: false };
+    try {
+      if (window.supabaseClient.functions && window.supabaseClient.functions.invoke) {
+        const { data, error } = await window.supabaseClient.functions.invoke('publish_public', { body: { token, scripts, groups } });
+        if (!error) return { success: true, data };
+        console.error('Edge Function publish_public error:', error);
+      }
+    } catch (_) { }
+    try {
+      return await this.storageService.publishAllToPublic(scripts, groups, token);
+    } catch (_) {
+      return { success: false };
     }
   }
 
@@ -46,10 +209,10 @@ class ChatListWidget {
   addToFocusHistory(element) {
     // 移除已存在的相同元素
     this.focusHistory = this.focusHistory.filter(el => el !== element);
-    
+
     // 添加到历史记录开头
     this.focusHistory.unshift(element);
-    
+
     // 限制历史记录长度为2个
     if (this.focusHistory.length > 2) {
       this.focusHistory = this.focusHistory.slice(0, 2);
@@ -72,12 +235,12 @@ class ChatListWidget {
     // setInterval(() => {
     //   this.updateDebugPanel();
     // }, 500);
-    
+
     // // 立即更新一次
     // this.updateDebugPanel();
   }
 
- 
+
 
   getElementInfo(element) {
     return ChatListUtils.getElementInfo(element);
@@ -88,7 +251,7 @@ class ChatListWidget {
 
   async init() {
     console.log('开始初始化话术扩展...');
-    
+
     // 先加载数据
     try {
       await this.loadData();
@@ -101,27 +264,27 @@ class ChatListWidget {
       console.error('数据加载失败:', error);
       return;
     }
-    
+
     // 白名单检查已移除，直接初始化UI
-    
+
     try {
       // 获取版本号
       this.version = await this.getVersion();
       console.log('版本号获取完成:', this.version);
-      
+
       // 使用统一的模块加载器初始化所有模块
       this.initAllModules();
       console.log('模块加载完成');
-      
+
       this.initDragPositionManager(); // 初始化拖拽位置管理模块
       console.log('拖拽位置管理器初始化完成');
-      
+
       this.createWidget();
       console.log('组件创建完成');
-      
+
       this.initPreviewModule();
       console.log('预览模块初始化完成');
-      
+
       // this.createFocusDebugPanel();
       this.bindEvents();
       console.log('事件绑定完成');
@@ -130,35 +293,60 @@ class ChatListWidget {
       this.storageService.processSyncQueue();
       // 设置周期性同步 (10分钟)
       setInterval(() => this.handleSync(), 10 * 60 * 1000);
-      
+
       this.initialized = true; // 标记为已初始化
       console.log('话术扩展初始化成功');
     } catch (error) {
       console.error('初始化过程中出错:', error);
       // 尝试清理部分初始化的资源
       this.cleanup();
-      
+
       // 显示错误提示
       this.showInitErrorNotice(error);
     }
   }
 
-  async handleSync() {
+  async handleSync(manual = false) {
     try {
+      // Check if remote is ready (has password/token)
+      const isReady = await this.storageService.remote.isReady();
+
+      if (!isReady) {
+        if (manual) {
+          const password = prompt('请输入同步密码 (任意字符，用于多设备同步):');
+          if (password) {
+            await this.storageService.local.setSyncPassword(password);
+            this.showSuccessMessage('同步密码已设置');
+          } else {
+            return; // User cancelled
+          }
+        } else {
+          // Auto-sync silently fails if not ready
+          return;
+        }
+      }
+
       const data = await this.storageService.syncPull();
       this.scripts = this.validateScripts(data.scripts) || this.getDefaultScripts();
       this.groups = this.validateGroups(data.groups) || this.getDefaultGroups();
-      
+
       if (this.uiRenderer) {
         this.uiRenderer.refreshUI();
       } else {
         this.renderGroups();
         this.renderScripts();
       }
-      
+
       this.storageService.processSyncQueue();
+
+      if (manual) {
+        this.showSuccessMessage('同步完成');
+      }
     } catch (error) {
       console.error('Sync failed', error);
+      if (manual) {
+        this.showSuccessMessage('同步失败: ' + error.message);
+      }
     }
   }
 
@@ -170,7 +358,7 @@ class ChatListWidget {
         console.warn('扩展上下文已失效，使用默认版本号');
         return '1.0.0';
       }
-      
+
       const manifest = chrome.runtime.getManifest();
       return manifest.version;
     } catch (error) {
@@ -189,14 +377,14 @@ class ChatListWidget {
       this.resetToDefaultData();
     }
   }
-  
+
   // 重置为默认数据
   resetToDefaultData() {
     console.log('重置为默认数据');
     this.scripts = this.getDefaultScripts();
     this.groups = this.getDefaultGroups();
   }
-  
+
   // 验证脚本数据
   validateScripts(scripts) {
     if (!Array.isArray(scripts)) {
@@ -205,7 +393,7 @@ class ChatListWidget {
     }
     return scripts;
   }
-  
+
   // 验证分组数据
   validateGroups(groups) {
     if (!Array.isArray(groups)) {
@@ -214,9 +402,9 @@ class ChatListWidget {
     }
     return groups;
   }
-  
+
   // 白名单与相关设置校验已移除
-  
+
   // 清理部分初始化的资源
   cleanup() {
     try {
@@ -224,7 +412,7 @@ class ChatListWidget {
         this.widget.parentNode.removeChild(this.widget);
         console.log('清理了widget组件');
       }
-      
+
       // 清理其他可能创建的DOM元素
       const existingElements = document.querySelectorAll('[id^="chat-list-"]');
       existingElements.forEach(el => {
@@ -232,18 +420,18 @@ class ChatListWidget {
           el.parentNode.removeChild(el);
         }
       });
-      
+
       this.initialized = false;
       console.log('清理完成');
     } catch (error) {
       console.error('清理过程中出错:', error);
     }
   }
-  
+
   // 显示初始化错误提示
   showInitErrorNotice(error) {
     console.log('显示初始化错误提示:', error.message);
-    
+
     // 创建错误提示元素
     const notice = document.createElement('div');
     notice.id = 'chat-list-init-error-notice';
@@ -252,14 +440,14 @@ class ChatListWidget {
       <div class="title">话术助手初始化失败</div>
       <div class="desc">点击此处尝试重新加载</div>
     `;
-    
+
     // 点击重新加载
     notice.addEventListener('click', () => {
       location.reload();
     });
-    
+
     document.body.appendChild(notice);
-    
+
     // 5秒后自动消失
     setTimeout(() => {
       if (notice.parentNode) {
@@ -271,7 +459,7 @@ class ChatListWidget {
   // 数据迁移：为现有话术添加使用次数字段
   migrateScriptData() {
     let needsSave = false;
-    
+
     this.scripts = this.scripts.map(script => {
       if (script.usageCount === undefined) {
         needsSave = true;
@@ -279,7 +467,7 @@ class ChatListWidget {
       }
       return script;
     });
-    
+
     // 如果有数据需要迁移，保存到存储
     if (needsSave) {
       console.log('正在迁移话术数据，添加使用次数字段...');
@@ -313,7 +501,7 @@ class ChatListWidget {
   initAllModules() {
     // 创建模块加载器
     this.moduleLoader = new ModuleLoader(this);
-    
+
     // 定义所有需要加载的模块
     const moduleConfigs = [
       { name: '数据导入导出', className: 'DataImportExport', property: 'dataImportExport' },
@@ -323,11 +511,11 @@ class ChatListWidget {
       { name: '分组面板管理', className: 'GroupPanelManagement', property: 'groupPanelManagement' },
       { name: 'UI渲染器', className: 'UIRenderer', property: 'uiRenderer' }
     ];
-    
+
     // 批量加载模块
     this.moduleLoader.loadModules(moduleConfigs);
   }
-  
+
   // 临时的拖拽位置管理初始化方法（避免未定义方法调用错误）
   initDragPositionManager() {
     // 继续使用内置拖拽功能
@@ -337,16 +525,16 @@ class ChatListWidget {
     try {
       // 显示刷新提示
       this.showSuccessMessage('正在刷新话术数据...');
-      
+
       // 重置选中状态
       this.selectedScriptIndex = -1;
-      
+
       // 执行同步
       await this.handleSync();
-      
+
       // 确保清除选中状态和预览
       this.updateScriptSelection();
-      
+
       // 显示成功提示
       this.showSuccessMessage('话术数据已刷新');
     } catch (error) {
@@ -362,10 +550,10 @@ class ChatListWidget {
       this.uiRenderer.createTrigger();
       this.uiRenderer.renderGroups();
       this.uiRenderer.renderScripts();
-      
+
       // 初始状态：隐藏浮层，显示触发器
       this.hideWidget();
-      
+
       // 加载保存的位置
       setTimeout(() => {
         this.loadPosition();
@@ -417,13 +605,13 @@ class ChatListWidget {
         if (ChatListUtils.closest(e.target, '#chat-list-widget')) {
           return;
         }
-        
+
         // 更新最后聚焦的元素
         this.lastFocusedElement = e.target;
-        
+
         // 添加到焦点历史记录
         this.addToFocusHistory(e.target);
-        
+
         // 立即更新调试面板
         // this.updateDebugPanel();
       }
@@ -436,13 +624,13 @@ class ChatListWidget {
         if (ChatListUtils.closest(e.target, '#chat-list-widget')) {
           return;
         }
-        
+
         // 更新最后聚焦的元素
         this.lastFocusedElement = e.target;
-        
+
         // 添加到焦点历史记录
         this.addToFocusHistory(e.target);
-        
+
         // 立即更新调试面板
         // this.updateDebugPanel();
       }
@@ -455,13 +643,13 @@ class ChatListWidget {
         if (ChatListUtils.closest(e.target, '#chat-list-widget')) {
           return;
         }
-        
+
         // 更新最后聚焦的元素
         this.lastFocusedElement = e.target;
-        
+
         // 添加到焦点历史记录
         this.addToFocusHistory(e.target);
-        
+
         // 立即更新调试面板
         // this.updateDebugPanel();
       }
@@ -547,31 +735,31 @@ class ChatListWidget {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const isModifierPressed = isMac ? e.metaKey : e.ctrlKey;
       const isGPressed = e.key && e.key.toLowerCase() === 'g' || e.keyCode === 71;
-      
+
       if (isModifierPressed && isGPressed) {
         // 防止浏览器默认的查找行为
         e.preventDefault();
         e.stopImmediatePropagation(); // 防止其他脚本干扰
-        
+
         // 记录快捷键触发前的焦点状态
         const currentFocus = document.activeElement;
-        
+
         // 如果当前焦点是有效输入框且不是插件内部的，记录它
         if (currentFocus && this.inputManager.isValidInput(currentFocus) && !ChatListUtils.closest(currentFocus, '#chat-list-widget')) {
           this.lastFocusedElement = currentFocus;
           this.addToFocusHistory(currentFocus);
-          
+
           // 立即更新调试面板
           // this.updateDebugPanel();
         }
-        
+
         // 只打开面板并聚焦搜索框，不再用于关闭面板
         if (!this.isVisible) {
           // 面板未显示，显示它并聚焦搜索框
           this.openedByShortcut = true; // 标记为通过快捷键打开
           this.showWidget();
         }
-        
+
         // 无论面板是否已显示，都聚焦到搜索输入框
         const searchInput = this.widget.querySelector('.search-input');
         if (searchInput) {
@@ -579,20 +767,20 @@ class ChatListWidget {
           searchInput.select(); // 选中现有文本，方便用户直接输入新的搜索词
         }
       }
-      
+
       // ESC 键分层关闭：第一次关闭预览，第二次关闭面板
       if (e.key === 'Escape' && this.isVisible) {
         // 如果不是在插件内部的输入框，处理 ESC
         const currentFocus = document.activeElement;
         const isInWidget = currentFocus && ChatListUtils.closest(currentFocus, '#chat-list-widget');
-        
+
         if (!isInWidget) {
           e.preventDefault();
-          
+
           // 检查是否有预览在显示
-          const hasActivePreview = this.previewModule && this.previewModule.previewElement && 
-                                   this.previewModule.previewElement.style.display !== 'none';
-          
+          const hasActivePreview = this.previewModule && this.previewModule.previewElement &&
+            this.previewModule.previewElement.style.display !== 'none';
+
           if (hasActivePreview) {
             // 第一次 ESC：关闭预览
             this.previewModule.forceHidePreview();
@@ -637,12 +825,12 @@ class ChatListWidget {
     // 搜索功能
     const searchInput = this.widget.querySelector('.search-input');
     const clearSearchBtn = this.widget.querySelector('.cls-btn-clear-search');
-    
+
     searchInput.addEventListener('input', (e) => {
       this.searchKeyword = e.target.value.trim();
       this.selectedScriptIndex = -1; // 重置选中索引
       this.renderScripts();
-      
+
       // 显示/隐藏清除按钮
       if (this.searchKeyword) {
         clearSearchBtn.classList.add('visible');
@@ -650,13 +838,13 @@ class ChatListWidget {
         clearSearchBtn.classList.remove('visible');
       }
     });
-    
+
     // 搜索框键盘导航
     searchInput.addEventListener('keydown', (e) => {
       const scriptItems = this.widget.querySelectorAll('.script-item');
       const maxIndex = scriptItems.length - 1;
-      
-      switch(e.key) {
+
+      switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
           if (scriptItems.length > 0) {
@@ -664,7 +852,7 @@ class ChatListWidget {
             this.updateScriptSelection();
           }
           break;
-          
+
         case 'ArrowUp':
           e.preventDefault();
           if (scriptItems.length > 0) {
@@ -672,7 +860,7 @@ class ChatListWidget {
             this.updateScriptSelection();
           }
           break;
-          
+
         case 'Enter':
           e.preventDefault();
           if (this.selectedScriptIndex >= 0 && scriptItems[this.selectedScriptIndex]) {
@@ -694,7 +882,7 @@ class ChatListWidget {
             }
           }
           break;
-          
+
         case 'Escape':
           e.preventDefault();
           this.selectedScriptIndex = -1;
@@ -704,7 +892,7 @@ class ChatListWidget {
           break;
       }
     });
-    
+
     clearSearchBtn.addEventListener('click', () => {
       searchInput.value = '';
       this.searchKeyword = '';
@@ -773,7 +961,7 @@ class ChatListWidget {
     this.widget.addEventListener('mouseleave', () => {
       // 延迟300ms隐藏，如果鼠标进入预览浮层则取消隐藏
       this.previewModule.hidePreviewTimeout = setTimeout(() => {
-          this.previewModule.forceHidePreview();
+        this.previewModule.forceHidePreview();
       }, 100);
     });
 
@@ -783,7 +971,7 @@ class ChatListWidget {
 
     // 添加话术
     const addScriptBtn = this.widget.querySelector('.cls-btn-add-script');
-    
+
     if (addScriptBtn) {
       addScriptBtn.addEventListener('click', () => {
         try {
@@ -830,38 +1018,59 @@ class ChatListWidget {
         moreMenu.style.display = 'none';
         this.exportData();
       });
-      moreMenu.querySelector('.cls-menu-admin')?.addEventListener('click', () => {
-        moreMenu.style.display = 'none';
-        if (chrome.runtime.openOptionsPage) {
-          chrome.runtime.openOptionsPage();
-        } else {
-          const url = chrome.runtime.getURL('admin.html');
-          window.open(url, '_blank');
-        }
-      });
-      moreMenu.querySelector('.cls-menu-token')?.addEventListener('click', async () => {
-        moreMenu.style.display = 'none';
-        const token = prompt('请输入发布令牌');
-        if (token && token.trim()) {
-          await chrome.storage.local.set({ publishToken: token.trim() });
-          this.showSuccessMessage('发布令牌已保存');
-        }
-      });
-      moreMenu.querySelector('.cls-menu-sync')?.addEventListener('click', async () => {
-        moreMenu.style.display = 'none';
-        await this.saveData();
-        this.showSuccessMessage('已触发同步');
-      });
+      if (this.remoteEnabled) {
+        moreMenu.querySelector('.cls-menu-admin')?.addEventListener('click', () => {
+          moreMenu.style.display = 'none';
+          if (chrome.runtime.openOptionsPage) {
+            chrome.runtime.openOptionsPage();
+          } else {
+            const url = chrome.runtime.getURL('admin.html');
+            window.open(url, '_blank');
+          }
+        });
+        moreMenu.querySelector('.cls-menu-sync')?.addEventListener('click', () => {
+          moreMenu.style.display = 'none';
+          this.handleSync(true);
+        });
+
+        moreMenu.querySelector('.cls-menu-test')?.addEventListener('click', async () => {
+          moreMenu.style.display = 'none';
+          const r = await this.storageService.testConnection();
+          if (r.ok) {
+            this.showSuccessMessage('连接成功');
+          } else if (r.error === 'not_configured') {
+            this.showSuccessMessage('未配置 Supabase');
+          } else if (r.error === 'client_not_initialized') {
+            this.showSuccessMessage('客户端未初始化');
+          } else {
+            this.showSuccessMessage('连接失败: ' + r.error);
+          }
+        });
+        moreMenu.querySelector('.cls-menu-publish-public')?.addEventListener('click', async () => {
+          moreMenu.style.display = 'none';
+          await this.publishSelectedToPublic();
+        });
+        moreMenu.querySelector('.cls-menu-publish-all')?.addEventListener('click', async () => {
+          moreMenu.style.display = 'none';
+          await this.publishAllToPublicFromLocal();
+        });
+        moreMenu.querySelector('.cls-menu-login')?.addEventListener('click', async () => {
+          moreMenu.style.display = 'none';
+          await this.loginSharedAccount();
+        });
+      }
       moreMenu.querySelector('.cls-menu-filter-all')?.addEventListener('click', () => {
         moreMenu.style.display = 'none';
         this.currentSourceFilter = 'all';
         this.renderScripts();
       });
-      moreMenu.querySelector('.cls-menu-filter-public')?.addEventListener('click', () => {
-        moreMenu.style.display = 'none';
-        this.currentSourceFilter = 'public';
-        this.renderScripts();
-      });
+      if (this.remoteEnabled) {
+        moreMenu.querySelector('.cls-menu-filter-public')?.addEventListener('click', () => {
+          moreMenu.style.display = 'none';
+          this.currentSourceFilter = 'public';
+          this.renderScripts();
+        });
+      }
       moreMenu.querySelector('.cls-menu-filter-private')?.addEventListener('click', () => {
         moreMenu.style.display = 'none';
         this.currentSourceFilter = 'private';
@@ -908,12 +1117,12 @@ class ChatListWidget {
     if (this.previewModule) {
       this.previewModule.forceHidePreview();
     }
-    
+
     // 使用setTimeout确保预览图层完全隐藏后再隐藏主面板
     setTimeout(() => {
       // 重置打开方式标记
       this.openedByShortcut = false;
-      
+
       if (this.modalManagement) {
         this.modalManagement.hideWidget();
       } else {
@@ -947,33 +1156,33 @@ class ChatListWidget {
         if (!this.isVisible) {
           this.showWidget();
         }
-        
+
         const managePanel = this.widget.querySelector('.manage-panel');
         const widgetContent = this.widget.querySelector('.widget-content');
-        
+
         if (!managePanel) {
           console.error('找不到管理面板元素 .manage-panel');
           return;
         }
-        
+
         if (!widgetContent) {
           console.error('找不到内容区域元素 .widget-content');
           return;
         }
-        
+
         // 更新分组选项
         this.renderGroups();
-        
+
         // 强制设置样式
         managePanel.style.display = 'block';
         managePanel.style.visibility = 'visible';
         managePanel.style.opacity = '1';
         widgetContent.style.display = 'none';
-        
+
         // 确保插件容器也是可见的
         this.widget.style.display = 'block';
         this.widget.style.visibility = 'visible';
-        
+
       } catch (error) {
         console.error('显示管理面板时出错:', error);
       }
@@ -1045,18 +1254,18 @@ class ChatListWidget {
   fillContent(content, scriptId = null) {
     // 复制到剪贴板
     this.copyToClipboard(content);
-    
+
     // 使用新的InputManager进行智能填充
     const success = this.inputManager.fillContent(content, {
       lastFocusedElement: this.lastFocusedElement,
       getValidFocusFromHistory: () => this.getValidFocusFromHistory()
     });
-    
+
     // 如果填充成功且提供了scriptId，增加使用次数
     if (success && scriptId) {
       this.incrementScriptUsage(scriptId);
     }
-    
+
     if (!success) {
       alert('未找到可填充的输入框，请先点击输入框');
     }
@@ -1067,28 +1276,28 @@ class ChatListWidget {
     const script = this.scripts.find(s => s.id === scriptId);
     if (script) {
       script.usageCount = (script.usageCount || 0) + 1;
-      
+
       // 保存数据
       this.saveData().then(() => {
         console.log(`话术 "${script.title}" 使用次数已更新为 ${script.usageCount}`);
-        
+
         // 如果当前按使用次数排序，重新渲染列表
         if (this.currentSortBy === 'usage') {
           this.renderScripts();
         }
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }
 
   // 获取排序后的话术列表
   getSortedScripts() {
     let filteredScripts = this.scripts;
-    
+
     // 按分组筛选
     if (this.currentGroup) {
       filteredScripts = this.scripts.filter(script => script.groupId === this.currentGroup);
     }
-    
+
     if (this.currentSourceFilter === 'public') {
       filteredScripts = filteredScripts.filter(s => s.__source === 'public');
     } else if (this.currentSourceFilter === 'private') {
@@ -1117,7 +1326,7 @@ class ChatListWidget {
         });
       }
     }
-    
+
     // 排序
     if (this.currentSortBy === 'usage') {
       // 按使用次数降序排列
@@ -1128,7 +1337,7 @@ class ChatListWidget {
       });
     }
     // 默认排序保持原有顺序
-    
+
     return filteredScripts;
   }
 
@@ -1198,39 +1407,39 @@ class ChatListWidget {
     header.addEventListener('mousedown', (e) => {
       // 只有点击头部区域才能拖拽，排除按钮
       if (ChatListUtils.closest(e.target, '.widget-controls')) return;
-      
+
       isDragging = true;
       this.widget.classList.add('dragging');
-      
+
       const rect = this.widget.getBoundingClientRect();
       startX = e.clientX;
       startY = e.clientY;
       startLeft = rect.left;
       startTop = rect.top;
-      
+
       e.preventDefault();
     });
 
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
-      
+
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
-      
+
       let newLeft = startLeft + deltaX;
       let newTop = startTop + deltaY;
-      
+
       // 边界检查，确保不会拖拽到屏幕外
       const maxLeft = window.innerWidth - this.widget.offsetWidth;
       const maxTop = window.innerHeight - this.widget.offsetHeight;
-      
+
       newLeft = Math.max(0, Math.min(newLeft, maxLeft));
       newTop = Math.max(0, Math.min(newTop, maxTop));
-      
+
       this.widget.style.left = newLeft + 'px';
       this.widget.style.top = newTop + 'px';
       this.widget.style.right = 'auto'; // 清除right定位
-      
+
       e.preventDefault();
     });
 
@@ -1238,7 +1447,7 @@ class ChatListWidget {
       if (isDragging) {
         isDragging = false;
         this.widget.classList.remove('dragging');
-        
+
         // 保存位置到存储
         this.savePosition();
       }
@@ -1252,7 +1461,7 @@ class ChatListWidget {
         console.warn('扩展上下文已失效，跳过位置保存');
         return;
       }
-      
+
       const rect = this.widget.getBoundingClientRect();
       await chrome.storage.local.set({
         widgetPosition: {
@@ -1286,18 +1495,18 @@ class ChatListWidget {
         console.warn('扩展上下文已失效，跳过位置加载');
         return;
       }
-      
+
       const result = await chrome.storage.local.get(['widgetPosition']);
       if (result.widgetPosition) {
         const { left, top } = result.widgetPosition;
-        
+
         // 检查位置是否在屏幕范围内
         const maxLeft = window.innerWidth - this.widget.offsetWidth;
         const maxTop = window.innerHeight - this.widget.offsetHeight;
-        
+
         const validLeft = Math.max(0, Math.min(left, maxLeft));
         const validTop = Math.max(0, Math.min(top, maxTop));
-        
+
         this.widget.style.left = validLeft + 'px';
         this.widget.style.top = validTop + 'px';
         this.widget.style.right = 'auto';
@@ -1318,7 +1527,7 @@ class ChatListWidget {
       console.error('数据导入导出模块未初始化');
     }
   }
-  
+
   async importData(file) {
     if (this.dataImportExport) {
       await this.dataImportExport.importData(file);
@@ -1426,7 +1635,7 @@ if (window.chatListWidget) {
   console.log('话术助手已经初始化，跳过重复初始化');
 } else {
   console.log('开始初始化话术助手...');
-  
+
   // 初始化插件
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -1436,7 +1645,7 @@ if (window.chatListWidget) {
     });
   } else {
     window.chatListWidget = new ChatListWidget();
-    
+
     // 初始化自适应高度功能
     if (window.TextareaUtils) {
       window.TextareaUtils.initAutoResizeTextareas();

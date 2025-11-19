@@ -9,16 +9,19 @@
   ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "<all_urls>"
+      ],
       "js": [
-        "utils.js", 
+        "utils.js",
         "modules/common-utils.js",
         "modules/module-loader.js",
+        "libs/supabase.js",
         "modules/supabase-client.js",
         "modules/storage-service.js",
-        "modules/textarea-utils.js", 
-        "modules/data-import-export.js", 
-        "modules/script-management.js", 
+        "modules/textarea-utils.js",
+        "modules/data-import-export.js",
+        "modules/script-management.js",
         "modules/group-management.js",
         "modules/modal-management.js",
         "modules/group-panel-management.js",
@@ -27,7 +30,7 @@
         "modules/content-filler.js",
         "modules/input-manager.js",
         "modules/ui-renderer.js",
-        "preview-module.js", 
+        "preview-module.js",
         "content.js"
       ],
       "css": [

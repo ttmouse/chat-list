@@ -3,16 +3,25 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const urlEl=document.getElementById('inp-url')
 const keyEl=document.getElementById('inp-key')
 const tokenEl=document.getElementById('inp-token')
-const saveBtn=document.getElementById('btn-save')
-const loadPublicBtn=document.getElementById('btn-load-public')
-const loadReqBtn=document.getElementById('btn-load-requests')
 const tblPublic=document.querySelector('#tbl-public tbody')
 const tblReq=document.querySelector('#tbl-requests tbody')
 
 let client=null
 
+const hasChrome = typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
+const getKV = async (keys) => {
+  if (hasChrome) return await chrome.storage.local.get(keys);
+  const res = {};
+  keys.forEach(k => { res[k] = localStorage.getItem(k) || ''; });
+  return res;
+};
+const setKV = async (obj) => {
+  if (hasChrome) return await chrome.storage.local.set(obj);
+  Object.entries(obj).forEach(([k,v]) => localStorage.setItem(k, v ?? ''));
+};
+
 async function loadConfig(){
-  const r=await chrome.storage.local.get(['SUPABASE_URL','SUPABASE_ANON_KEY','publishToken'])
+  const r=await getKV(['SUPABASE_URL','SUPABASE_ANON_KEY','publishToken'])
   urlEl.value=r.SUPABASE_URL||''
   keyEl.value=r.SUPABASE_ANON_KEY||''
   tokenEl.value=r.publishToken||''
@@ -26,7 +35,7 @@ async function saveConfig(){
   const url=urlEl.value.trim()
   const key=keyEl.value.trim()
   const token=tokenEl.value.trim()
-  await chrome.storage.local.set({SUPABASE_URL:url,SUPABASE_ANON_KEY:key,publishToken:token})
+  await setKV({SUPABASE_URL:url,SUPABASE_ANON_KEY:key,publishToken:token})
   if(url&&key){
     client=createClient(url,key)
     window.supabase=client
@@ -53,7 +62,7 @@ async function loadRequests(){
 }
 
 async function approveRequest(id){
-  const token=(await chrome.storage.local.get(['publishToken'])).publishToken||null
+  const token=(await getKV(['publishToken'])).publishToken||null
   const r=await client.from('publish_requests').select('*').eq('id',id).limit(1)
   const row=(r.data||[])[0]
   if(!row)return
@@ -66,7 +75,7 @@ async function approveRequest(id){
 }
 
 async function rejectRequest(id){
-  const token=(await chrome.storage.local.get(['publishToken'])).publishToken||null
+  const token=(await getKV(['publishToken'])).publishToken||null
   await client.from('publish_requests').update({status:'rejected',token}).eq('id',id)
   await loadRequests()
 }
@@ -87,9 +96,35 @@ tblReq.addEventListener('click',async e=>{
   if(act==='approve') await approveRequest(id)
   if(act==='reject') await rejectRequest(id)
 })
+function debounce(fn,delay){
+  let t
+  return function(){
+    clearTimeout(t)
+    t=setTimeout(()=>fn.apply(this,arguments),delay)
+  }
+}
 
-saveBtn.addEventListener('click',saveConfig)
-loadPublicBtn.addEventListener('click',loadPublic)
-loadReqBtn.addEventListener('click',loadRequests)
+const autoSave=debounce(async()=>{
+  await saveConfig()
+  if(client){
+    await loadPublic()
+    await loadRequests()
+  }
+  try{
+    window.postMessage({type:'SUPABASE_CONFIG',SUPABASE_URL:urlEl.value.trim(),SUPABASE_ANON_KEY:keyEl.value.trim()},'*')
+  }catch(_){}
+},400)
 
-loadConfig()
+urlEl.addEventListener('input',autoSave)
+keyEl.addEventListener('input',autoSave)
+tokenEl.addEventListener('input',autoSave)
+
+loadConfig().then(async()=>{
+  if(client){
+    await loadPublic()
+    await loadRequests()
+  }
+  try{
+    window.postMessage({type:'SUPABASE_CONFIG',SUPABASE_URL:urlEl.value.trim(),SUPABASE_ANON_KEY:keyEl.value.trim()},'*')
+  }catch(_){}
+})

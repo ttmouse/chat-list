@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Supabase 连接测试</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+    .log { margin: 10px 0; padding: 10px; background: #2d2d2d; border-radius: 4px; }
+    .success { color: #4ec9b0; }
+    .error { color: #f48771; }
+    .info { color: #9cdcfe; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Supabase 连接测试</h1>
+  <div id="logs"></div>
+  <button onclick="testConnection()">测试连接</button>
+  <button onclick="testPublicData()">测试读取公共数据</button>
+  
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    
+    const URL = 'https://noslltzmrhffjfatqlgh.supabase.co';
+    const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vc2xsdHptcmhmZmpmYXRxbGdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzOTIzMzcsImV4cCI6MjA3ODk2ODMzN30.sCI0LgBH4niNSQQdQoT_Bz218lml-Djux_M4GZR-yII';
+    
+    const logs = document.getElementById('logs');
+    
+    function log(msg, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `log ${type}`;
+      div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logs.appendChild(div);
+    }
+    
+    let client;
+    try {
+      client = createClient(URL, KEY);
+      window.supabase = client;
+      log('✅ Supabase 客户端创建成功', 'success');
+      log(`URL: ${URL}`, 'info');
+    } catch (e) {
+      log(`❌ 创建客户端失败: ${e.message}`, 'error');
+    }
+    
+    window.testConnection = async function() {
+      log('开始测试连接...', 'info');
+      try {
+        const { data, error } = await client.from('chat_groups_public').select('count');
+        if (error) throw error;
+        log('✅ 连接成功！', 'success');
+      } catch (e) {
+        log(`❌ 连接失败: ${e.message}`, 'error');
+      }
+    };
+    
+    window.testPublicData = async function() {
+      log('开始读取公共数据...', 'info');
+      try {
+        const { data: groups, error: gError } = await client.from('chat_groups_public').select('*');
+        if (gError) throw gError;
+        log(`✅ 读取到 ${groups?.length || 0} 个公共分组`, 'success');
+        
+        const { data: scripts, error: sError } = await client.from('public_catalog').select('*');
+        if (sError) throw sError;
+        log(`✅ 读取到 ${scripts?.length || 0} 条公共话术`, 'success');
+        
+        if (groups?.length > 0) {
+          log(`第一个分组: ${JSON.stringify(groups[0])}`, 'info');
+        }
+      } catch (e) {
+        log(`❌ 读取失败: ${e.message}`, 'error');
+      }
+    };
+  </script>
+</body>
+</html>

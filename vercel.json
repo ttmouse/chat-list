@@ -1,6 +1,12 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/web-admin/index.html" },
-    { "source": "/(.*)", "destination": "/web-admin/$1" }
+    {
+      "source": "/",
+      "destination": "/web-admin/index.html"
+    },
+    {
+      "source": "/web-admin/(.*)",
+      "destination": "/web-admin/$1"
+    }
   ]
 }

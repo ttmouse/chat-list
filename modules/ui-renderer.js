@@ -57,9 +57,6 @@ class UIRenderer {
             <button class="cls-btn-clear-search" title="清除搜索"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L15 15" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15L15 3" stroke="#333333" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
           <div class="script-list"></div>
-          <div class="widget-actions">
-            <button class="cls-btn-add-script" aria-label="添加话术" title="添加话术">＋</button>
-          </div>
         </div>
         <div class="manage-panel" style="display: none;">
           <div class="manage-header">
@@ -79,11 +76,15 @@ class UIRenderer {
               <h4>话术编辑</h4>
               <div class="script-form">
                 <input type="hidden" id="edit-script-id">
+                <div class="script-group-selector">
+                  <div class="script-group-selector-label">所属分组</div>
+                  <div class="script-group-selector-tabs" id="script-group-selector"></div>
+                  <select id="script-group" class="script-group-select" aria-label="分组选择">
+                    <option value="">未分组</option>
+                  </select>
+                </div>
                 <input type="text" id="script-title" placeholder="话术标题">
                 <textarea id="script-note" placeholder="备注（可选）" rows="2"></textarea>
-                <select id="script-group">
-                  <option value="">选择分组</option>
-                </select>
                 <textarea id="script-content" placeholder="话术内容"></textarea>
                 <div class="form-actions">
                   <button class="cls-btn-save-script">保存</button>
@@ -93,6 +94,7 @@ class UIRenderer {
             </div>
           </div>
         </div>
+        <button class="cls-btn-add-script" aria-label="添加话术" title="添加话术">＋</button>
       </div>
     `;
 
@@ -145,6 +147,7 @@ class UIRenderer {
     try {
       const groupTabs = this.widget.widget.querySelector('.group-tabs');
       const groupSelect = this.widget.widget.querySelector('#script-group');
+      const groupSelector = this.widget.widget.querySelector('#script-group-selector');
       const groupList = this.widget.widget.querySelector('.group-list');
 
       // 检查必要元素是否存在
@@ -154,6 +157,10 @@ class UIRenderer {
       }
       if (!groupSelect) {
         console.error('找不到分组选择器 #script-group');
+        return;
+      }
+      if (!groupSelector) {
+        console.error('找不到脚本分组标签容器 #script-group-selector');
         return;
       }
       if (!groupList) {
@@ -183,12 +190,52 @@ class UIRenderer {
       `;
 
       // 渲染分组选择器
+      const currentSelectValue = groupSelect.value || '';
       groupSelect.innerHTML = `
-        <option value="">选择分组</option>
+        <option value="">未分组</option>
         ${this.widget.groups.map(group => `
           <option value="${group.id}">${group.name}</option>
         `).join('')}
       `;
+      groupSelect.value = currentSelectValue || '';
+
+      // 渲染脚本编辑分组选项（横向 Chips）
+      const selectorItems = [
+        { id: '', name: '未分组', color: '#d0d0d0' },
+        ...this.widget.groups.map(group => ({
+          id: group.id,
+          name: group.name,
+          color: group.color || '#d0d0d0'
+        }))
+      ];
+
+      groupSelector.innerHTML = selectorItems.map(item => `
+        <button type="button"
+                class="script-group-chip ${currentSelectValue === item.id ? 'active' : ''}"
+                data-value="${item.id}">
+          <span class="chip-color" style="background:${item.color}"></span>
+          <span class="chip-label">${item.name}</span>
+        </button>
+      `).join('');
+
+      const chipButtons = Array.from(groupSelector.querySelectorAll('.script-group-chip'));
+      const updateChipSelection = (value = groupSelect.value || '') => {
+        chipButtons.forEach(btn => {
+          const val = btn.dataset.value || '';
+          btn.classList.toggle('active', val === value);
+        });
+      };
+
+      chipButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const value = btn.dataset.value || '';
+          groupSelect.value = value;
+          updateChipSelection(value);
+        });
+      });
+
+      this.widget.syncScriptGroupSelector = updateChipSelection;
+      updateChipSelection(currentSelectValue);
 
       // 渲染分组管理列表
       groupList.innerHTML = this.widget.groups.map(group => `

@@ -386,6 +386,12 @@ class ScriptManagement {
     if (noteInput) noteInput.value = '';
     if (groupSelect) groupSelect.value = '';
     if (contentInput) contentInput.value = '';
+    if (this.widget?.syncScriptGroupSelector) {
+      this.widget.syncScriptGroupSelector('');
+    }
+    if (this.widget?.refreshScriptContentHeight) {
+      this.widget.refreshScriptContentHeight();
+    }
   }
 }
 

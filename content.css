@@ -341,34 +341,34 @@
   opacity: 0.8;
 }
 
-/* 操作按钮 */
-#chat-list-widget .widget-actions {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  left: auto;
-  background: transparent;
-  border: none;
-  padding: 0;
-  display: block;
-  box-shadow: none;
-  border-radius: 0;
-  z-index: 10;
-}
-
 /* 悬浮添加按钮（FAB）样式 */
-#chat-list-widget .widget-actions .cls-btn-add-script {
-  width: 56px;
-  height: 56px;
+#chat-list-widget .cls-btn-add-script {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   padding: 0;
-  font-size: 28px;
-  line-height: 56px;
-  text-align: center;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: var(--cls-primary);
+  box-shadow: 0 10px 24px rgba(41, 50, 103, 0.15);
+  z-index: 15;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-#chat-list-widget .widget-actions .cls-btn-add-script:hover { transform: scale(0.98); }
-#chat-list-widget .widget-actions .cls-btn-add-script:active { transform: scale(0.96); }
+#chat-list-widget .cls-btn-add-script:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(41, 50, 103, 0.2);
+}
+#chat-list-widget .cls-btn-add-script:active {
+  transform: scale(0.96);
+}
 
 /* 管理面板 */
 #chat-list-widget .manage-panel {
@@ -1284,7 +1284,7 @@
   }
   
   #chat-list-widget .group-tabs {
-    flex-direction: column;
+    justify-content: flex-start;
   }
   
   #chat-list-widget .group-tab {

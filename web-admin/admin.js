@@ -8,6 +8,8 @@ const loadPublicBtn = document.getElementById('btn-load-public')
 const importPublicBtn = document.getElementById('btn-import-public')
 const exportPublicBtn = document.getElementById('btn-export-public')
 const scriptList = document.getElementById('script-list')
+const searchInput = document.getElementById('script-search')
+const groupFilterEl = document.getElementById('group-filter')
 
 // Form Elements
 const formGroup = document.getElementById('form-group')
@@ -21,10 +23,15 @@ const btnPubDel = document.getElementById('btn-pub-del')
 const btnAddNew = document.getElementById('btn-add-new')
 const editorTitle = document.getElementById('editor-title')
 
+const GROUP_ALL = 'all'
+const GROUP_UNGROUPED = 'ungrouped'
+
 let client = null
 let groups = []
 let scripts = []
 let editingId = null
+let selectedGroupId = GROUP_ALL
+let searchQuery = ''
 
 function lsGet(k) { try { return localStorage.getItem(k) || '' } catch { return '' } }
 function lsSet(k, v) { try { localStorage.setItem(k, v) } catch { } }
@@ -80,9 +87,12 @@ async function loadPublic() {
     const sr = await client.from('public_catalog').select('*').order('order_index', { ascending: true })
     scripts = sr.data || []
 
-    // Update Count
-    const countEl = document.getElementById('public-count')
-    if (countEl) countEl.textContent = scripts.length
+    if (selectedGroupId !== GROUP_ALL && selectedGroupId !== GROUP_UNGROUPED) {
+      const groupExists = groups.some(g => String(g.id) === selectedGroupId)
+      if (!groupExists) selectedGroupId = GROUP_ALL
+    }
+
+    renderGroupFilter()
 
     renderList()
 
@@ -102,13 +112,64 @@ async function loadPublic() {
   }
 }
 
-function renderList() {
-  if (!scripts.length) {
-    scriptList.innerHTML = '<div class="text-center text-slate-400 py-8 text-sm">暂无数据</div>'
+function renderGroupFilter() {
+  if (!groupFilterEl) return
+
+  const hasUngrouped = scripts.some(s => !s.group_id)
+  const buttonConfigs = [
+    { id: GROUP_ALL, label: '全部' },
+    ...(hasUngrouped ? [{ id: GROUP_UNGROUPED, label: '未分组' }] : []),
+    ...groups.map(g => ({
+      id: String(g.id),
+      label: g.name || '未命名分组'
+    }))
+  ]
+
+  if (!buttonConfigs.length) {
+    groupFilterEl.innerHTML = '<span class="text-xs text-slate-400">暂无分组</span>'
     return
   }
 
-  scriptList.innerHTML = scripts.map(s => {
+  groupFilterEl.innerHTML = buttonConfigs.map(cfg => {
+    const isActive = selectedGroupId === cfg.id
+    const base = 'px-3 py-1 rounded-full border text-xs whitespace-nowrap transition-all'
+    const active = 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+    const inactive = 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900'
+    return `<button type="button" data-id="${cfg.id}" class="${base} ${isActive ? active : inactive}">${cfg.label}</button>`
+  }).join('')
+}
+
+function getFilteredScripts() {
+  const query = searchQuery.trim().toLowerCase()
+  return scripts.filter(s => {
+    const groupId = s.group_id === null || s.group_id === undefined ? '' : String(s.group_id)
+    let matchesGroup = true
+    if (selectedGroupId === GROUP_UNGROUPED) {
+      matchesGroup = !groupId
+    } else if (selectedGroupId !== GROUP_ALL) {
+      matchesGroup = groupId === selectedGroupId
+    }
+
+    if (!matchesGroup) return false
+    if (!query) return true
+
+    const text = `${s.title || ''} ${s.note || ''} ${s.content || ''}`.toLowerCase()
+    return text.includes(query)
+  })
+}
+
+function renderList() {
+  const filtered = getFilteredScripts()
+  const countEl = document.getElementById('public-count')
+  if (countEl) countEl.textContent = filtered.length === scripts.length ? scripts.length : `${filtered.length}/${scripts.length}`
+
+  if (!filtered.length) {
+    const message = scripts.length ? '未找到匹配话术' : '暂无数据'
+    scriptList.innerHTML = `<div class="text-center text-slate-400 py-8 text-sm">${message}</div>`
+    return
+  }
+
+  scriptList.innerHTML = filtered.map(s => {
     const g = groups.find(x => x.id === s.group_id)
     const isActive = s.id === editingId ? 'active' : ''
     const note = s.note || s.content || ''
@@ -118,10 +179,12 @@ function renderList() {
         <div class="flex justify-between items-start mb-1">
           <span class="font-medium text-slate-800 truncate flex-1 mr-2">${s.title}</span>
           ${g ? `<span class="flex-none px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-600">${g.name}</span>` : ''}
-        </div>
-        <div class="text-xs text-slate-500 truncate">${note}</div>
+      </div>
+      <div class="text-xs text-slate-500 truncate">${note}</div>
       </div>`
   }).join('')
+
+  updateListSelection()
 }
 
 function updateListSelection() {
@@ -147,6 +210,25 @@ scriptList.addEventListener('click', e => {
   const id = item.dataset.id
   selectScript(id)
 })
+
+if (searchInput) {
+  searchInput.addEventListener('input', e => {
+    searchQuery = e.target.value || ''
+    renderList()
+  })
+}
+
+if (groupFilterEl) {
+  groupFilterEl.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-id]')
+    if (!btn) return
+    const newId = btn.dataset.id || GROUP_ALL
+    if (selectedGroupId === newId) return
+    selectedGroupId = newId
+    renderGroupFilter()
+    renderList()
+  })
+}
 
 function selectScript(id) {
   const s = scripts.find(x => x.id === id)

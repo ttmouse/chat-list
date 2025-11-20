@@ -43,7 +43,6 @@
     "default_popup": "popup.html",
     "default_title": "话术助手"
   },
-  "options_page": "admin.html",
   "icons": {
     "16": "icons/icon16.svg",
     "48": "icons/icon48.svg",

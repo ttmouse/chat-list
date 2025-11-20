@@ -50,18 +50,18 @@ class PopupManager {
       // 从 manifest.json 获取版本号
       const manifest = chrome.runtime.getManifest();
       const version = manifest.version;
-      
+
       // 更新页面中的版本号显示
       const versionElement = document.querySelector('.footer p');
       if (versionElement) {
         versionElement.innerHTML = `话术助手 v${version} | <a href="#" id="help-link">帮助</a> | <a href="#" id="feedback-link">反馈</a>`;
-        
+
         // 重新绑定帮助和反馈链接事件
         document.getElementById('help-link').addEventListener('click', (e) => {
           e.preventDefault();
           this.showHelp();
         });
-        
+
         document.getElementById('feedback-link').addEventListener('click', (e) => {
           e.preventDefault();
           this.showFeedback();
@@ -124,7 +124,7 @@ class PopupManager {
         chrome.tabs.sendMessage(tab.id, {
           type: 'SETTINGS_UPDATED',
           settings: this.settings
-        }).catch(() => {});
+        }).catch(() => { });
       });
     } catch (error) {
       console.error('保存设置失败:', error);
@@ -133,16 +133,8 @@ class PopupManager {
 
   async openManagePage() {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab) {
-        // 发送消息给内容脚本，打开管理面板
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'OPEN_MANAGE_PANEL'
-        }).catch(() => {
-          alert('请在网页中使用话术助手管理功能');
-        });
-        window.close();
-      }
+      chrome.tabs.create({ url: 'http://[::]:5500/web-admin/index.html' });
+      window.close();
     } catch (error) {
       console.error('打开管理页面失败:', error);
     }
@@ -208,7 +200,7 @@ class PopupManager {
 4. 数据管理：
    - 支持导出话术数据进行备份
 
-如有问题，请联系开发者。
+5. 如有问题，请联系开发者。
     `;
 
     alert(helpContent);

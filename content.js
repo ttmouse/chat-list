@@ -20,6 +20,9 @@ class ChatListWidget {
     this.storageService = new StorageService();
     this.remoteEnabled = !!this.storageService.enableRemote;
     this.currentSourceFilter = 'all';
+    this.addScriptButton = null;
+    this.scriptContentTextarea = null;
+    this.syncScriptGroupSelector = null;
 
     // 初始化新的输入框管理器
     this.inputManager = new InputManager();
@@ -550,6 +553,7 @@ class ChatListWidget {
       this.uiRenderer.createTrigger();
       this.uiRenderer.renderGroups();
       this.uiRenderer.renderScripts();
+      this.addScriptButton = this.widget.querySelector('.cls-btn-add-script');
 
       // 初始状态：隐藏浮层，显示触发器
       this.hideWidget();
@@ -970,7 +974,7 @@ class ChatListWidget {
     // 预览浮层事件已在预览模块中处理
 
     // 添加话术
-    const addScriptBtn = this.widget.querySelector('.cls-btn-add-script');
+    const addScriptBtn = this.addScriptButton || this.widget.querySelector('.cls-btn-add-script');
 
     if (addScriptBtn) {
       addScriptBtn.addEventListener('click', () => {

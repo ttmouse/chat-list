@@ -19,12 +19,12 @@ class GroupManagement {
         name: name.trim(),
         color: this.colors[Math.floor(Math.random() * this.colors.length)]
       };
-      
+
       this.widget.groups.push(newGroup);
       this.widget.saveData();
       this.widget.renderGroups();
-      
-      console.log('添加分组成功:', newGroup);
+
+      // console.log('添加分组成功:', newGroup);
     }
   }
 
@@ -45,8 +45,8 @@ class GroupManagement {
       this.widget.saveData();
       this.widget.renderGroups();
       this.widget.renderScripts();
-      
-      console.log('编辑分组成功:', group);
+
+      // console.log('编辑分组成功:', group);
     }
   }
 
@@ -82,26 +82,26 @@ class GroupManagement {
         script.groupId = '';
       }
     });
-    
+
     // 删除分组
     this.widget.groups = this.widget.groups.filter(g => g.id !== groupId);
-    
+
     // 如果当前选中的是被删除的分组，切换到全部
     if (this.widget.currentGroup === groupId) {
       this.widget.currentGroup = null;
     }
-    
+
     // 重置选中状态
     this.widget.selectedScriptIndex = -1;
-    
+
     this.widget.saveData();
     this.widget.renderGroups();
     this.widget.renderScripts();
-    
+
     // 确保清除选中状态和预览
     this.widget.updateScriptSelection();
-    
-    console.log('删除分组成功:', groupId);
+
+    // console.log('删除分组成功:', groupId);
   }
 
   /**
@@ -147,7 +147,7 @@ class GroupManagement {
     }
 
     // 检查是否重名
-    const existingGroup = this.widget.groups.find(g => 
+    const existingGroup = this.widget.groups.find(g =>
       g.name === trimmedName && g.id !== excludeId
     );
     if (existingGroup) {
@@ -229,8 +229,8 @@ class GroupManagement {
 
     script.groupId = targetGroupId;
     script.updatedAt = new Date().toISOString();
-    
-    console.log('话术移动成功:', { scriptId, targetGroupId });
+
+    // console.log('话术移动成功:', { scriptId, targetGroupId });
     return true;
   }
 
@@ -263,7 +263,7 @@ class GroupManagement {
    */
   bindEvents() {
     const widget = this.widget.widget;
-    
+
     // 添加分组按钮
     const addGroupBtn = widget.querySelector('.cls-btn-add-group');
     if (addGroupBtn) {
@@ -286,7 +286,7 @@ class GroupManagement {
       });
     }
 
-    console.log('分组管理事件绑定完成');
+    // console.log('分组管理事件绑定完成');
   }
 }
 

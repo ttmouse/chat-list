@@ -18,7 +18,7 @@ class DataImportExport {
     fileInput.type = 'file';
     fileInput.accept = '.json';
     fileInput.style.display = 'none';
-    
+
     // 文件选择处理
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
@@ -27,12 +27,12 @@ class DataImportExport {
       // 清理临时元素
       document.body.removeChild(fileInput);
     });
-    
+
     // 添加到页面并触发点击
     document.body.appendChild(fileInput);
     fileInput.click();
   }
-  
+
   /**
    * 导入数据
    * @param {File} file - 要导入的JSON文件
@@ -41,20 +41,20 @@ class DataImportExport {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      
+
       if (!data.scripts || !Array.isArray(data.scripts)) {
         throw new Error('无效的数据格式');
       }
-      
+
       // 分析导入数据
       const existingTitles = new Set(this.widget.scripts.map(script => script.title));
       const newScripts = data.scripts.filter(script => !existingTitles.has(script.title));
       const duplicateScripts = data.scripts.filter(script => existingTitles.has(script.title));
-      
+
       // 处理分组数据
       const existingGroupIds = new Set(this.widget.groups.map(group => group.id));
       const newGroups = (data.groups || []).filter(group => !existingGroupIds.has(group.id));
-      
+
       // 显示导入预览
       const importMessage = [
         `共 ${data.scripts.length} 个话术，${(data.groups || []).length} 个分组`,
@@ -64,7 +64,7 @@ class DataImportExport {
         '',
         '是否继续增量导入？'
       ].join('\n');
-      
+
       this.widget.showConfirmDialog(
         '导入确认',
         importMessage,
@@ -92,30 +92,30 @@ class DataImportExport {
       newScripts.forEach((script, index) => {
         script.id = String(maxId + index + 1);
       });
-      
+
       // 合并数据
       this.widget.scripts = [...this.widget.scripts, ...newScripts];
       this.widget.groups = [...this.widget.groups, ...newGroups];
-      
+
       await this.widget.saveData();
-      
+
       // 重置选中状态
       this.widget.selectedScriptIndex = -1;
-      
+
       // 重新渲染界面
       this.widget.renderGroups();
       this.widget.renderScripts();
-      
+
       // 确保清除选中状态和预览
       this.widget.updateScriptSelection();
-      
+
       const resultMessage = [
         '导入完成！',
         `新增话术：${newScripts.length} 个`,
         `跳过重复：${duplicateScripts.length} 个`,
         `新增分组：${newGroups.length} 个`
       ].join('\n');
-      
+
       this.widget.showSuccessMessage(resultMessage);
     } catch (error) {
       console.error('执行导入失败:', error);
@@ -135,11 +135,11 @@ class DataImportExport {
         exportTime: new Date().toISOString(),
         version: '1.0'
       };
-      
+
       const dataStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `chat-scripts-${new Date().toISOString().split('T')[0]}.json`;
@@ -147,11 +147,11 @@ class DataImportExport {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
+
       URL.revokeObjectURL(url);
-      
+
       this.widget.showSuccessMessage('导出成功！');
-      console.log('话术数据导出成功');
+      // console.log('话术数据导出成功');
     } catch (error) {
       console.error('导出失败:', error);
       alert('导出失败，请稍后重试');
@@ -167,24 +167,24 @@ class DataImportExport {
     if (!data || typeof data !== 'object') {
       return false;
     }
-    
+
     // 检查必需的scripts字段
     if (!data.scripts || !Array.isArray(data.scripts)) {
       return false;
     }
-    
+
     // 检查每个话术的基本结构
     for (const script of data.scripts) {
       if (!script.title || !script.content) {
         return false;
       }
     }
-    
+
     // 检查分组数据（可选）
     if (data.groups && !Array.isArray(data.groups)) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -196,11 +196,11 @@ class DataImportExport {
   getImportStats(data) {
     const existingTitles = new Set(this.widget.scripts.map(script => script.title));
     const existingGroupIds = new Set(this.widget.groups.map(group => group.id));
-    
+
     const newScripts = data.scripts.filter(script => !existingTitles.has(script.title));
     const duplicateScripts = data.scripts.filter(script => existingTitles.has(script.title));
     const newGroups = (data.groups || []).filter(group => !existingGroupIds.has(group.id));
-    
+
     return {
       totalScripts: data.scripts.length,
       totalGroups: (data.groups || []).length,

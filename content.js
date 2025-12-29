@@ -46,143 +46,135 @@ class ChatListWidget {
     });
   }
 
-  async submitScriptToPublic(scriptId) {
-    if (!this.remoteEnabled) {
-      this.showSuccessMessage('未启用远端功能');
-      return;
-    }
-    const s = this.scripts.find(x => x.id === scriptId);
-    if (!s) return;
-    const token = prompt('请输入发布令牌', '123456');
-    if (!token) return;
-    const group = this.groups.find(g => g.id === s.groupId) || null;
-    const scripts = [{ id: s.id, groupId: s.groupId || null, title: s.title || '', note: s.note || '', content: s.content || '', order_index: 0 }];
-    const groups = group ? [{ id: group.id, name: group.name, color: group.color, order_index: group.order_index || 0 }] : [];
-    const r = await this.storageService.publishAllToPublic(scripts, groups, token);
-    if (r && r.success) {
-      this.showSuccessMessage('已保存到公共库');
-    } else {
-      this.showSuccessMessage('保存失败');
-    }
-  }
-
-  async publishSelectedToPublic() {
-    if (!this.remoteEnabled) {
-      this.showSuccessMessage('未启用远端功能');
-      return;
-    }
-    const sel = this.uiRenderer?.getSelectedScript();
-    if (!sel) {
-      this.showSuccessMessage('请先选择话术');
-      return;
-    }
-    const token = await this.getPublishToken();
-    if (!token) return;
-    const group = this.groups.find(g => g.id === sel.groupId) || null;
-    const scripts = [{ id: sel.id, groupId: sel.groupId || null, title: sel.title || '', note: sel.note || '', content: sel.content || '', order_index: 0 }];
-    const groups = group ? [{ id: group.id, name: group.name, color: group.color, order_index: group.order_index || 0 }] : [];
-    const r = await this.publishViaFunction(token, scripts, groups);
-    if (r && r.success) {
-      this.showSuccessMessage('已保存到公共库');
-    } else {
-      this.showSuccessMessage('保存失败');
-    }
-  }
-
-  async loginSharedAccount() {
-    const email = prompt('请输入共享账户邮箱');
-    const password = prompt('请输入共享账户密码');
-    if (!email || !password) return;
-    const ok = await (window.ensureSupabase ? window.ensureSupabase() : Promise.resolve(false));
-    if (!ok || !window.supabaseClient?.auth) {
-      this.showSuccessMessage('客户端未初始化');
-      return;
-    }
-    try {
-      const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        this.showSuccessMessage('登录失败');
-      } else {
-        this.showSuccessMessage('登录成功');
-      }
-    } catch (_) {
-      this.showSuccessMessage('登录异常');
-    }
-  }
-
   async publishAllToPublicFromLocal() {
-    if (!this.remoteEnabled) {
-      this.showSuccessMessage('未启用远端功能');
-      return;
-    }
-
-    const privateScripts = (this.scripts || []).filter(s => s.__source !== 'public').map(s => ({
-      id: s.id,
-      group_id: s.groupId || null,
-      title: s.title || '',
-      note: s.note || '',
-      content: s.content || '',
-      order_index: s.order_index || 0,
-      is_active: true
-    }));
-
-    const privateGroups = (this.groups || []).filter(g => g.__source !== 'public').map(g => ({
-      id: g.id,
-      name: g.name,
-      color: g.color,
-      order_index: g.order_index || 0
-    }));
-
     try {
-      const response = await fetch('http://localhost:3001/api/upload-public', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          scripts: privateScripts,
-          groups: privateGroups
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`上传失败: ${response.status}`);
+      if (!this.remoteEnabled) {
+        this.showSuccessMessage('未启用远端功能');
+        return;
       }
 
-      const result = await response.json();
+      const token = await this.getPublishToken();
+      if (!token) return;
 
-      if (result.success) {
+      const privateScripts = (this.scripts || []).filter(s => s.__source !== 'public').map(s => ({
+        id: s.id,
+        groupId: s.groupId || null,
+        title: s.title || '',
+        note: s.note || '',
+        content: s.content || '',
+        order_index: s.order_index || 0,
+        is_active: true
+      }));
+
+      const privateGroups = (this.groups || []).filter(g => g.__source !== 'public').map(g => ({
+        id: g.id,
+        name: g.name,
+        color: g.color,
+        order_index: g.order_index || 0
+      }));
+
+      // console.log('[ChatList] 批量上传公共库开始', { scripts: privateScripts.length, groups: privateGroups.length });
+      const result = await this.runWithTimeout(
+        this.publishViaFunction(token, privateScripts, privateGroups),
+        20000,
+        '批量上传超时'
+      );
+      // console.log('[ChatList] 批量上传公共库完成', result);
+      if (result?.success) {
         this.showSuccessMessage(`批量上传成功！话术: ${privateScripts.length} 条，分组: ${privateGroups.length} 个`);
       } else {
-        this.showSuccessMessage('批量上传失败');
+        const err = result?.error?.message ? `批量上传失败: ${result.error.message}` : '批量上传失败';
+        this.showSuccessMessage(err);
       }
     } catch (error) {
       console.error('上传失败:', error);
-      this.showSuccessMessage('上传失败: ' + error.message);
+      const message = error?.message?.includes('Extension context invalidated')
+        ? '扩展已更新，请刷新页面后重试'
+        : (error?.message || '未知错误');
+      this.showSuccessMessage('上传失败: ' + message);
     }
   }
 
+  runWithTimeout(promise, timeoutMs = 20000, timeoutMessage = '请求超时') {
+    return new Promise((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        resolve({ success: false, error: new Error(timeoutMessage) });
+      }, timeoutMs);
+
+      promise.then(result => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(result);
+      }).catch(error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve({ success: false, error });
+      });
+    });
+  }
+
   async getPublishToken() {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        const r = await chrome.storage.local.get(['publishToken']);
-        const t = (r.publishToken || '').trim();
-        if (t) return t;
-      } else {
-        const t = (localStorage.getItem('publishToken') || '').trim();
-        if (t) return t;
+    const useChromeStorage = () => {
+      try {
+        if (typeof chrome === 'undefined') return false;
+        if (!chrome.storage || !chrome.storage.local) return false;
+        if (!chrome.runtime || !chrome.runtime.id) return false;
+        return this.isExtensionContextValid();
+      } catch (_) {
+        return false;
       }
-    } catch (_) { }
+    };
+
+    const readFromChrome = async () => {
+      const r = await chrome.storage.local.get(['publishToken']);
+      return (r.publishToken || '').trim();
+    };
+
+    const readFromLocal = () => (localStorage.getItem('publishToken') || '').trim();
+
+    const writeToken = async (token) => {
+      if (!token) return;
+      if (useChromeStorage()) {
+        try {
+          await chrome.storage.local.set({ publishToken: token });
+          return;
+        } catch (error) {
+          if (error?.message?.includes('Extension context invalidated')) {
+            this.showContextInvalidatedNotice();
+          } else {
+            console.error('保存发布令牌失败:', error);
+          }
+        }
+      }
+      try {
+        localStorage.setItem('publishToken', token);
+      } catch (error) {
+        console.error('本地保存发布令牌失败:', error);
+      }
+    };
+
+    // 读取缓存的令牌
+    try {
+      const token = useChromeStorage() ? await readFromChrome() : readFromLocal();
+      if (token) return token;
+    } catch (error) {
+      if (error?.message?.includes('Extension context invalidated')) {
+        this.showContextInvalidatedNotice();
+      } else {
+        console.error('读取发布令牌失败:', error);
+      }
+    }
+
     const t = prompt('请输入发布令牌', '123456');
     if ((t || '').trim()) {
-      try {
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-          await chrome.storage.local.set({ publishToken: t.trim() });
-        } else {
-          localStorage.setItem('publishToken', t.trim());
-        }
-      } catch (_) { }
-      return t.trim();
+      const token = t.trim();
+      await writeToken(token);
+      return token;
     }
     return null;
   }
@@ -253,16 +245,16 @@ class ChatListWidget {
   isWhitelistedSite() { return true; }
 
   async init() {
-    console.log('开始初始化话术扩展...');
+    // console.log('开始初始化话术扩展...');
 
     // 先加载数据
     try {
       await this.loadData();
-      console.log('数据加载完成:', {
-        scriptsCount: this.scripts?.length || 0,
-        groupsCount: this.groups?.length || 0,
-        settings: this.settings
-      });
+      // console.log('数据加载完成:', {
+      //   scriptsCount: this.scripts?.length || 0,
+      //   groupsCount: this.groups?.length || 0,
+      //   settings: this.settings
+      // });
     } catch (error) {
       console.error('数据加载失败:', error);
       return;
@@ -273,32 +265,27 @@ class ChatListWidget {
     try {
       // 获取版本号
       this.version = await this.getVersion();
-      console.log('版本号获取完成:', this.version);
+      // console.log('版本号获取完成:', this.version);
 
       // 使用统一的模块加载器初始化所有模块
       this.initAllModules();
-      console.log('模块加载完成');
+      // console.log('模块加载完成');
 
       this.initDragPositionManager(); // 初始化拖拽位置管理模块
-      console.log('拖拽位置管理器初始化完成');
+      // console.log('拖拽位置管理器初始化完成');
 
       this.createWidget();
-      console.log('组件创建完成');
+      // console.log('组件创建完成');
 
       this.initPreviewModule();
-      console.log('预览模块初始化完成');
+      // console.log('预览模块初始化完成');
 
       // this.createFocusDebugPanel();
       this.bindEvents();
-      console.log('事件绑定完成');
-
-      // 处理启动时的同步任务
-      this.storageService.processSyncQueue();
-      // 设置周期性同步 (10分钟)
-      setInterval(() => this.handleSync(), 10 * 60 * 1000);
+      // console.log('事件绑定完成');
 
       this.initialized = true; // 标记为已初始化
-      console.log('话术扩展初始化成功');
+      // console.log('话术扩展初始化成功');
     } catch (error) {
       console.error('初始化过程中出错:', error);
       // 尝试清理部分初始化的资源
@@ -306,50 +293,6 @@ class ChatListWidget {
 
       // 显示错误提示
       this.showInitErrorNotice(error);
-    }
-  }
-
-  async handleSync(manual = false) {
-    try {
-      // Check if remote is ready (has password/token)
-      const isReady = await this.storageService.remote.isReady();
-
-      if (!isReady) {
-        if (manual) {
-          const password = prompt('请输入同步密码 (任意字符，用于多设备同步):');
-          if (password) {
-            await this.storageService.local.setSyncPassword(password);
-            this.showSuccessMessage('同步密码已设置');
-          } else {
-            return; // User cancelled
-          }
-        } else {
-          // Auto-sync silently fails if not ready
-          return;
-        }
-      }
-
-      const data = await this.storageService.syncPull();
-      this.scripts = this.validateScripts(data.scripts) || this.getDefaultScripts();
-      this.groups = this.validateGroups(data.groups) || this.getDefaultGroups();
-
-      if (this.uiRenderer) {
-        this.uiRenderer.refreshUI();
-      } else {
-        this.renderGroups();
-        this.renderScripts();
-      }
-
-      this.storageService.processSyncQueue();
-
-      if (manual) {
-        this.showSuccessMessage('同步完成');
-      }
-    } catch (error) {
-      console.error('Sync failed', error);
-      if (manual) {
-        this.showSuccessMessage('同步失败: ' + error.message);
-      }
     }
   }
 
@@ -383,7 +326,7 @@ class ChatListWidget {
 
   // 重置为默认数据
   resetToDefaultData() {
-    console.log('重置为默认数据');
+    // console.log('重置为默认数据');
     this.scripts = this.getDefaultScripts();
     this.groups = this.getDefaultGroups();
   }
@@ -425,7 +368,7 @@ class ChatListWidget {
       });
 
       this.initialized = false;
-      console.log('清理完成');
+      // console.log('清理完成');
     } catch (error) {
       console.error('清理过程中出错:', error);
     }
@@ -473,7 +416,7 @@ class ChatListWidget {
 
     // 如果有数据需要迁移，保存到存储
     if (needsSave) {
-      console.log('正在迁移话术数据，添加使用次数字段...');
+      // console.log('正在迁移话术数据，添加使用次数字段...');
       this.saveData().then(() => {
         console.log('话术数据迁移完成');
       }).catch(error => {
@@ -532,8 +475,14 @@ class ChatListWidget {
       // 重置选中状态
       this.selectedScriptIndex = -1;
 
-      // 执行同步
-      await this.handleSync();
+      // 重新加载数据并刷新UI
+      await this.loadData();
+      if (this.uiRenderer) {
+        this.uiRenderer.refreshUI();
+      } else {
+        this.renderGroups();
+        this.renderScripts();
+      }
 
       // 确保清除选中状态和预览
       this.updateScriptSelection();
@@ -940,16 +889,12 @@ class ChatListWidget {
     this.widget.querySelector('.script-list').addEventListener('click', (e) => {
       const editBtn = ChatListUtils.closest(e.target, '.cls-btn-edit');
       const deleteBtn = ChatListUtils.closest(e.target, '.cls-btn-delete');
-      const submitBtn = ChatListUtils.closest(e.target, '.cls-btn-submit');
       if (editBtn) {
         const scriptId = editBtn.dataset.id;
         this.editScript(scriptId);
       } else if (deleteBtn) {
         const scriptId = deleteBtn.dataset.id;
         this.deleteScript(scriptId);
-      } else if (submitBtn) {
-        const scriptId = submitBtn.dataset.id;
-        this.submitScriptToPublic(scriptId);
       }
     });
 
@@ -1023,55 +968,9 @@ class ChatListWidget {
         this.exportData();
       });
       if (this.remoteEnabled) {
-        moreMenu.querySelector('.cls-menu-refresh-public')?.addEventListener('click', async () => {
-          moreMenu.style.display = 'none';
-          this.showSuccessMessage('正在刷新公共库...');
-          try {
-            await this.loadData(); // 重新加载并渲染
-            this.showSuccessMessage('刷新成功');
-          } catch (error) {
-            console.error(error);
-            this.showSuccessMessage('刷新失败');
-          }
-        });
-        moreMenu.querySelector('.cls-menu-admin')?.addEventListener('click', () => {
-          moreMenu.style.display = 'none';
-          if (chrome.runtime.openOptionsPage) {
-            chrome.runtime.openOptionsPage();
-          } else {
-            const url = chrome.runtime.getURL('admin.html');
-            window.open(url, '_blank');
-          }
-        });
-        moreMenu.querySelector('.cls-menu-sync')?.addEventListener('click', () => {
-          moreMenu.style.display = 'none';
-          this.handleSync(true);
-        });
-
-        moreMenu.querySelector('.cls-menu-test')?.addEventListener('click', async () => {
-          moreMenu.style.display = 'none';
-          const r = await this.storageService.testConnection();
-          if (r.ok) {
-            this.showSuccessMessage('连接成功');
-          } else if (r.error === 'not_configured') {
-            this.showSuccessMessage('未配置 Supabase');
-          } else if (r.error === 'client_not_initialized') {
-            this.showSuccessMessage('客户端未初始化');
-          } else {
-            this.showSuccessMessage('连接失败: ' + r.error);
-          }
-        });
-        moreMenu.querySelector('.cls-menu-publish-public')?.addEventListener('click', async () => {
-          moreMenu.style.display = 'none';
-          await this.publishSelectedToPublic();
-        });
         moreMenu.querySelector('.cls-menu-publish-all')?.addEventListener('click', async () => {
           moreMenu.style.display = 'none';
           await this.publishAllToPublicFromLocal();
-        });
-        moreMenu.querySelector('.cls-menu-login')?.addEventListener('click', async () => {
-          moreMenu.style.display = 'none';
-          await this.loginSharedAccount();
         });
       }
       moreMenu.querySelector('.cls-menu-filter-all')?.addEventListener('click', () => {
@@ -1079,13 +978,6 @@ class ChatListWidget {
         this.currentSourceFilter = 'all';
         this.renderScripts();
       });
-      if (this.remoteEnabled) {
-        moreMenu.querySelector('.cls-menu-filter-public')?.addEventListener('click', () => {
-          moreMenu.style.display = 'none';
-          this.currentSourceFilter = 'public';
-          this.renderScripts();
-        });
-      }
       moreMenu.querySelector('.cls-menu-filter-private')?.addEventListener('click', () => {
         moreMenu.style.display = 'none';
         this.currentSourceFilter = 'private';
@@ -1149,7 +1041,6 @@ class ChatListWidget {
   }
 
   showWidget() {
-    this.handleSync(); // 同步数据
     if (this.modalManagement) {
       this.modalManagement.showWidget();
     } else {

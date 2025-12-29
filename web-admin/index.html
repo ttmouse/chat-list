@@ -82,6 +82,13 @@
       background-color: #eff6ff;
       border-color: #6366f1;
     }
+
+    .preset-dimension-count {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-left: 6px;
+    }
   </style>
 </head>
 
@@ -177,18 +184,23 @@
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex-none">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-lg font-semibold text-slate-800 flex items-center">
-              话术列表
-              <span id="public-count"
-                class="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">0</span>
+              预设库
+              <span id="public-count" class="ml-2 text-xs text-slate-400 font-medium">0</span>
             </h2>
-            <button type="button" id="btn-load-public"
-              class="text-slate-500 hover:text-indigo-600 transition-colors p-1" title="刷新">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                </path>
-              </svg>
-            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btn-sidebar-save"
+                class="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                保存当前
+              </button>
+              <button type="button" id="btn-load-public"
+                class="text-slate-500 hover:text-indigo-600 transition-colors p-1" title="刷新">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                  </path>
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="mt-4 space-y-3">
             <div class="relative">

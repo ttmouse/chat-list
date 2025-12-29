@@ -1,4 +1,4 @@
-console.log('[Supabase] supabase-client.js 脚本开始加载...');
+// console.log('[Supabase] supabase-client.js 脚本开始加载...');
 
 // 硬编码配置（最高优先级，确保能用）
 const HARDCODED_URL = 'https://noslltzmrhffjfatqlgh.supabase.co';
@@ -15,18 +15,18 @@ function getCreateClientSync() {
 function initializeClient() {
   try {
     const createClient = getCreateClientSync();
-    console.log('[Supabase] createClient available:', !!createClient);
+    // console.log('[Supabase] createClient available:', !!createClient);
 
     if (createClient) {
       if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
         client = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        console.log('[Supabase] Client initialized with window config');
+        // console.log('[Supabase] Client initialized with window config');
       } else if (HARDCODED_URL && HARDCODED_KEY) {
         client = createClient(HARDCODED_URL, HARDCODED_KEY);
-        console.log('[Supabase] Client initialized with hardcoded config');
+        // console.log('[Supabase] Client initialized with hardcoded config');
       }
       window.supabaseClient = client;
-      console.log('[Supabase] window.supabaseClient set:', !!window.supabaseClient);
+      // console.log('[Supabase] window.supabaseClient set:', !!window.supabaseClient);
     } else {
       console.warn('[Supabase] createClient not available, will retry...');
     }
@@ -42,7 +42,7 @@ initializeClient();
 if (!client) {
   setTimeout(() => {
     if (!window.supabaseClient) {
-      console.log('[Supabase] Retrying initialization...');
+      // console.log('[Supabase] Retrying initialization...');
       initializeClient();
     }
   }, 100);

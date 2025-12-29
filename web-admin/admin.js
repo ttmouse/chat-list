@@ -19,6 +19,7 @@ const formContent = document.getElementById('form-content')
 const formOrder = document.getElementById('form-order')
 const formActive = document.getElementById('form-active')
 const btnPubSave = document.getElementById('btn-pub-save')
+const btnSidebarSave = document.getElementById('btn-sidebar-save')
 const btnPubDel = document.getElementById('btn-pub-del')
 const btnAddNew = document.getElementById('btn-add-new')
 const editorTitle = document.getElementById('editor-title')
@@ -156,6 +157,36 @@ function getFilteredScripts() {
     const text = `${s.title || ''} ${s.note || ''} ${s.content || ''}`.toLowerCase()
     return text.includes(query)
   })
+}
+
+function normalizeTagList(tags) {
+  if (!tags) return []
+  if (Array.isArray(tags)) {
+    return tags.map(tag => typeof tag === 'string' ? tag.trim() : tag).filter(Boolean)
+  }
+  if (typeof tags === 'string') {
+    const trimmed = tags.trim()
+    if (!trimmed) return []
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) {
+        return parsed.map(tag => typeof tag === 'string' ? tag.trim() : tag).filter(Boolean)
+      }
+    } catch (_) {
+      // fall back to comma / whitespace separated text
+    }
+    return trimmed.split(/[,，\s]+/).map(item => item.trim()).filter(Boolean)
+  }
+  return []
+}
+
+function getDimensionCount(script) {
+  if (!script) return 0
+  if (typeof script.dimension_count === 'number' && !Number.isNaN(script.dimension_count)) {
+    return script.dimension_count
+  }
+  const normalizedTags = normalizeTagList(script.tags)
+  return normalizedTags.length
 }
 
 function renderList() {

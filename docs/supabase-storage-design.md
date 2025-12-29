@@ -82,6 +82,27 @@
 - 输入校验：写入前校验 `title/content/name` 长度与合法性，避免脏数据。
 - 统计事件：如需公共使用统计，另设 `usage_events` 做匿名聚合，公共库本身只读。
 
+## 数据去重策略
+### 上传阶段
+- `server/dedupe-helpers.js` 会在 `/api/upload-public` 中统一处理公共分组与话术的去重逻辑。
+- 去重键由 `group name` 与 `script title + content + group_id` 组成，先匹配云端已有记录，再对同一次上报的数据内部去重。
+- 若已存在相同内容，会复用云端 ID 并执行 `upsert`，确保来自不同浏览器的重复上报不会产生新纪录。
+
+### 历史数据清理
+- 新增脚本 `server/dedupe-public-data.js` 用于扫描 Supabase 中的 `chat_groups_public` 与 `public_catalog`，自动合并重复项并删除冗余行。
+- 运行方式：
+  ```bash
+  cd server
+  npm install
+  npm run dedupe            # 默认 Dry Run，只输出计划
+  npm run dedupe -- --apply # 真正执行写入与删除
+  ```
+- 该脚本会：
+  - 将重复分组合并为首个创建的记录，并把话术的 `group_id` 全部指向保留分组；
+  - 对重复话术累加 `usage_count`、合并标签，并删除冗余记录；
+  - 提供 `--json` 输出方便审计，`--silent` 可屏蔽日志。
+- 在执行前可设置 `SUPABASE_SERVICE_KEY`（优先级高于仓库内默认值），以避免在日志中暴露密钥。
+
 ## 最小可行版本（MVP）
 1. 公共只读 + 私有读写接入 Supabase。
 2. 插件内新增“提报到公共库”，写入 `publish_requests`。

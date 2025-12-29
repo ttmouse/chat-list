@@ -5,7 +5,7 @@
 
 // Element.closest() polyfill for older browsers
 if (!Element.prototype.closest) {
-  Element.prototype.closest = function(selector) {
+  Element.prototype.closest = function (selector) {
     let element = this;
     while (element && element.nodeType === 1) {
       if (element.matches(selector)) {
@@ -19,8 +19,8 @@ if (!Element.prototype.closest) {
 
 // Element.matches() polyfill for older browsers
 if (!Element.prototype.matches) {
-  Element.prototype.matches = Element.prototype.msMatchesSelector || 
-                              Element.prototype.webkitMatchesSelector;
+  Element.prototype.matches = Element.prototype.msMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
 }
 
 class Utils {
@@ -37,7 +37,7 @@ class Utils {
       // 优先使用现代的 Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
-        console.log('内容已复制到剪贴板');
+        // console.log('内容已复制到剪贴板');
       } else {
         // 降级方案：使用传统的 execCommand
         this.fallbackCopyToClipboard(text);
@@ -64,13 +64,13 @@ class Utils {
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      
+
       // 执行复制命令
       const successful = document.execCommand('copy');
       document.body.removeChild(textArea);
-      
+
       if (successful) {
-        console.log('内容已复制到剪贴板（降级方案）');
+        // console.log('内容已复制到剪贴板（降级方案）');
       } else {
         console.error('复制失败');
       }
@@ -178,26 +178,26 @@ class Utils {
     // 避免重复显示提示
     if (this.contextNoticeShown) return;
     this.contextNoticeShown = true;
-    
+
     const notice = document.createElement('div');
     notice.className = 'chatlist-notice';
     notice.innerHTML = `
       <div class="title">扩展已更新</div>
       <div class="desc">请刷新页面以继续使用话术助手</div>
     `;
-    
+
     // 点击关闭提示
     notice.addEventListener('click', () => {
       notice.remove();
     });
-    
+
     // 5秒后自动关闭
     setTimeout(() => {
       if (notice.parentNode) {
         notice.remove();
       }
     }, 5000);
-    
+
     document.body.appendChild(notice);
   }
 
@@ -242,13 +242,13 @@ class Utils {
    */
   getElementInfo(element) {
     if (!element) return '无';
-    
+
     const tagName = element.tagName.toLowerCase();
     const id = element.id ? `#${element.id}` : '';
     const className = element.className ? `.${element.className.split(' ').join('.')}` : '';
     const type = element.type ? `[type="${element.type}"]` : '';
     const placeholder = element.placeholder ? `[placeholder="${element.placeholder.substring(0, 20)}..."]` : '';
-    
+
     return `${tagName}${id}${className}${type}${placeholder}`.substring(0, 100);
   }
 
@@ -286,7 +286,7 @@ class Utils {
    */
   throttle(func, limit) {
     let inThrottle;
-    return function(...args) {
+    return function (...args) {
       if (!inThrottle) {
         func.apply(this, args);
         inThrottle = true;
@@ -304,15 +304,15 @@ class Utils {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
-    
+
     if (obj instanceof Date) {
       return new Date(obj.getTime());
     }
-    
+
     if (obj instanceof Array) {
       return obj.map(item => this.deepClone(item));
     }
-    
+
     if (typeof obj === 'object') {
       const clonedObj = {};
       for (const key in obj) {
@@ -355,12 +355,12 @@ class Utils {
    */
   closest(element, selector) {
     if (!element || !selector) return null;
-    
+
     // 如果浏览器支持原生closest方法，直接使用
     if (element.closest) {
       return element.closest(selector);
     }
-    
+
     // 降级方案：手动向上遍历DOM树
     let current = element;
     while (current && current.nodeType === 1) {
@@ -380,12 +380,12 @@ class Utils {
    */
   matches(element, selector) {
     if (!element || !selector) return false;
-    
+
     // 如果浏览器支持原生matches方法，直接使用
     if (element.matches) {
       return element.matches(selector);
     }
-    
+
     // 降级方案：使用其他兼容方法
     if (element.msMatchesSelector) {
       return element.msMatchesSelector(selector);
@@ -393,11 +393,11 @@ class Utils {
     if (element.webkitMatchesSelector) {
       return element.webkitMatchesSelector(selector);
     }
-    
+
     // 最后的降级方案：使用querySelectorAll
     const matches = (element.document || element.ownerDocument).querySelectorAll(selector);
     let i = matches.length;
-    while (--i >= 0 && matches.item(i) !== element) {}
+    while (--i >= 0 && matches.item(i) !== element) { }
     return i > -1;
   }
 }

@@ -150,7 +150,7 @@ class PopupManager {
         if (response && response.success) {
           const status = response.visible ? '已显示' : '已隐藏';
           // 可以在这里显示状态提示
-          console.log(`话术助手${status}`);
+          // console.log(`话术助手${status}`);
         }
         window.close();
       }
@@ -168,7 +168,7 @@ class PopupManager {
           type: 'SHOW_WIDGET'
         });
         if (response && response.success) {
-          console.log('话术助手已显示');
+          // console.log('话术助手已显示');
         }
         window.close();
       }

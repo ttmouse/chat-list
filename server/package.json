@@ -4,7 +4,8 @@
     "description": "Backend API for chat-list extension",
     "main": "server.js",
     "scripts": {
-        "start": "node server.js"
+        "start": "node server.js",
+        "dedupe": "node dedupe-public-data.js"
     },
     "dependencies": {
         "express": "^4.18.2",

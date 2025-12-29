@@ -21,7 +21,7 @@ class ModuleLoader {
         const instance = new window[className](this.context);
         this.context[propertyName] = instance;
         this.modules.set(moduleName, instance);
-        console.log(`✅ ${moduleName} 模块加载成功`);
+        // console.log(`✅ ${moduleName} 模块加载成功`);
         return true;
       } else {
         console.error(`❌ ${moduleName} 模块未找到 (${className})`);
@@ -49,9 +49,9 @@ class ModuleLoader {
     // 统计加载结果
     const successful = results.filter(r => r.success).length;
     const total = results.length;
-    
-    console.log(`📊 模块加载完成: ${successful}/${total} 个模块成功加载`);
-    
+
+    // console.log(`📊 模块加载完成: ${successful}/${total} 个模块成功加载`);
+
     if (successful < total) {
       const failed = results.filter(r => !r.success).map(r => r.name);
       console.warn('⚠️ 未能加载的模块:', failed.join(', '));

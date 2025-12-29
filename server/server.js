@@ -1,5 +1,6 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
+const { preparePublicUploadPayload } = require('./dedupe-helpers');
 
 const app = express();
 app.use(express.json());
@@ -27,33 +28,43 @@ app.post('/api/upload-public', async (req, res) => {
             return res.status(400).json({ error: '数据格式错误' });
         }
 
-        const results = { scripts: [], groups: [] };
+        const dedupeResult = await preparePublicUploadPayload(supabase, {
+            scripts: Array.isArray(scripts) ? scripts : [],
+            groups: Array.isArray(groups) ? groups : []
+        });
+        const { summary, groups: dedupedGroups, scripts: dedupedScripts } = dedupeResult;
+
+        const results = {
+            scripts: [],
+            groups: [],
+            summary
+        };
 
         // 上传分组
-        if (groups && groups.length > 0) {
+        if (dedupedGroups && dedupedGroups.length > 0) {
             const { data, error } = await supabase
                 .from('chat_groups_public')
-                .upsert(groups, { onConflict: 'id' });
+                .upsert(dedupedGroups, { onConflict: 'id' });
 
             if (error) {
                 console.error('分组上传失败:', error);
                 results.groups.push({ success: false, error: error.message });
             } else {
-                results.groups.push({ success: true, count: groups.length });
+                results.groups.push({ success: true, count: dedupedGroups.length });
             }
         }
 
         // 上传话术
-        if (scripts.length > 0) {
+        if (dedupedScripts.length > 0) {
             const { data, error } = await supabase
                 .from('public_catalog')
-                .upsert(scripts, { onConflict: 'id' });
+                .upsert(dedupedScripts, { onConflict: 'id' });
 
             if (error) {
                 console.error('话术上传失败:', error);
                 results.scripts.push({ success: false, error: error.message });
             } else {
-                results.scripts.push({ success: true, count: scripts.length });
+                results.scripts.push({ success: true, count: dedupedScripts.length });
             }
         }
 
